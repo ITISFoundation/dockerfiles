@@ -18,7 +18,7 @@ RUN apk update &&\
         python3-dev
 
 RUN python3 -m ensurepip &&\ 
-    pip3 install --no-cache --upgrade \
+    pip3 install -u --upgrade \
         pip \
         wheel \
         setuptools

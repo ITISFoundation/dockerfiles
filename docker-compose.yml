@@ -1,7 +1,7 @@
 version: '3.4'
 services:
   python3:
-    image: python:3.6-itis
+    image: ITISFoundation/python:3.6-alpine
     build:
       context: python3
     labels: 
@@ -9,3 +9,14 @@ services:
       org.label-schema.build-date: "${BUILD_DATE}"
       org.label-schema.vcs-url: "https://github.com/ITISFoundation/osparc-simcore"
       org.label-schema.vcs-ref: "${VCS_REF}"
+  dev-tools:
+    image: ITISFoundation/dev-tools:3.6-alpine
+    build:
+      context: dev-tools
+    labels: 
+      org.label-schema.schema-version: "1.0"
+      org.label-schema.build-date: "${BUILD_DATE}"
+      org.label-schema.vcs-url: "https://github.com/ITISFoundation/osparc-simcore"
+      org.label-schema.vcs-ref: "${VCS_REF}"
+    volumes:
+      - .:/home/scu/
