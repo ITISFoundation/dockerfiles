@@ -1,7 +1,7 @@
-FROM python:3.6-itis
+FROM python:3.6-alpine
 
-LABEL maintainer = "IT'IS Foundation"
-LABEL description = "dev-tools: pip compiler, template renderers, versioning, ..."
+LABEL maintainer = "IT'IS Foundation - pcrespov"
+LABEL description = "Tools to manage, compile and sync pip requirements"
 
 RUN apk update && apk add \
     git \
