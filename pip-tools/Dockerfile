@@ -11,7 +11,7 @@ RUN apk update && apk add \
     openssl
 
 COPY requirements.txt /requirements.txt
-RUN pip3 install -r /requirements.txt
+RUN pip3 install -u -r /requirements.txt
 
 WORKDIR /home/scu
 VOLUME /home/scu

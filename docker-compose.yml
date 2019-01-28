@@ -13,7 +13,7 @@ services:
     image: itisfoundation/pip-tools:latest
     build:
       context: ./pip-tools
-    labels: 
+    labels:
       org.label-schema.schema-version: "1.0"
       org.label-schema.build-date: "${BUILD_DATE}"
       org.label-schema.vcs-url: "https://github.com/ITISFoundation/osparc-simcore"
