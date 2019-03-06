@@ -20,23 +20,31 @@ DOCKER_COMPOSE = docker-compose
 
 
 ## Targets .
-
-.PHONY: all
-# target: all – Builds all images
-all: build
-
-
-.PHONY: build
-# target: build – Builds all images
-build: .env 
-	${DOCKER_COMPOSE} build --no-cache
-
-
 .PHONY: .env
 .env:
 	@echo VCS_REF=$(shell git rev-parse --short HEAD)           >.env
 	@echo VCS_URL=$(shell git config --get remote.origin.url)  >>.env
 	@echo BUILD_DATE=$(shell date -u +"%Y-%m-%dT%H:%M:%SZ")    >>.env
+
+.PHONY: all
+# target: all – Builds all images
+all: build
+
+.PHONY: build
+# target: build – Builds all images (uses cache)
+build: .env 
+	${DOCKER_COMPOSE} build
+
+.PHONY: rebuild
+# target: rebuild – Builds all images from scratch
+rebuild: .env 
+	${DOCKER_COMPOSE} build --no-cache
+
+.PHONY: push
+# target: push – Pushes all images to dockerhub's registry
+rebuild: .env 
+	${DOCKER_COMPOSE} push
+
 
 
 .PHONY: clean
