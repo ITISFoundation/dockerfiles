@@ -1,3 +1,4 @@
 pip-tools
 pipdeptree
-cookiecutter
+pipreqs
+yolk3k

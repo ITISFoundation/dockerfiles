@@ -1,17 +1,13 @@
 FROM python:3.6-alpine
 
-LABEL maintainer  = "IT'IS Foundation - pcrespov"
-LABEL description = "Tools to manage, compile and sync pip requirements"
+# TODO create user
 
-RUN apk update && apk add \
-    git \
-    docker \
-    bash \
-    openssh \
-    openssl
+LABEL maintainer  = "IT'IS Foundation - pcrespov"
+# LABEL description = 
+
 
 COPY requirements.txt /requirements.txt
 RUN pip3 install --user -r /requirements.txt
 
-WORKDIR /home/scu
-VOLUME /home/scu
+WORKDIR /work
+VOLUME /work

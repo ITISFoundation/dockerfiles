@@ -1,25 +1,26 @@
-# dev tools
+# pip tools
 
-Container for python-based command-line utilities to assist development tasks.
+Managing python dependencies without loosing control or your mind ... :-)
 
 ## Content
 
-- [cookiecutter]  creates projects from cookiecutters (project templates)
-- [pipdeptree]: displaying the installed python packages in form of a dependency tree
-- [pip-tools] (pip-compile + pip-sync): help you keep your pip-based packages fresh, even when you’ve pinned (i.e. freeze) them
-
+- [pipdeptree] displays a dependency tree of the installed python packages
+- [pip-tools] (``pip-compile`` + ``pip-sync``) helps you keep your pip-based packages fresh, even when you’ve pinned (i.e. freeze) them
+- [yolk] gets info about installed packages or those in some registry (e.g. PyPI)
+- [pipreqs] deduces the requirements from the source code of a package
+  
 ## Usage
 
 ```bash
-$ docker -it -v $(pwd):/home/scu/data ITISFoudation/devtools cookiecutter
-
-# OR
-$ docker-compose devtools run cookiecutter --help
-
+docker -it itisfoundation/pip-kit --help
 ```
 
+```bash
+docker -it -v $(pwd):/work itisfoundation/pip-kit pip-tools requirements.in
+```
 
-
-[cookiecutter]:https://cookiecutter.readthedocs.io/en/latest/
+<!--REFERENCES. Please keep alphabetical order -->
 [pipdeptree]:https://pypi.org/project/pipdeptree/
+[pipreqs]:https://github.com/bndr/pipreqs
 [pip-tools]:https://pypi.org/project/pip-tools/
+[yolk]:https://github.com/myint/yolk
