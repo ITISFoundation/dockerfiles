@@ -2,18 +2,11 @@ SHELL = /bin/bash
 
 ##
 # Definitions.
-
 .SUFFIXES:
 
-VCS_REF:=$(shell git rev-parse --short HEAD)
-BUILD_DATE:=$(shell date -u +"%Y-%m-%dT%H:%M:%SZ")
-
-export VCS_REF
-export BUILD_DATE
 
 
 ## Tools.
-
 tools =
 
 ifeq ($(shell uname -s),Darwin)
@@ -30,15 +23,26 @@ DOCKER_COMPOSE = docker-compose
 
 .PHONY: all
 # target: all – Builds all images
-all:
+all: build
+
+
+.PHONY: build
+# target: build – Builds all images
+build: .env 
 	${DOCKER_COMPOSE} build --no-cache
 
+
+.PHONY: .env
+.env:
+	@echo VCS_REF=$(shell git rev-parse --short HEAD)           >.env
+	@echo VCS_URL=$(shell git config --get remote.origin.url)  >>.env
+	@echo BUILD_DATE=$(shell date -u +"%Y-%m-%dT%H:%M:%SZ")    >>.env
 
 
 .PHONY: clean
 # target: clean – Cleans all unversioned files in project
 clean:
-	@git clean -dxf -e .vscode/
+	@git clean -dxf
 
 
 .PHONY: help
