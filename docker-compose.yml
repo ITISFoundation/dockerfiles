@@ -4,19 +4,19 @@ services:
     image: itisfoundation/python-base:3.6
     build:
       context: ./python-base
-    labels: 
-      org.label-schema.schema-version: "1.0"
-      org.label-schema.build-date: "${BUILD_DATE}"
-      org.label-schema.vcs-url: "${VCS_URL}"
-      org.label-schema.vcs-ref: "${VCS_REF}"
+      labels: 
+        org.label-schema.schema-version: "1.0"
+        org.label-schema.build-date: "${BUILD_DATE}"
+        org.label-schema.vcs-url: "${VCS_URL}"
+        org.label-schema.vcs-ref: "${VCS_REF}"
   pip-tools:
     image: itisfoundation/pip-tools:latest
     build:
       context: ./pip-tools
-    labels:
-      org.label-schema.schema-version: "1.0"
-      org.label-schema.build-date: "${BUILD_DATE}"
-      org.label-schema.vcs-url: "${VCS_URL}"
-      org.label-schema.vcs-ref: "${VCS_REF}"
+      labels:
+        org.label-schema.schema-version: "1.0"
+        org.label-schema.build-date: "${BUILD_DATE}"
+        org.label-schema.vcs-url: "${VCS_URL}"
+        org.label-schema.vcs-ref: "${VCS_REF}"
     volumes:
       - .:/home/scu/
