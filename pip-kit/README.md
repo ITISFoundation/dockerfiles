@@ -1,6 +1,17 @@
 # pip toolkit
+[![image-size]](https://microbadger.com/images/itisfoundation/pip-kit "More on itisfoundation/pip-kit latet image")
+[![image-badge]](https://microbadger.com/images/itisfoundation/pip-kit "More on image in registry")
+[![image-version]](https://microbadger.com/images/itisfoundation/pip-kit "More on image in registry")
+[![image-commit]](https://microbadger.com/images/itisfoundation/pip-kit "More on mage in registry")
 
 Managing python dependencies without loosing control or your mind ... :-)
+
+<!-- Add badges urls here-->
+[image-size]:https://img.shields.io/microbadger/image-size/itisfoundation/pip-kit:latest.svg?label=pip-kit
+[image-badge]:https://images.microbadger.com/badges/image/itisfoundation/pip-kit.svg
+[image-version]:https://images.microbadger.com/badges/version/itisfoundation/pip-kit.svg
+[image-commit]:https://images.microbadger.com/badges/commit/itisfoundation/pip-kit.svg
+<!------------------------->
 
 ## Content
 
