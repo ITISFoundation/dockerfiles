@@ -40,11 +40,12 @@ build: .env
 rebuild: .env 
 	${DOCKER_COMPOSE} build --no-cache
 
-.PHONY: push
-# target: push – Pushes all images to dockerhub's registry
-rebuild: .env 
-	${DOCKER_COMPOSE} push
 
+.PHONY: deploy
+# target: deploy – Tags images and pushes to dockerhub's registry [TODO]
+deploy: .env 
+	echo TODO: tagging images and pushing to dockerhub ...
+	#${DOCKER_COMPOSE} push
 
 
 .PHONY: clean

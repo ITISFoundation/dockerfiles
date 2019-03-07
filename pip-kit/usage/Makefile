@@ -1,7 +1,7 @@
 .PHONY: all check clean
 
 SHELL = /bin/sh
-DOCKER_PIP_TOOLS_IMAGE = itisfoundation/pip-tools:latest
+PIPKIT = itisfoundation/pip-kit:latest
  
 objects = $(wildcard *.in)
 outputs := $(objects:.in=.txt)
@@ -14,7 +14,7 @@ all: $(outputs)
 %.txt: %.in
 	@docker run -it --rm \
 		-v "$(CURDIR):/home/scu" \
-	"$(DOCKER_PIP_TOOLS_IMAGE)" "$(SHELL)" -c \
+	"$(PIPKIT)" "$(SHELL)" -c \
 		'CUSTOM_COMPILE_COMMAND="make $@" \
 		pip-compile -v -o /tmp/requirements.tmp $< && \
 		cat /tmp/requirements.tmp > $@'
@@ -23,7 +23,7 @@ ci.txt: base.txt
 
 # target: check – Checks whether pip-compile is installed
 check:
-	@docker run -it --rm "$(DOCKER_PIP_TOOLS_IMAGE)" "$(SHELL)" -c \
+	@docker run -it --rm "$(PIPKIT)" "$(SHELL)" -c \
 	'pip-compile --version'
 
 # target: clean – Cleans all requirements/*.txt

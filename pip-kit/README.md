@@ -1,4 +1,4 @@
-# pip tools
+# pip toolkit
 
 Managing python dependencies without loosing control or your mind ... :-)
 
@@ -16,7 +16,11 @@ docker -it itisfoundation/pip-kit --help
 ```
 
 ```bash
-docker -it -v $(pwd):/work itisfoundation/pip-kit pip-tools requirements.in
+echo pip-tools > requirements.in
+
+docker -it -v $(pwd):/home/itis/work itisfoundation/pip-kit pip-compile requirements.in
+# OR
+docker-compose run pip-kit pip-compile requirements.in
 ```
 
 <!--REFERENCES. Please keep alphabetical order -->
