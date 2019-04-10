@@ -7,9 +7,9 @@ echo "  Workdir :`pwd`"
 USERNAME=itis
 MOUNT_VOLUME=/home/itis/work
 
-
 stat $MOUNT_VOLUME &> /dev/null || \
-    (echo "ERROR: You must mount '$MOUNT_VOLUME' to deduce user and group ids" && exit 1) # FIXME: exit does not stop script
+    echo "ERROR: You must mount '$MOUNT_VOLUME' to deduce user and group ids" && \
+    exit 1
 
 USERID=$(stat -c %u $MOUNT_VOLUME)
 GROUPID=$(stat -c %g $MOUNT_VOLUME)
@@ -27,11 +27,11 @@ else
     else
         addgroup $USERNAME $GROUPNAME
     fi
-    
+
     deluser $USERNAME &> /dev/null
     adduser -u $USERID -G $GROUPNAME -D -s /bin/sh $USERNAME
 fi
 
 echo "Starting boot ..."
 # TODO: su-exec $USERNAME "python -m $@"
-su-exec $USERNAME "$@"
+exec su-exec $USERNAME "$@"

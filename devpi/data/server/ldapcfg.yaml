@@ -1,7 +1,0 @@
-devpi-ldap:
-  url: ldaps://ldap-server
-  user_template: uid={username},ou=users,dc=speag,dc=com
-  group_search:
-    base: ou=groups,dc=speag,dc=com
-    filter: (&(objectClass=posixGroup)(memberUid={username}))
-    attribute_name: uid
