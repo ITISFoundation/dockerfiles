@@ -48,4 +48,6 @@ Here some of the guidelines we have collected so far:
 
 7. Containers with mounted volumes MUST run using the same uid:gid as the mounted volume.
 
-8. Configuration information shall be passed into the container as environment variables prefixed with the name of the container. See `devpi/entrypoint.sh` for inspiration.
+8. Configuration information SHALL be passed into the container as environment variables prefixed with the name of the container.
+
+9. The "payload" of the container SHALL be run with 'exec' at the end of the `entrypoint.sh` script to make sure signals get passed properly.
