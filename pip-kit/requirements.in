@@ -2,3 +2,6 @@ pip-tools
 pipdeptree
 pipreqs
 yolk3k
+
+# other constraints (please add reason)
+urllib3~=1.24.2  # https://nvd.nist.gov/vuln/detail/CVE-2019-11324
