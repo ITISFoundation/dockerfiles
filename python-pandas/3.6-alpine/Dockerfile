@@ -17,9 +17,11 @@ RUN pip --no-cache \
 
 WORKDIR /build
 
+COPY requirements.txt requirements.txt
 RUN umask 022 && \
     pip --no-cache --disable-pip-version-check install \
-        pandas~=0.24.0
+        -r requirements.txt
+        #pandas~=0.24.0
         
 RUN apk del --no-cache \
         .build-deps
