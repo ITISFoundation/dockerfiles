@@ -2,9 +2,11 @@ FROM python:3.6-alpine
 
 LABEL maintainer=pcrespov
 
-RUN apk add --virtual .build-deps \
+RUN apk add --no-cache --virtual .BUILD-DEPS \
+        build-base \
         git \
         gcc \
+        wget \
         libc-dev \
         python-dev \
         musl-dev \
@@ -23,5 +25,6 @@ RUN umask 022 && \
         -r requirements.txt
         #pandas~=0.24.0
         
-RUN apk del --no-cache \
-        .build-deps
+RUN rm -rf /var/cache/apk/* &&\
+    apk del --no-cache .BUILD-DEPS
+        
