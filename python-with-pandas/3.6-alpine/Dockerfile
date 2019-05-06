@@ -1,4 +1,4 @@
-FROM python:3.6-alpine
+FROM python:3.6-alpine3.9
 
 LABEL maintainer=pcrespov
 
@@ -23,8 +23,6 @@ COPY requirements.txt requirements.txt
 RUN umask 022 && \
     pip --no-cache --disable-pip-version-check install \
         -r requirements.txt
-        #pandas~=0.24.0
-        
+
 RUN rm -rf /var/cache/apk/* &&\
-    apk del --no-cache .BUILD-DEPS
-        
+        apk del --no-cache .BUILD-DEPS
