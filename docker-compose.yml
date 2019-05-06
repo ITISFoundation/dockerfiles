@@ -11,7 +11,24 @@ services:
         org.label-schema.vcs-ref: "${VCS_REF}"
     volumes:
       - .:/home/itis/work
-
+  python-pandas:
+    image: itsfoundation/python-pandas:3.6-alpine
+    build:
+      context: ./python-pandas/3.6-alpine
+      labels:
+        org.label-schema.schema-version: "1.0"
+        org.label-schema.build-date: "${BUILD_DATE}"
+        org.label-schema.vcs-url: "${VCS_URL}"
+        org.label-schema.vcs-ref: "${VCS_REF}"
+  python-pandas-py27:
+    image: itsfoundation/python-pandas-py27:3.6-alpine
+    build:
+      context: ./python-pandas/3.6-alpine/py2.7
+      labels:
+        org.label-schema.schema-version: "1.0"
+        org.label-schema.build-date: "${BUILD_DATE}"
+        org.label-schema.vcs-url: "${VCS_URL}"
+        org.label-schema.vcs-ref: "${VCS_REF}"
   devpi:
     image: itisfoundation/devpi:latest
     build:
