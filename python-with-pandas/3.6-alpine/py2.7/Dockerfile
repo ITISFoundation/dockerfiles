@@ -27,6 +27,4 @@ RUN umask 022 && \
         -r requirements.txt
 
         
-RUN apk del --no-cache \
-        .build-deps \
-        .build-deps-py2 
+RUN apk del --no-cache .BUILD-DEPS
