@@ -12,7 +12,7 @@ COPY --chown=node:node entrypoint.sh .
 
 RUN echo {} > package.json ;\
     chmod 755 entrypoint.sh ;\
-    npm install qooxdoo-sdk qxcompiler
+    npm install @qooxdoo/framework @qooxdoo/compiler
 
 USER root
 EXPOSE 8080
