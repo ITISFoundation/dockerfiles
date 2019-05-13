@@ -3,18 +3,19 @@ FROM node:10-alpine
 LABEL maintainer=oetiker
 
 # adding these in separate layers since
-RUN apk add --no-cache su-exec git python2 tini
+RUN apk add --no-cache su-exec git tini
 
-USER node
+USER root
 WORKDIR /home/node
 
 COPY --chown=node:node entrypoint.sh .
 
 RUN echo {} > package.json ;\
     chmod 755 entrypoint.sh ;\
-    npm install @qooxdoo/framework @qooxdoo/compiler
+    apk add --no-cache --virtual .build-deps python2;\
+    su - node -c "npm install @qooxdoo/framework @qooxdoo/compiler" ;\
+    apk del .build-deps;
 
-USER root
 EXPOSE 8080
 
 ENTRYPOINT [ "/sbin/tini","--","/home/node/entrypoint.sh" ]
