@@ -20,6 +20,13 @@ fi
 
 PROJECT_DIR=/project
 
+if [ ! -d $PROJECT_DIR ]; then
+    cat << 'ERROR_END'
+ERROR: no directory mounted on /project
+ERROR_END
+exit 1
+fi
+
 export PATH=/home/node/node_modules/.bin:$PATH
 USERID=$(stat -c %u ${PROJECT_DIR})
 USERNAME=$(getent passwd ${USERID} | cut -d: -f1)
