@@ -1,6 +1,6 @@
 APP_NAME=qx-kit
 DOCKER_REPO=itisfoundation# import config.
-VERSION=$(date +0.0.%Y%m%d-%H%M%S)
+VERSION:=$(shell date +0.0.%Y%m%d-%H%M%S)
 
 
 # HELP
