@@ -5,7 +5,6 @@ LABEL maintainer=oetiker
 # adding these in separate layers since
 RUN apk add --no-cache su-exec git tini
 
-USER root
 WORKDIR /home/node
 
 COPY --chown=node:node entrypoint.sh .
