@@ -47,6 +47,7 @@ else
 fi
 
 cd $PROJECT_DIR
-
+mkdir -p .qooxdoo
+ln -s $PROJECT_DIR/.qooxdoo ~/.qooxdoo
 echo "[RUN]: Running command ($@) as ${USERNAME}($USERID):${GROUPNAME}($GROUPID)"
 exec su-exec ${USERNAME}:${GROUPNAME} "$@"
