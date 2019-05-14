@@ -51,3 +51,6 @@ Here some of the guidelines we have collected so far:
 8. Configuration information SHALL be passed into the container as environment variables prefixed with the name of the container.
 
 9. The "payload" of the container SHALL be run with 'exec' at the end of the `entrypoint.sh` script to make sure signals get passed properly.
+
+10. If the "payload" has no explicit internal signal handling add tini as an init replacement (same effect as when running the docker with --init)
+  https://github.com/krallin/tini
