@@ -12,7 +12,8 @@ COPY --chown=node:node entrypoint.sh .
 RUN echo {} > package.json ;\
     chmod 755 entrypoint.sh ;\
     apk add --no-cache --virtual .build-deps python2;\
-    su - node -c "npm install @qooxdoo/framework @qooxdoo/compiler" ;\
+    su - node -c "npm install @qooxdoo/framework" ;\
+    su - node -c "npm install @qooxdoo/compiler" ;\
     apk del .build-deps;
 
 EXPOSE 8080

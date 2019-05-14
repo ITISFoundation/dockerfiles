@@ -1,5 +1,5 @@
 APP_NAME=qx-kit
-DOCKER_REPO=itisfoundation# import config.
+DOCKER_REPO=itisfoundation
 VERSION:=$(shell date +0.0.%Y%m%d-%H%M%S)
 
 
