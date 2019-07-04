@@ -54,6 +54,12 @@ clean:
 	@git clean -dxf
 
 
+.PHONY: tools
+tools:
+	python3 -m venv .venv
+	.venv/bin/pip install --upgrade pip setuptools wheel
+	.venv/bin/pip install pip-tools
+
 .PHONY: help
 # target: help – Display all callable targets
 help:
