@@ -1,9 +1,10 @@
-FROM python:3.6-alpine3.9
+
+ARG PYTHON_VERSION=3.6-alpine3.9
+FROM python:${PYTHON_VERSION} as builder
 
 LABEL maintainer=pcrespov
 
-WORKDIR /build
-COPY requirements.txt requirements.txt
+ENV PYTHONUNBUFFERED 1
 
 RUN apk add --no-cache --virtual .BUILD-DEPS \
         build-base \
@@ -14,12 +15,19 @@ RUN apk add --no-cache --virtual .BUILD-DEPS \
         python-dev \
         musl-dev \
         libffi-dev \
-        postgresql-dev && \
-    pip --no-cache \
-        --disable-pip-version-check install \
-        --upgrade pip~=19.1.0 &&\
-    umask 022 && \
-    pip --no-cache --disable-pip-version-check install \
-        -r requirements.txt && \
-    rm -rf /var/cache/apk/* && \
-        apk del --no-cache .BUILD-DEPS
+        postgresql-dev
+
+WORKDIR /wheels
+COPY requirements.txt /wheels/requirements.txt
+RUN pip install -U pip \
+   && pip wheel -r ./requirements.txt
+
+FROM python:${PYTHON_VERSION} as runtime-image
+
+COPY --from=builder /wheels /wheels
+RUN pip install -U pip \
+       && umask 022 \
+       && pip install -r /wheels/requirements.txt \
+                      -f /wheels \
+       && rm -rf /wheels \
+       && rm -rf /root/.cache/pip/* 

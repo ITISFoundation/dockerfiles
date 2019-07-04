@@ -14,6 +14,6 @@ See [discussion](https://stackoverflow.com/questions/49037742/why-does-it-take-a
 
 - alpine-pkg-py-pandas - https://github.com/sgerrand/alpine-pkg-py-pandas
 - alpine packages - https://github.com/nbgallery/apks
-
+- [multi-stage-builds-python-development](https://www.merixstudio.com/blog/docker-multi-stage-builds-python-development/)
 
 [blackfynn-python]:https://github.com/Blackfynn/blackfynn-python
