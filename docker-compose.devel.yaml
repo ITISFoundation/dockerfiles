@@ -1,0 +1,8 @@
+version: "3.7"
+services:
+  auto-deployment-agent:
+    build:
+      target: development
+    image: deployment-agent:dev
+    volumes:
+      - ./:/devel/services/deployment-agent
