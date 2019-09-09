@@ -1,28 +1,46 @@
-APP_NAME=qx-kit
-DOCKER_REPO=itisfoundation
-VERSION:=$(shell date +0.0.%Y%m%d-%H%M%S)
 
+APP_NAME    = $(notdir $(PWD))
+DOCKER_REPO = itisfoundation
+VERSION     := $(shell date +0.0.%Y%m%d-%H%M%S)
 
-# HELP
-# This will output the help for each task
+# Environments
+export VCS_URL    := $(shell git config --get remote.origin.url)
+export VCS_REF    := $(shell git rev-parse --short HEAD)
+export BUILD_DATE := $(shell date -u +"%Y-%m-%dT%H:%M:%SZ")
+
+TMPDIR := $(strip $(shell mktemp -d /tmp/$(APP_NAME)-XXXXX))
+
+.PHONY: help build build-nc test release publish publish-latest publish-version tag tag-latest tag-version
+
 # thanks to https://marmelab.com/blog/2016/02/29/auto-documented-makefile.html
-.PHONY: help
-
 help: ## This help.
 	@awk 'BEGIN {FS = ":.*?## "} /^[a-zA-Z_-]+:.*?## / {printf "\033[36m%-20s\033[0m %s\n", $$1, $$2}' $(MAKEFILE_LIST)
 
 .DEFAULT_GOAL := help
 
 
-# DOCKER TASKS
 # Build the container
 build: ## Build the container
-	docker build -t $(APP_NAME) .
+	docker-compose build $(APP_NAME)
 
 build-nc: ## Build the container without caching
-	docker build --no-cache -t $(APP_NAME) .
+	docker-compose build --no-cache $(APP_NAME)
 
 release: build-nc publish ## Make a release by building and publishing the `{version}` ans `latest` tagged containers to ECR
+
+
+.PHONY: shell .script
+
+.script:
+	@echo "Writing '$(TMPDIR)/test-run.sh' ..."
+	@echo "qx create myapp -t desktop -I" >>$(TMPDIR)/test-run.sh
+	@echo "cd myapp; qx compile" >>$(TMPDIR)/test-run.sh
+	@echo "qx serve" >>$(TMPDIR)/test-run.sh
+
+shell: .script
+	docker run -it -v $(TMPDIR):/project -p 8080:8080 -w /project $(DOCKER_REPO)/$(APP_NAME):latest /bin/sh
+
+
 
 # Docker publish
 publish: publish-latest publish-version ## Publish the `{version}` ans `latest` tagged containers to ECR
@@ -35,6 +53,7 @@ publish-version: tag-version ## Publish the `{version}` taged container to ECR
 	@echo 'publish $(VERSION) to $(DOCKER_REPO)'
 	docker push $(DOCKER_REPO)/$(APP_NAME):$(VERSION)
 
+
 # Docker tagging
 tag: tag-latest tag-version ## Generate container tags for the `{version}` ans `latest` tags
 
@@ -45,3 +64,7 @@ tag-latest: ## Generate container `{version}` tag
 tag-version: ## Generate container `latest` tag
 	@echo 'create tag $(VERSION)'
 	docker tag $(APP_NAME) $(DOCKER_REPO)/$(APP_NAME):$(VERSION)
+
+
+clean:
+	- rm -rf $(TMPDIR)
