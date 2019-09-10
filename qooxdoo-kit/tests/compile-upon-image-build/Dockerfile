@@ -19,7 +19,8 @@ WORKDIR /work
 COPY --from=build /project/myapp/compiled/build/ .
 
 EXPOSE 8000
-ENTRYPOINT 
+
+ENTRYPOINT []
 CMD python3 -m http.server 8000 --bind 0.0.0.0
 
 

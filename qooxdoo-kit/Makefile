@@ -1,7 +1,7 @@
 
 APP_NAME    = $(notdir $(PWD))
 DOCKER_REPO = itisfoundation
-VERSION     := $(shell date +0.0.%Y%m%d-%H%M%S)
+VERSION    := $(shell date +0.0.%Y%m%d-%H%M%S)
 
 # Environments
 export VCS_URL    := $(shell git config --get remote.origin.url)
