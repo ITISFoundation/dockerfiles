@@ -34,7 +34,7 @@ release: build-nc publish ## Make a release by building and publishing the `{ver
 .script:
 	@echo "Writing '$(TMPDIR)/test-run.sh' ..."
 	@echo "qx create myapp -t desktop -I" >>$(TMPDIR)/test-run.sh
-	@echo "cd myapp; qx compile" >>$(TMPDIR)/test-run.sh
+	@echo "cd myapp; qx compile -t build" >>$(TMPDIR)/test-run.sh
 	@echo "qx serve" >>$(TMPDIR)/test-run.sh
 
 shell: .script
