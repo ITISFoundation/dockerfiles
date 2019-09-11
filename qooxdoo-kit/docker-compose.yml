@@ -12,5 +12,6 @@ services:
         org.label-schema.vcs-ref: "${VCS_REF}"
         swiss.itis.dockerfiles.qooxdoo-kit.qooxdoo-compiler-version  : "${QOOXDOO_COMPILER_VERSION}"
         swiss.itis.dockerfiles.qooxdoo-kit.qooxdoo-framework-version : "${QOOXDOO_FRAMEWORK_VERSION}"
+        swiss.itis.dockerfiles.qooxdoo-kit.puppeteer-version : "${PUPPETEER_VERSION}"
     volumes:
       - ${PROJECT_DIR-.}:/project

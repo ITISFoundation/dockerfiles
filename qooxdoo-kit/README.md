@@ -22,5 +22,6 @@ Some workflows
     $ make release
     $ cat VERSION
 
+
 <!--REFERENCES. Please keep alphabetical order -->
 [qooxdoo]:qooxdoo.org

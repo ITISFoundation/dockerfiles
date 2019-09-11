@@ -13,8 +13,10 @@ export VCS_URL    := $(shell git config --get remote.origin.url)
 export VCS_REF    := $(shell git rev-parse --short HEAD)
 export BUILD_DATE := $(shell date -u +"%Y-%m-%dT%H:%M:%SZ")
 
+# Installed versions
 export QOOXDOO_COMPILER_VERSION  := $(shell jq '.dependencies."@qooxdoo/compiler".version'  package-lock.json)
 export QOOXDOO_FRAMEWORK_VERSION := $(shell jq '.dependencies."@qooxdoo/compiler".dependencies."@qooxdoo/framework".version'  package-lock.json)
+export PUPPETEER_VERSION := $(shell jq '.dependencies."puppeteer".version'  package-lock.json)
 
 
 .PHONY: help
@@ -67,26 +69,25 @@ publish-version: tag-version ## Publish the `{version}` tagged container to ECR
 	@echo 'publish $(shell cat .TAG) to $(DOCKER_REPO)'
 	docker push $(DOCKER_IMAGE_NAME):$(shell cat .TAG)
 
-release: build-nc publish ## Make a release by building and publishing the `{version}` ans `latest` tagged containers to ECR
+release: build-nc publish ## Make a release by building and publishing the `{version}` and `latest` tagged containers to ECR
 
 
 # Misc tools
 .PHONY: shell
 # TODO: add make shell cmd=''
+# TODO: separate test script?
 shell: ## opens shell in container
-	@echo "Writing '$(TMPDIR)/test-run.sh' ..."
+	# writing '$(TMPDIR)/test-run.sh' ...
 	@echo "qx create myapp -t desktop -I" >>$(TMPDIR)/test-run.sh
 	@echo "cd myapp; qx compile -t build" >>$(TMPDIR)/test-run.sh
 	@echo "qx serve" >>$(TMPDIR)/test-run.sh
-	docker run -it -v $(TMPDIR):/project -p 8080:8080 -w /home/node $(DOCKER_IMAGE_NAME):lastbuild /bin/sh
+	docker run -it -v $(TMPDIR):/project -p 8080:8080 -w /project $(DOCKER_IMAGE_NAME):lastbuild /bin/sh
 
 
-.PHONY test
+.PHONY: test
 test: ## tests (TODO: implement tests)
 	@echo TODO: test it compiles at run-time
 	@echo TODO: test it compiles at build-time
-
-
 
 
 .PHONY: info
@@ -106,8 +107,14 @@ info:
 	@docker image inspect itisfoundation/qooxdoo-kit:lastbuild | jq .[0].ContainerConfig.Labels
 
 
-.PHONY: info
+.PHONY: clean
 clean:
-	@git clean -ndf
+	# clean unversioned
+	@git clean -Xdf
+	# remove all temporary folders
 	-rm -rf $(wildcard $(TMPPREFIX)*)
-	docker image rm -f $(docker images itisfoundation/qooxdoo* -q) 
+	# clean close docker-compose
+	-docker-compose down
+	# remove all images
+	-docker image rm -f $(docker images itisfoundation/qooxdoo* -q)
+
