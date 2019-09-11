@@ -47,7 +47,7 @@ tag-latest: ## Generate container `latest` tag
 tag-version: ## Generate container `{version}` tag
 	@echo 'create tag $(VERSION_SNAPSHOT)'
 	docker tag $(DOCKER_IMAGE_NAME):lastbuild $(DOCKER_IMAGE_NAME):$(VERSION_SNAPSHOT)
-	@echo $(VERSION_SNAPSHOT) >VERSION
+	@echo $(VERSION_SNAPSHOT) >.TAG
 
 
 # Docker publish
@@ -60,8 +60,8 @@ publish-latest: tag-latest ## Publish the `latest` tagged container to ECR
 	docker push $(DOCKER_IMAGE_NAME):latest
 
 publish-version: tag-version ## Publish the `{version}` tagged container to ECR
-	@echo 'publish $(shell cat VERSION) to $(DOCKER_REPO)'
-	docker push $(DOCKER_IMAGE_NAME):$(shell cat VERSION)
+	@echo 'publish $(shell cat .TAG) to $(DOCKER_REPO)'
+	docker push $(DOCKER_IMAGE_NAME):$(shell cat .TAG)
 
 release: build-nc publish ## Make a release by building and publishing the `{version}` ans `latest` tagged containers to ECR
 

@@ -11,11 +11,16 @@ RUN apk add --no-cache \
 
 WORKDIR /home/node
 
-RUN su - node -c "echo {} > package.json" ;\
-    apk add --no-cache --virtual .build-deps python2;\
-    su - node -c "npm install @qooxdoo/framework" ;\
-    su - node -c "npm install @qooxdoo/compiler" ;\
-    apk del .build-deps;
+COPY --chown=node:node package*.json ./
+
+RUN su - node -c "npm install npm@latest" && \
+    su - node -c "npm install"
+
+# RUN su - node -c "echo {} > package.json" ;\
+#     apk add --no-cache --virtual .build-deps python2;\
+#     su - node -c "npm install @qooxdoo/framework" ;\
+#     su - node -c "npm install @qooxdoo/compiler" ;\
+#     apk del .build-deps;
 
 COPY --chown=node:node entrypoint.sh .
 RUN chmod 755 entrypoint.sh
