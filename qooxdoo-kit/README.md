@@ -32,9 +32,9 @@ Some self-explanatory examples
     $ make shell cmd="jq '.dependencies' package.json"
     $ make clean
 
-    $ make tag
+    $ make build-nc tag
 
-    $ make build-nc release
+    $ make build-nc test release
 
 
 <!--REFERENCES. Please keep alphabetical order -->
