@@ -1,3 +1,5 @@
+PREDEFINED_VARIABLES := $(.VARIABLES)
+
 DOCKER_REPO        = itisfoundation
 APP_NAME           = $(notdir $(PWD))
 DOCKER_IMAGE_NAME  = $(DOCKER_REPO)/$(APP_NAME)
@@ -11,6 +13,8 @@ export VCS_URL    := $(shell git config --get remote.origin.url)
 export VCS_REF    := $(shell git rev-parse --short HEAD)
 export BUILD_DATE := $(shell date -u +"%Y-%m-%dT%H:%M:%SZ")
 
+export QOOXDOO_COMPILER_VERSION  := $(shell jq '.dependencies."@qooxdoo/compiler".version'  package-lock.json)
+export QOOXDOO_FRAMEWORK_VERSION := $(shell jq '.dependencies."@qooxdoo/compiler".dependencies."@qooxdoo/framework".version'  package-lock.json)
 
 
 .PHONY: help
@@ -68,6 +72,7 @@ release: build-nc publish ## Make a release by building and publishing the `{ver
 
 # Misc tools
 .PHONY: shell
+# TODO: add make shell cmd=''
 shell: ## opens shell in container
 	@echo "Writing '$(TMPDIR)/test-run.sh' ..."
 	@echo "qx create myapp -t desktop -I" >>$(TMPDIR)/test-run.sh
@@ -76,13 +81,29 @@ shell: ## opens shell in container
 	docker run -it -v $(TMPDIR):/project -p 8080:8080 -w /home/node $(DOCKER_IMAGE_NAME):lastbuild /bin/sh
 
 
+.PHONY test
+test: ## tests (TODO: implement tests)
+	@echo TODO: test it compiles at run-time
+	@echo TODO: test it compiles at build-time
+
+
+
+
 .PHONY: info
+	#@echo Installed versions
+	#@export PROJECT_DIR=$(TMPDIR); \
+	#	docker-compose run -w /home/node --rm $(APP_NAME) jq '.dependencies' package.json
+	# TODO: list
+	#@echo Labels; \
+	#	docker image inspect $(DOCKER_IMAGE_NAME):lastbuild --format="{{.ContainerConfig.Labels}}"
 info:
-	@echo Installed versions
-	@export PROJECT_DIR=$(TMPDIR); \
-		docker-compose run -w /home/node --rm $(APP_NAME) jq '.dependencies' package.json
-	@echo Labels; \
-		docker image inspect $(DOCKER_IMAGE_NAME):lastbuild --format="{{.ContainerConfig.Labels}}"
+	$(foreach v,                                                                           \
+		$(filter-out $(PREDEFINED_VARIABLES) PREDEFINED_VARIABLES, $(sort $(.VARIABLES))), \
+		$(info $(v)=$($(v))                                                                \
+	)
+	@echo ""
+	@echo Labels of $(DOCKER_IMAGE_NAME):lastbuild:
+	@docker image inspect itisfoundation/qooxdoo-kit:lastbuild | jq .[0].ContainerConfig.Labels
 
 
 .PHONY: info
