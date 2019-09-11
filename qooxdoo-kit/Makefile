@@ -3,7 +3,7 @@ PREDEFINED_VARIABLES := $(.VARIABLES)
 DOCKER_REPO        = itisfoundation
 APP_NAME           = $(notdir $(PWD))
 DOCKER_IMAGE_NAME  = $(DOCKER_REPO)/$(APP_NAME)
-VERSION_SNAPSHOT  := $(shell date +0.0.%Y%m%d-%H%M%S)
+DOCKER_IMAGE_TAG  := $(shell date +0.0.%Y%m%d-%H%M%S)
 
 TMPPREFIX := /tmp/$(APP_NAME)
 TMPDIR    := $(strip $(shell mktemp -d $(TMPPREFIX)-XXXXX))
@@ -17,6 +17,8 @@ export BUILD_DATE := $(shell date -u +"%Y-%m-%dT%H:%M:%SZ")
 export QOOXDOO_COMPILER_VERSION  := $(shell jq '.dependencies."@qooxdoo/compiler".version'  package-lock.json)
 export QOOXDOO_FRAMEWORK_VERSION := $(shell jq '.dependencies."@qooxdoo/compiler".dependencies."@qooxdoo/framework".version'  package-lock.json)
 export PUPPETEER_VERSION := $(shell jq '.dependencies."puppeteer".version'  package-lock.json)
+
+
 
 
 .PHONY: help
@@ -48,39 +50,7 @@ build-nc: package-lock.json ## Build the container without caching
 	docker-compose build --no-cache $(APP_NAME)
 
 
-# Docker tagging
-.PHONY: tag tag-latest tag-version
-
-tag: tag-latest tag-version ## Generate container tags for the `{version}` and `latest` tags
-
-tag-latest: ## Generate container `latest` tag
-	@echo 'create tag latest'
-	docker tag $(DOCKER_IMAGE_NAME):lastbuild $(DOCKER_IMAGE_NAME):latest
-
-tag-version: ## Generate container `{version}` tag
-	@echo 'create tag $(VERSION_SNAPSHOT)'
-	docker tag $(DOCKER_IMAGE_NAME):lastbuild $(DOCKER_IMAGE_NAME):$(VERSION_SNAPSHOT)
-	@echo $(VERSION_SNAPSHOT) >.TAG
-
-
-# Docker publish
-PHONY: publish publish-latest publish-version release
-
-publish: publish-latest publish-version ## Publish the `{version}` and `latest` tagged containers to ECR
-
-publish-latest: tag-latest ## Publish the `latest` tagged container to ECR
-	@echo 'publish latest to $(DOCKER_REPO)'
-	docker push $(DOCKER_IMAGE_NAME):latest
-
-publish-version: tag-version ## Publish the `{version}` tagged container to ECR
-	@echo 'publish $(shell cat .TAG) to $(DOCKER_REPO)'
-	docker push $(DOCKER_IMAGE_NAME):$(shell cat .TAG)
-
-release: build-nc publish ## Make a release by building and publishing the `{version}` and `latest` tagged containers to ECR
-
-
-
-# Misc tools
+# Run the container
 .PHONY: shell
 # TODO: add make shell cmd=''
 # TODO: separate test script?
@@ -91,29 +61,57 @@ shell: ## opens shell in container
 	@echo "qx serve" >>$(TMPDIR)/test-run.sh
 	docker run -it -v $(TMPDIR):/project -p 8080:8080 -w /project $(DOCKER_IMAGE_NAME):lastbuild /bin/sh
 
-
 .PHONY: test
-test: ## tests (TODO: implement tests)
+test: ## tests (TODO: implement tests)		
 	@echo TODO: test it compiles at run-time
 	@echo TODO: test it compiles at build-time
 
 
+# Docker tagging
+.PHONY: tag .tag-latest .tag-version
+
+tag: .tag-latest .tag-version ## Generate container tags for the `{version}` and `latest` tags
+
+.tag-latest: 
+	# Generate container `latest` tag
+	docker tag $(DOCKER_IMAGE_NAME):lastbuild $(DOCKER_IMAGE_NAME):latest
+
+.tag-version: 
+	# Generate container `$(DOCKER_IMAGE_TAG)` tag
+	docker tag $(DOCKER_IMAGE_NAME):lastbuild $(DOCKER_IMAGE_NAME):$(DOCKER_IMAGE_TAG)
+	@echo $(DOCKER_IMAGE_TAG) >.TAG
+
+
+# Docker publish
+PHONY: publish publish-latest publish-version release
+
+publish: .publish-latest .publish-version ## Publish the `{version}` and `latest` tagged containers to ECR
+
+.publish-latest: tag-latest 
+	# Publish the `latest` tagged container to `$(DOCKER_REPO)`
+	docker push $(DOCKER_IMAGE_NAME):latest
+
+.publish-version: tag-version 
+	# Publish the $(shell cat .TAG) tagged to `$(DOCKER_REPO)`
+	docker push $(DOCKER_IMAGE_NAME):$(shell cat .TAG)
+
+release: publish ## Tags lastbuild and pushes `{version}` and `latest` to ECR
+
+
+
+
+# Misc tools
 .PHONY: info
-	#@echo Installed versions
-	#@export PROJECT_DIR=$(TMPDIR); \
-	#	docker-compose run -w /home/node --rm $(APP_NAME) jq '.dependencies' package.json
-	# TODO: list
-	#@echo Labels; \
-	#	docker image inspect $(DOCKER_IMAGE_NAME):lastbuild --format="{{.ContainerConfig.Labels}}"
 info:
+	$(info # Variables)
 	$(foreach v,                                                                           \
 		$(filter-out $(PREDEFINED_VARIABLES) PREDEFINED_VARIABLES, $(sort $(.VARIABLES))), \
 		$(info $(v)=$($(v)))                                                               \
 	)
-	@echo ""
-	@echo Labels of $(DOCKER_IMAGE_NAME):lastbuild:
-	@docker image inspect itisfoundation/qooxdoo-kit:lastbuild | jq .[0].ContainerConfig.Labels
-
+	# Labels in `$(DOCKER_IMAGE_NAME):lastbuild` image (metadata)
+	@docker image inspect $(DOCKER_IMAGE_NAME):lastbuild | jq .[0].ContainerConfig.Labels
+	# Build/tagged images 
+	docker images $(DOCKER_IMAGE_NAME)*
 
 .PHONY: clean
 clean:
@@ -124,5 +122,5 @@ clean:
 	# clean close docker-compose
 	-docker-compose down
 	# remove all images
-	-docker image rm -f $(docker images itisfoundation/qooxdoo* -q)
+	-docker image rm -f $(shell docker images $(DOCKER_IMAGE_NAME)* -q)
 

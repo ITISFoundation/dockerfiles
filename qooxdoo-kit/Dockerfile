@@ -1,6 +1,6 @@
 FROM node:10.16.3-alpine
 
-LABEL maintainer=oetiker
+LABEL maintainer="oetiker,pcrespov"
 
 # adding these in separate layers since
 RUN apk add --no-cache \
