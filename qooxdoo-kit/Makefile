@@ -87,11 +87,11 @@ PHONY: publish publish-latest publish-version release
 
 publish: .publish-latest .publish-version ## Publish the `{version}` and `latest` tagged containers to ECR
 
-.publish-latest: tag-latest 
+.publish-latest: .tag-latest 
 	# Publish the `latest` tagged container to `$(DOCKER_REPO)`
 	docker push $(DOCKER_IMAGE_NAME):latest
 
-.publish-version: tag-version 
+.publish-version: .tag-version 
 	# Publish the $(shell cat .TAG) tagged to `$(DOCKER_REPO)`
 	docker push $(DOCKER_IMAGE_NAME):$(shell cat .TAG)
 
