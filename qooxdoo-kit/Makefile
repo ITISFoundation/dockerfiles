@@ -3,7 +3,7 @@ PREDEFINED_VARIABLES := $(.VARIABLES)
 DOCKER_REPO        = itisfoundation
 APP_NAME           = $(notdir $(PWD))
 DOCKER_IMAGE_NAME  = $(DOCKER_REPO)/$(APP_NAME)
-VERSION_SNAPSHOT  := $(shell date +0.0.%Y%m%d-%H%M%S)
+DOCKER_IMAGE_TAG  := $(shell date +0.0.%Y%m%d-%H%M%S)
 
 TMPPREFIX := /tmp/$(APP_NAME)
 TMPDIR    := $(strip $(shell mktemp -d $(TMPPREFIX)-XXXXX))
@@ -58,9 +58,9 @@ tag-latest: ## Generate container `latest` tag
 	docker tag $(DOCKER_IMAGE_NAME):lastbuild $(DOCKER_IMAGE_NAME):latest
 
 tag-version: ## Generate container `{version}` tag
-	@echo 'create tag $(VERSION_SNAPSHOT)'
-	docker tag $(DOCKER_IMAGE_NAME):lastbuild $(DOCKER_IMAGE_NAME):$(VERSION_SNAPSHOT)
-	@echo $(VERSION_SNAPSHOT) >.TAG
+	@echo 'create tag $(DOCKER_IMAGE_TAG)'
+	docker tag $(DOCKER_IMAGE_NAME):lastbuild $(DOCKER_IMAGE_NAME):$(DOCKER_IMAGE_TAG)
+	@echo $(DOCKER_IMAGE_TAG) >.TAG
 
 
 # Docker publish
@@ -76,7 +76,7 @@ publish-version: tag-version ## Publish the `{version}` tagged container to ECR
 	@echo 'publish $(shell cat .TAG) to $(DOCKER_REPO)'
 	docker push $(DOCKER_IMAGE_NAME):$(shell cat .TAG)
 
-release: build-nc publish ## Make a release by building and publishing the `{version}` and `latest` tagged containers to ECR
+release: publish ## Tags lastbuild and pushes `{version}` and `latest` to ECR
 
 
 

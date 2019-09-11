@@ -1,13 +1,28 @@
 # [qooxdoo] toolkit
 
+[![itis.dockerhub]](https://hub.docker.com/u/itisfoundation)
+[![](https://images.microbadger.com/badges/image/itisfoundation/qooxdoo-kit.svg)](https://microbadger.com/images/itisfoundation/qooxdoo-kit "More info on latest image")
+[![](https://images.microbadger.com/badges/version/itisfoundation/qooxdoo-kit.svg)](https://microbadger.com/images/itisfoundation/qooxdoo-kit "Get your own version badge on microbadger.com")
+[![](https://images.microbadger.com/badges/commit/itisfoundation/qooxdoo-kit.svg)](https://microbadger.com/images/itisfoundation/qooxdoo-kit "Get your own commit badge on microbadger.com")
+
+<!-- ADD HERE ALL BADGE URLS -->
+[itis.dockerhub]:https://img.shields.io/website/https/hub.docker.com/u/itisfoundation.svg?down_color=red&label=dockerhub%20repos&up_color=green
+<!---------------------------->
+
+
 TODO: https://github.com/ITISFoundation/osparc-simcore/issues/572
 
 ## Content
 
+- [qooxdoo] compiler
+- [puppeteer]
+
+
+See [package.json](package.json) for version specs
 
 ## Usage
 
-Some workflows
+Some self-explanatory examples
 
     $ make help
 
@@ -15,13 +30,13 @@ Some workflows
     $ make info
     $ make shell
     $ make shell cmd="jq '.dependencies' package.json"
+    $ make clean
 
     $ make tag
-    $ cat VERSION
 
-    $ make release
-    $ cat VERSION
+    $ make build-nc release
 
 
 <!--REFERENCES. Please keep alphabetical order -->
 [qooxdoo]:qooxdoo.org
+[puppeteer]:pptr.dev
