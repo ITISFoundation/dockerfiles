@@ -30,12 +30,19 @@ help: ## This help.
 # Build the container
 .PHONY: build build-nc
 
-build: ## Build the container
+# TODO: do this with docker instead! See https://github.com/ITISFoundation/dockerfiles/issues/12
+# TODO:  make update-packages (see https://flaviocopes.com/update-npm-dependencies/)
+package-lock.json: package.json
+	# Updating package-lock.json
+	npm install --save-dev
+	-rm -rf node_modules
+
+build: package-lock.json ## Build the container
 	export DOCKER_REPO=itisfoundation; \
 	export VERSION=lastbuild; \
 	docker-compose build $(APP_NAME)
 
-build-nc: ## Build the container without caching
+build-nc: package-lock.json ## Build the container without caching
 	export DOCKER_REPO=itisfoundation; \
 	export VERSION=lastbuild; \
 	docker-compose build --no-cache $(APP_NAME)
@@ -72,6 +79,7 @@ publish-version: tag-version ## Publish the `{version}` tagged container to ECR
 release: build-nc publish ## Make a release by building and publishing the `{version}` and `latest` tagged containers to ECR
 
 
+
 # Misc tools
 .PHONY: shell
 # TODO: add make shell cmd=''
@@ -100,7 +108,7 @@ test: ## tests (TODO: implement tests)
 info:
 	$(foreach v,                                                                           \
 		$(filter-out $(PREDEFINED_VARIABLES) PREDEFINED_VARIABLES, $(sort $(.VARIABLES))), \
-		$(info $(v)=$($(v))                                                                \
+		$(info $(v)=$($(v)))                                                               \
 	)
 	@echo ""
 	@echo Labels of $(DOCKER_IMAGE_NAME):lastbuild:
