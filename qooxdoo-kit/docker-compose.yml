@@ -5,6 +5,8 @@ services:
     # init: true See #11
     build:
       context: .
+      cache_from:
+        - itisfoundation/qooxdoo-kit:latest
       labels:
         org.label-schema.schema-version: "1.0"
         org.label-schema.build-date: "${BUILD_DATE}"
