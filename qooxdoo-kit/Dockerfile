@@ -3,7 +3,11 @@ FROM node:10-alpine
 LABEL maintainer=oetiker
 
 # adding these in separate layers since
-RUN apk add --no-cache su-exec git tini
+RUN apk add --no-cache \
+    su-exec \
+    git \
+    tini \
+    jq
 
 WORKDIR /home/node
 
