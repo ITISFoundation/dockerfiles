@@ -11,6 +11,8 @@ RUN apk add --no-cache \
 
 WORKDIR /home/node
 
+ENV PATH=/home/node/node_modules/.bin:${PATH}
+
 COPY --chown=node:node package*.json ./
 
 RUN su - node -c "npm install npm@latest" && \

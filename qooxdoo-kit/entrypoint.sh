@@ -27,7 +27,6 @@ ERROR_END
 exit 1
 fi
 
-export PATH=/home/node/node_modules/.bin:$PATH
 USERID=$(stat -c %u ${PROJECT_DIR})
 USERNAME=$(getent passwd ${USERID} | cut -d: -f1)
 GROUPID=$(stat -c %g ${PROJECT_DIR})
