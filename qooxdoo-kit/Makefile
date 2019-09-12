@@ -40,14 +40,12 @@ package-lock.json: package.json
 	-rm -rf node_modules
 
 build: package-lock.json ## Build the container
-	export DOCKER_REPO=itisfoundation; \
 	export VERSION=lastbuild; \
-	docker-compose build $(APP_NAME)
+	docker-compose -f docker-compose.build.yml build $(APP_NAME)
 
 build-nc: package-lock.json ## Build the container without caching
-	export DOCKER_REPO=itisfoundation; \
 	export VERSION=lastbuild; \
-	docker-compose build --no-cache $(APP_NAME)
+	docker-compose -f docker-compose.build.yml build --no-cache $(APP_NAME)
 
 
 # Run the container
@@ -59,7 +57,11 @@ shell: ## opens shell in container
 	@echo "qx create myapp -t desktop -I" >>$(TMPDIR)/test-run.sh
 	@echo "cd myapp; qx compile -t build" >>$(TMPDIR)/test-run.sh
 	@echo "qx serve" >>$(TMPDIR)/test-run.sh
-	docker run -it -v $(TMPDIR):/project -p 8080:8080 -w /project $(DOCKER_IMAGE_NAME):lastbuild /bin/sh
+	# starting container $(APP_NAME) shell on `$(TMPDIR)`
+	@export VERSION=lastbuild; \
+	export PROJECT_DIR=$(TMPDIR);\
+	docker-compose run $(APP_NAME)
+
 
 .PHONY: test
 test: ## tests (TODO: implement tests)		
@@ -96,7 +98,6 @@ publish: .publish-latest .publish-version ## Publish the `{version}` and `latest
 	docker push $(DOCKER_IMAGE_NAME):$(shell cat .TAG)
 
 release: publish ## Tags lastbuild and pushes `{version}` and `latest` to ECR
-
 
 
 

@@ -15,6 +15,7 @@ ENV PATH=/home/node/node_modules/.bin:${PATH}
 
 COPY --chown=node:node package*.json ./
 
+# TODO: latest or fix?? or a variable?
 RUN su - node -c "npm install npm@latest" && \
     su - node -c "npm install"
 
