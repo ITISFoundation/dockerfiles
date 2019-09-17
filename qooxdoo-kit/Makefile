@@ -102,8 +102,8 @@ release: publish ## Tags lastbuild and pushes `{version}` and `latest` to ECR
 
 
 # Misc tools
-.PHONY: info
-info:
+.PHONY: info 
+info: ## shows info
 	$(info # Variables)
 	$(foreach v,                                                                           \
 		$(filter-out $(PREDEFINED_VARIABLES) PREDEFINED_VARIABLES, $(sort $(.VARIABLES))), \

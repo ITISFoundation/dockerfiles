@@ -9,9 +9,10 @@ RUN apk add --no-cache \
     tini \
     jq
 
-WORKDIR /home/node
-
 ENV PATH=/home/node/node_modules/.bin:${PATH}
+ENV NODE_PATH=/home/node/node_modules
+
+WORKDIR /home/node
 
 COPY --chown=node:node package*.json ./
 
