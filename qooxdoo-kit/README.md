@@ -15,7 +15,7 @@ TODO: https://github.com/ITISFoundation/osparc-simcore/issues/572
 ## Content
 
 - [qooxdoo] compiler
-- [puppeteer] - **TEMPORARY DISABLED**. Check [troubeshooting](https://github.com/GoogleChrome/puppeteer/blob/master/docs/troubleshooting.md#running-on-alpine)
+- [puppeteer] - **TEMPORARY DISABLED**. Check [troubeshooting](https://github.com/GoogleChrome/puppeteer/blob/master/docs/troubleshooting.md#running-on-alpine). See also [this ref](https://paul.kinlan.me/hosting-puppeteer-in-a-docker-container/)
 
 
 See [package.json](package.json) for version specs
