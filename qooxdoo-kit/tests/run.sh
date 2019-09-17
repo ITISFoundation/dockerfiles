@@ -18,5 +18,7 @@ while ! nc -z localhost 8080; do
     sleep 1 # wait for 10 second before check again
 done
 
-wget --spider http://localhost:8080/testtapper/
+echo "# Checks whether site reachable "
+wget --spider http://localhost:8080/
+
 kill $SERVER_PID

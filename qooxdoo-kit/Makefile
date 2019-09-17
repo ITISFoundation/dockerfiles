@@ -59,13 +59,13 @@ shell: ## opens shell in container
 	export PROJECT_DIR=$(TMPDIR);\
 	docker-compose run $(APP_NAME)
 
-
 .PHONY: test
-test: ## tests (TODO: implement tests)
-	@echo TODO: test it compiles at run-time
-	@echo TODO: test it compiles at build-time
-	
-
+test: ## tests 
+	# Executes tests/run.sh
+	cp -r tests $(TMPDIR)
+	@export VERSION=lastbuild; 
+	export PROJECT_DIR=$(TMPDIR);\
+	docker-compose run $(APP_NAME) /bin/sh ./tests/run.sh
 
 
 # Docker tagging
