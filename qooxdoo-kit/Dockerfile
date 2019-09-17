@@ -9,6 +9,7 @@ RUN apk add --no-cache \
     tini \
     jq
 
+# TODO: PATH=/foo:${PATH} invalidates path and append everytime a new /foo!!!
 ENV PATH=/home/node/node_modules/.bin:${PATH}
 ENV NODE_PATH=/home/node/node_modules
 

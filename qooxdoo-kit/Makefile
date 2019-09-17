@@ -53,20 +53,19 @@ build-nc: package-lock.json ## Build the container without caching
 # TODO: add make shell cmd=''
 # TODO: separate test script?
 shell: ## opens shell in container
-	# writing '$(TMPDIR)/test-run.sh' ...
-	@echo "qx create myapp -t desktop -I" >>$(TMPDIR)/test-run.sh
-	@echo "cd myapp; qx compile -t build" >>$(TMPDIR)/test-run.sh
-	@echo "qx serve" >>$(TMPDIR)/test-run.sh
 	# starting container $(APP_NAME) shell on `$(TMPDIR)`
+	cp -r tests $(TMPDIR)
 	@export VERSION=lastbuild; \
 	export PROJECT_DIR=$(TMPDIR);\
 	docker-compose run $(APP_NAME)
 
 
 .PHONY: test
-test: ## tests (TODO: implement tests)		
+test: ## tests (TODO: implement tests)
 	@echo TODO: test it compiles at run-time
 	@echo TODO: test it compiles at build-time
+	
+
 
 
 # Docker tagging
