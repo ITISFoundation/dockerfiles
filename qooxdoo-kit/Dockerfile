@@ -9,7 +9,6 @@ WORKDIR /home/node
 
 RUN su - node -c "echo {} > package.json" ;\
     apk add --no-cache --virtual .build-deps python2;\
-    su - node -c "npm install @qooxdoo/framework" ;\
     su - node -c "npm install @qooxdoo/compiler" ;\
     apk del .build-deps;
 
