@@ -29,15 +29,23 @@ help: ## This help.
 .DEFAULT_GOAL := help
 
 
-# Build the container
-.PHONY: build build-nc
+
+.PHONY: update-packages
 
 # TODO: do this with docker instead! See https://github.com/ITISFoundation/dockerfiles/issues/12
-# TODO:  make update-packages (see https://flaviocopes.com/update-npm-dependencies/)
 package-lock.json: package.json
 	# Updating package-lock.json
 	npm install --save-dev
 	-rm -rf node_modules
+
+# TODO:  make update-packages (see https://flaviocopes.com/update-npm-dependencies/)
+update-packages: ## updates dependencies and recreates package-lock.json
+	touch package.json
+	$(CMAKE) package-lock.json
+
+
+# Build the container
+.PHONY: build build-nc
 
 build: package-lock.json ## Build the container
 	export VERSION=lastbuild; \
@@ -58,6 +66,7 @@ shell: ## opens shell in container
 	@export VERSION=lastbuild; \
 	export PROJECT_DIR=$(TMPDIR);\
 	docker-compose run $(APP_NAME)
+
 
 .PHONY: test
 test: ## tests 
@@ -103,24 +112,30 @@ release: publish ## Tags lastbuild and pushes `{version}` and `latest` to ECR
 # Misc tools
 .PHONY: info 
 info: ## shows info
+	# Labels in `$(DOCKER_IMAGE_NAME):lastbuild` image (metadata)
+	@docker image inspect $(DOCKER_IMAGE_NAME):lastbuild | jq .[0].ContainerConfig.Labels
+	# Tagged images 
+	@docker images $(DOCKER_IMAGE_NAME)*:*
+
+info-vars: ## info to debug makefile
 	$(info # Variables)
 	$(foreach v,                                                                           \
 		$(filter-out $(PREDEFINED_VARIABLES) PREDEFINED_VARIABLES, $(sort $(.VARIABLES))), \
 		$(info $(v)=$($(v)))                                                               \
 	)
-	# Labels in `$(DOCKER_IMAGE_NAME):lastbuild` image (metadata)
-	@docker image inspect $(DOCKER_IMAGE_NAME):lastbuild | jq .[0].ContainerConfig.Labels
-	# Build/tagged images 
-	docker images $(DOCKER_IMAGE_NAME)*
 
-.PHONY: clean
-clean:
-	# clean unversioned
+.PHONY: clean clean-images .check_clean
+clean: .check_clean
+	# cleans unversioned
 	@git clean -Xdf
-	# remove all temporary folders
-	-rm -rf $(wildcard $(TMPPREFIX)*)
-	# clean close docker-compose
-	-docker-compose down
-	# remove all images
-	-docker image rm -f $(shell docker images $(DOCKER_IMAGE_NAME)* -q)
+	# removes all temporary folders
+	@-rm -rf $(wildcard $(TMPPREFIX)*)
+	# cleans close docker-compose
+	@-docker-compose down
 
+clean-images: .check_clean
+	# remove all images
+	-docker image rm -f $(shell docker images $(DOCKER_IMAGE_NAME)*:* -q)
+
+.check_clean:
+	@echo -n "Are you sure? [y/N] " && read ans && [ $${ans:-N} = y ]

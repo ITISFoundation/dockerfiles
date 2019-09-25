@@ -32,6 +32,9 @@ publish:  ## TODO: Tags images and pushes to dockerhub's registry
 	.venv/bin/pip install --upgrade pip setuptools wheel
 	.venv/bin/pip install pip-tools
 
-.PHONY: clean
-clean: ## Cleans all unversioned files in project
+.PHONY: clean .check_clean:
+clean: .check_clean: ## Cleans all unversioned files in project
 	@git clean -dxf
+
+.check_clean:
+	@echo -n "Are you sure? [y/N] " && read ans && [ $${ans:-N} = y ]
