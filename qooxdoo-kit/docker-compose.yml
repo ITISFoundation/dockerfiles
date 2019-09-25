@@ -1,0 +1,11 @@
+version: '3.7'
+services:
+  qooxdoo-kit:
+    image: ${DOCKER_REPO:-itisfoundation}/qooxdoo-kit:${VERSION:-latest}
+    # init: true See #11
+    volumes:
+      - ${PROJECT_DIR-.}:/project
+    ports:
+      - 8080:8080
+    working_dir: /project 
+    command: /bin/sh

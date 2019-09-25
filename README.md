@@ -54,3 +54,11 @@ Here some of the guidelines we have collected so far:
 
 10. If the "payload" has no explicit internal signal handling add tini as an init replacement (same effect as when running the docker with --init)
   https://github.com/krallin/tini
+
+
+## References
+
+Selection of publications worth reading on this topic:
+
+- [Docker & Makefile | X-Ops — sharing infra-as-code parts](https://itnext.io/docker-makefile-x-ops-sharing-infra-as-code-parts-ea6fa0d22946)
+- [Auto-documented makefiles](https://marmelab.com/blog/2016/02/29/auto-documented-makefile.html)
