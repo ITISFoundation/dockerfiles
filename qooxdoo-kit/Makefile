@@ -35,13 +35,12 @@ help: ## This help.
 # TODO: do this with docker instead! See https://github.com/ITISFoundation/dockerfiles/issues/12
 package-lock.json: package.json
 	# Updating package-lock.json
-	npm install --save-dev
-	-rm -rf node_modules
+	npm update --save-dev --package-lock-only
 
 # TODO:  make update-packages (see https://flaviocopes.com/update-npm-dependencies/)
 update-packages: ## updates dependencies and recreates package-lock.json
 	touch package.json
-	$(CMAKE) package-lock.json
+	$(MAKE) package-lock.json
 
 
 # Build the container
