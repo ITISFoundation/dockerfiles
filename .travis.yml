@@ -1,4 +1,4 @@
-dist: xenial
+dist: bionic
 env:
   global:
     - DOCKER_COMPOSE_VERSION=1.24.1
@@ -20,7 +20,7 @@ jobs:
       language: minimal
       sudo: required
       before_install:
-        - sudo bash ci/travis/build/rabbitmq before_install
+        - sudo bash ci/travis/build/rabbit-mq before_install
       install:
         - unbuffer bash ci/travis/build/rabbit-mq install
       before_script:
