@@ -1,5 +1,7 @@
 # dockerfiles
 
+[![Build Status](https://travis-ci.com/ITISFoundation/dockerfiles.svg?branch=master)](https://travis-ci.com/ITISFoundation/dockerfiles)
+
 A collection of curated dockefiles used to develop great software at the [IT'IS Foundation](https://itis.swiss/)
 
 ## Why?

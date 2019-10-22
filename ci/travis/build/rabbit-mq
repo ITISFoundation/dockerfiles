@@ -23,7 +23,7 @@ script() {
 
 after_success() {
     echo "build succeeded"
-    pushd rabbitmq; make info-images; popd
+    pushd rabbitmq; make info-image; popd
 }
 
 after_failure() {
