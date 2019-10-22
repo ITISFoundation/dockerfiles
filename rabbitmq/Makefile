@@ -1,5 +1,5 @@
-RABBIT_VERSION=3.8.0-management
-DOCKER_REGISTRY=itisfoundation
+RABBIT_VERSION  =3.8.0-management
+DOCKER_REGISTRY ?=itisfoundation
 
 VCS_URL          := $(shell git config --get remote.origin.url)
 VCS_REF          := $(shell git rev-parse --short HEAD)
