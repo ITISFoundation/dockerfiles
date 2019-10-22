@@ -17,6 +17,7 @@ jobs:
       # in pull request we do not have credentials to push, so this is useless
       if: NOT type = pull_request AND tag IS blank
       name: build images
+      language: minimal
       sudo: required
       before_install:
         - sudo bash ci/travis/build/rabbitmq before_install
