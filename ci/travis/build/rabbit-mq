@@ -6,8 +6,8 @@ IFS=$'\n\t'
 export DOCKER_REGISTRY=itisfoundation
 
 before_install() {
-    bash ops/travis/helpers/install_docker_compose;
-    bash ops/travis/helpers/show_system_versions;
+    bash ci/travis/helpers/install_docker_compose;
+    bash ci/travis/helpers/show_system_versions;
     env
 }
 
