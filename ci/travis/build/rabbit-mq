@@ -25,7 +25,7 @@ script() {
 
 after_success() {
     echo "build succeeded"
-    make info-images
+    pushd rabbitmq; make info-images; popd
 }
 
 after_failure() {
@@ -35,7 +35,7 @@ after_failure() {
 }
 
 deploy() {
-    make push
+    pushd rabbitmq; make push; popd
 }
 
 # Check if the function exists (bash specific)
