@@ -18,12 +18,12 @@ before_script() {
 }
 
 script() {
-    pushd rabbitmq; make build; popd
+    make -C rabbitmq build
 }
 
 after_success() {
     echo "build succeeded"
-    pushd rabbitmq; make info-image; popd
+    make -C rabbitmq info
 }
 
 after_failure() {
