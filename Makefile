@@ -1,69 +1,40 @@
 SHELL = /bin/bash
 
-##
-# Definitions.
-.SUFFIXES:
+# Environments
+export VCS_URL          := $(shell git config --get remote.origin.url)
+export VCS_REF          := $(shell git rev-parse --short HEAD)
+export BUILD_DATE       := $(shell date -u +"%Y-%m-%dT%H:%M:%SZ")
 
 
+## Targets ----
 
-## Tools.
-tools =
+.PHONY: help
+help: ## This help.
+	@sort $(MAKEFILE_LIST) | awk 'BEGIN {FS = ":.*?## "} /^[a-zA-Z_-.]+:.*?## / {printf "\033[36m%-20s\033[0m %s\n", $$1, $$2}' 
 
-ifeq ($(shell uname -s),Darwin)
-	SED = gsed
-else
-	SED = sed
-endif
-
-DOCKER = docker
-DOCKER_COMPOSE = docker-compose
-
-
-## Targets .
-.PHONY: .env
-.env:
-	@echo VCS_REF=$(shell git rev-parse --short HEAD)           >.env
-	@echo VCS_URL=$(shell git config --get remote.origin.url)  >>.env
-	@echo BUILD_DATE=$(shell date -u +"%Y-%m-%dT%H:%M:%SZ")    >>.env
-
-.PHONY: all
-# target: all – Builds all images
-all: build
+.DEFAULT_GOAL := help
 
 .PHONY: build
-# target: build – Builds all images (uses cache)
-build: .env 
-	${DOCKER_COMPOSE} build
+build:  ## Builds all images (uses cache)
+	docker-compose build
 
-.PHONY: rebuild
-# target: rebuild – Builds all images from scratch
-rebuild: .env 
-	${DOCKER_COMPOSE} build --no-cache
-
+.PHONY: build-nc
+build-nc: ## Builds all images from scratch
+	docker-compose build --no-cache
 
 .PHONY: deploy
-# target: deploy – Tags images and pushes to dockerhub's registry [TODO]
-deploy: .env 
+publish:  ## TODO: Tags images and pushes to dockerhub's registry
 	echo TODO: tagging images and pushing to dockerhub ...
-	#${DOCKER_COMPOSE} push
+	#docker-compose push
 
-
-.PHONY: clean
-# target: clean – Cleans all unversioned files in project
-clean:
-	@git clean -dxf
-
-
-.PHONY: tools
-tools:
+.venv: ## builds python environment and installs tooling for this repo
 	python3 -m venv .venv
 	.venv/bin/pip install --upgrade pip setuptools wheel
 	.venv/bin/pip install pip-tools
 
-.PHONY: help
-# target: help – Display all callable targets
-help:
-	@echo
-	@egrep "^\s*#\s*target\s*:\s*" [Mm]akefile \
-	| $(SED) -r "s/^\s*#\s*target\s*:\s*//g"
-	@echo
+.PHONY: clean .check_clean:
+clean: .check_clean: ## Cleans all unversioned files in project
+	@git clean -dxf
+
+.check_clean:
+	@echo -n "Are you sure? [y/N] " && read ans && [ $${ans:-N} = y ]
