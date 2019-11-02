@@ -1,10 +1,10 @@
 .DEFAULT_GOAL   := help
-RABBIT_VERSION  :=3.8.0-management
-DOCKER_REGISTRY ?=itisfoundation
+export RABBIT_VERSION  :=3.8.0-management
+export DOCKER_REGISTRY ?=itisfoundation
 
-VCS_URL         := $(shell git config --get remote.origin.url)
-VCS_REF         := $(shell git rev-parse --short HEAD)
-BUILD_DATE      := $(shell date -u +"%Y-%m-%dT%H:%M:%SZ")
+export VCS_URL         := $(shell git config --get remote.origin.url)
+export VCS_REF         := $(shell git rev-parse --short HEAD)
+export BUILD_DATE      := $(shell date -u +"%Y-%m-%dT%H:%M:%SZ")
 
 .PHONY: help
 help: ## displays targets
@@ -12,13 +12,7 @@ help: ## displays targets
 
 .PHONY: build
 build: ## builds image
-	@docker build --build-arg VERSION=$(RABBIT_VERSION) \
-		--label org.label-schema.schema-version=1.0 \
-        --label org.label-schema.build-date=${BUILD_DATE} \
-        --label org.label-schema.vcs-url=${VCS_URL} \
-        --label org.label-schema.vcs-ref=${VCS_REF} \
-		--tag $(DOCKER_REGISTRY)/rabbitmq:$(RABBIT_VERSION) \
-		$(CURDIR)
+	@docker-compose build
 
 .PHONY: push
 push: ## pushes image to Dockerhub
