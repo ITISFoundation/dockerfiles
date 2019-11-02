@@ -1,40 +1,52 @@
-SHELL = /bin/bash
+#
+#
+# Main targets for https://github.com/ITISFoundation/osparc-ops.git
+#
+#
+.DEFAULT_GOAL := help
+SHELL         := /bin/bash
 
 # Environments
 export VCS_URL          := $(shell git config --get remote.origin.url)
 export VCS_REF          := $(shell git rev-parse --short HEAD)
 export BUILD_DATE       := $(shell date -u +"%Y-%m-%dT%H:%M:%SZ")
 
+# TODO: all folders with a $(folder)/docker-compose.yml or $(folder)/.docker-compose-build.yml inside
+PROJECTS := \
+	devpi \
+	pip-kit \
+	python-with-pandas \
+	qooxdoo-kit \
+	rabbitmq
+
+docker_compose_configs = $(foreach folder,$(PROJECTS),$(CURDIR)/$(folder)/docker-compose.yml)
 
 ## Targets ----
-
 .PHONY: help
-help: ## This help.
-	@sort $(MAKEFILE_LIST) | awk 'BEGIN {FS = ":.*?## "} /^[a-zA-Z_-.]+:.*?## / {printf "\033[36m%-20s\033[0m %s\n", $$1, $$2}' 
+help: ## this colourful help
+	@awk 'BEGIN {FS = ":.*?## "} /^[a-zA-Z_-.]+:.*?## / {printf "\033[36m%-20s\033[0m %s\n", $$1, $$2}' $(MAKEFILE_LIST)
 
-.DEFAULT_GOAL := help
+.docker-compose-build.yml: $(docker_compose_configs)
+	docker-compose $(foreach dc,$^,-f $(dc)) config >$@
 
 .PHONY: build
-build:  ## Builds all images (uses cache)
-	docker-compose build
+build: .docker-compose-build.yml ## Builds all images (uses cache)
+	# building $$(PROJECTS)
+	docker-compose -f $< build --parallel
 
 .PHONY: build-nc
-build-nc: ## Builds all images from scratch
-	docker-compose build --no-cache
+build-nc: .docker-compose-build.yml ## Builds all images from scratch
+	docker-compose -f $< build --parallel --no-cache
 
-.PHONY: deploy
-publish:  ## TODO: Tags images and pushes to dockerhub's registry
-	echo TODO: tagging images and pushing to dockerhub ...
-	#docker-compose push
-
-.venv: ## builds python environment and installs tooling for this repo
+.PHONY: devenv
+devenv: .venv ## builds python environment and installs tooling for this repo
+.venv:
 	python3 -m venv .venv
 	.venv/bin/pip install --upgrade pip setuptools wheel
 	.venv/bin/pip install pip-tools
 
-.PHONY: clean .check_clean:
-clean: .check_clean: ## Cleans all unversioned files in project
+.PHONY: clean
+clean: ## Cleans all unversioned files in project
+	@echo -n "Are you sure? [y/N] " && read ans && [ $${ans:-N} = y ]
 	@git clean -dxf
 
-.check_clean:
-	@echo -n "Are you sure? [y/N] " && read ans && [ $${ans:-N} = y ]
