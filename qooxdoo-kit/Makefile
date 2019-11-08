@@ -1,4 +1,7 @@
-PREDEFINED_VARIABLES := $(.VARIABLES)
+#
+# qooxdoo-kit
+#
+.DEFAULT_GOAL := help
 
 DOCKER_REPO        = itisfoundation
 APP_NAME           = $(notdir $(PWD))
@@ -19,15 +22,10 @@ export QOOXDOO_FRAMEWORK_VERSION := $(shell jq '.dependencies."@qooxdoo/compiler
 export PUPPETEER_VERSION := $(shell jq '.dependencies."puppeteer".version'  package-lock.json)
 
 
-
-
 .PHONY: help
 # thanks to https://marmelab.com/blog/2016/02/29/auto-documented-makefile.html
 help: ## This help.
 	@awk 'BEGIN {FS = ":.*?## "} /^[a-zA-Z_-]+:.*?## / {printf "\033[36m%-20s\033[0m %s\n", $$1, $$2}' $(MAKEFILE_LIST)
-
-.DEFAULT_GOAL := help
-
 
 
 .PHONY: update-packages
@@ -37,11 +35,10 @@ package-lock.json: package.json
 	# Updating package-lock.json
 	npm update --save-dev --package-lock-only
 
-# TODO:  make update-packages (see https://flaviocopes.com/update-npm-dependencies/)
+# TODO:  Requires installing and running npm! make update-packages (see https://flaviocopes.com/update-npm-dependencies/)
 update-packages: ## updates dependencies and recreates package-lock.json
 	touch package.json
 	$(MAKE) package-lock.json
-
 
 # Build the container
 .PHONY: build build-nc
@@ -68,10 +65,10 @@ shell: ## opens shell in container
 
 
 .PHONY: test
-test: ## tests 
+test: ## tests
 	# Executes tests/run.sh
 	cp -r tests $(TMPDIR)
-	@export VERSION=lastbuild; 
+	@export VERSION=lastbuild;
 	export PROJECT_DIR=$(TMPDIR);\
 	docker-compose run $(APP_NAME) /bin/sh ./tests/run.sh
 
@@ -81,11 +78,11 @@ test: ## tests
 
 tag: .tag-latest .tag-version ## Generate container tags for the `{version}` and `latest` tags
 
-.tag-latest: 
+.tag-latest:
 	# Generate container `latest` tag
 	docker tag $(DOCKER_IMAGE_NAME):lastbuild $(DOCKER_IMAGE_NAME):latest
 
-.tag-version: 
+.tag-version:
 	# Generate container `$(DOCKER_IMAGE_TAG)` tag
 	docker tag $(DOCKER_IMAGE_NAME):lastbuild $(DOCKER_IMAGE_NAME):$(DOCKER_IMAGE_TAG)
 	@echo $(DOCKER_IMAGE_TAG) >.TAG
@@ -96,11 +93,11 @@ PHONY: publish publish-latest publish-version release
 
 publish: .publish-latest .publish-version ## Publish the `{version}` and `latest` tagged containers to ECR
 
-.publish-latest: .tag-latest 
+.publish-latest: .tag-latest
 	# Publish the `latest` tagged container to `$(DOCKER_REPO)`
 	docker push $(DOCKER_IMAGE_NAME):latest
 
-.publish-version: .tag-version 
+.publish-version: .tag-version
 	# Publish the $(shell cat .TAG) tagged to `$(DOCKER_REPO)`
 	docker push $(DOCKER_IMAGE_NAME):$(shell cat .TAG)
 
@@ -109,32 +106,27 @@ release: publish ## Tags lastbuild and pushes `{version}` and `latest` to ECR
 
 
 # Misc tools
-.PHONY: info 
+.PHONY: info
 info: ## shows info
 	# Labels in `$(DOCKER_IMAGE_NAME):lastbuild` image (metadata)
 	@docker image inspect $(DOCKER_IMAGE_NAME):lastbuild | jq .[0].ContainerConfig.Labels
-	# Tagged images 
+	# Tagged images
 	@docker images $(DOCKER_IMAGE_NAME)*:*
 
-info-vars: ## info to debug makefile
-	$(info # Variables)
-	$(foreach v,                                                                           \
-		$(filter-out $(PREDEFINED_VARIABLES) PREDEFINED_VARIABLES, $(sort $(.VARIABLES))), \
-		$(info $(v)=$($(v)))                                                               \
-	)
-
-.PHONY: clean clean-images .check_clean
-clean: .check_clean
-	# cleans unversioned
+.PHONY: clean
+clean:
+	@git clean -nXdf
+	@echo -n "Are you sure? [y/N] " && read ans && [ $${ans:-N} = y ]
+	# cleaning unversioned
 	@git clean -Xdf
 	# removes all temporary folders
 	@-rm -rf $(wildcard $(TMPPREFIX)*)
 	# cleans close docker-compose
 	@-docker-compose down
 
-clean-images: .check_clean
-	# remove all images
+.PHONY: clean-images
+clean-images:
+	# remove all images as $(DOCKER_IMAGE_NAME)*:*
+	@echo -n "Are you sure? [y/N] " && read ans && [ $${ans:-N} = y ]
 	-docker image rm -f $(shell docker images $(DOCKER_IMAGE_NAME)*:* -q)
 
-.check_clean:
-	@echo -n "Are you sure? [y/N] " && read ans && [ $${ans:-N} = y ]
