@@ -23,7 +23,7 @@ docker_compose_configs = $(foreach folder,$(PROJECTS),$(CURDIR)/$(folder)/docker
 
 ## Targets ----
 .PHONY: help
-help: ## this colourful help
+help: ## This colourful help
 	@awk 'BEGIN {FS = ":.*?## "} /^[a-zA-Z_-.]+:.*?## / {printf "\033[36m%-20s\033[0m %s\n", $$1, $$2}' $(MAKEFILE_LIST)
 
 .docker-compose-build.yml: $(docker_compose_configs)
@@ -39,7 +39,7 @@ build-nc: .docker-compose-build.yml ## Builds all images from scratch
 	docker-compose -f $< build --parallel --no-cache
 
 .PHONY: devenv
-devenv: .venv ## builds python environment and installs tooling for this repo
+devenv: .venv ##  Nuilds python environment and installs some tooling for operations
 .venv:
 	python3 -m venv .venv
 	.venv/bin/pip install --upgrade pip setuptools wheel
