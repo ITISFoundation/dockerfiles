@@ -1,0 +1,22 @@
+version: '3.7'
+services:
+  devpi:
+    image: itisfoundation/devpi:latest
+    build:
+      context: .
+      labels:
+        org.label-schema.schema-version: "1.0"
+        org.label-schema.build-date: "${BUILD_DATE}"
+        org.label-schema.vcs-url: "${VCS_URL}"
+        org.label-schema.vcs-ref: "${VCS_REF}"
+    working_dir: /data
+    volumes:
+      - ./data:/data
+    ports:
+      - 31411:31411
+    environment:
+      DEVPISERVER_DEVPI_LDAP_URL: ldaps://ds1.example.com
+      DEVPISERVER_DEVPI_USER_TEMPLATE: uid={username},ou=users,dc=example,dc=com
+      DEVPISERVER_DEVPI_GROUP_SEARCH_BASE: ou=groups,dc=example,dc=com
+      DEVPISERVER_DEVPI_GROUP_FILTER: (&(objectClass=posixGroup)(memberUid={username}))
+      DEVPISERVER_DEVPI_GROUP_ATTRIBUTE_NAME: uid
