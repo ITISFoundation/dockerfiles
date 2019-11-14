@@ -12,7 +12,25 @@ addons:
 
 jobs:
   include:
-    # build images ----------------------------------------------------------------------
+    - stage: test
+      name: devpi
+      language: python
+      python:
+        - "3.6"
+        - "3.7"
+      cache: pip
+      before_install:
+        - sudo bash ci/travis/unit-testing/deployment-agent before_install
+      install:
+        - unbuffer bash ci/travis/unit-testing/deployment-agent install
+      before_script:
+        - unbuffer bash ci/travis/unit-testing/deployment-agent before_script
+      script:
+        - unbuffer bash ci/travis/unit-testing/deployment-agent script
+      after_success:
+        - unbuffer bash ci/travis/unit-testing/deployment-agent after_success
+        
+        # build images ----------------------------------------------------------------------
     - stage: build
       # in pull request we do not have credentials to push, so this is useless
       if: NOT type = pull_request AND tag IS blank
@@ -37,3 +55,6 @@ jobs:
           script: unbuffer bash ci/travis/build/rabbit-mq deploy
           on:
             all_branches: true
+
+
+
