@@ -23,15 +23,15 @@ jobs:
         - "3.7"
       cache: pip
       before_install:
-        - sudo bash ci/build/devpi before_install
+        - sudo bash ci/travis/build/devpi before_install
       install:
-        - unbuffer bash ci/build/devpi install
+        - unbuffer bash ci/travis/build/devpi install
       before_script:
-        - unbuffer bash ci/build/devpi before_script
+        - unbuffer bash ci/travis/build/devpi before_script
       script:
-        - unbuffer bash ci/build/devpi script
+        - unbuffer bash ci/travis/build/devpi script
       after_success:
-        - unbuffer bash ci/build/devpi after_success
+        - unbuffer bash ci/travis/build/devpi after_success
         
     - stage: build
       # in pull request we do not have credentials to push, so this is useless
@@ -65,15 +65,15 @@ jobs:
         - "3.7"
       cache: pip
       before_install:
-        - sudo bash ci/tests/devpi before_install
+        - sudo bash ci/travis/tests/devpi before_install
       install:
-        - unbuffer bash ci/tests/devpi install
+        - unbuffer bash ci/travis/tests/devpi install
       before_script:
-        - unbuffer bash ci/tests/devpi before_script
+        - unbuffer bash ci/travis/tests/devpi before_script
       script:
-        - unbuffer bash ci/tests/devpi script
+        - unbuffer bash ci/travis/tests/devpi script
       after_success:
-        - unbuffer bash ci/tests/devpi after_success
+        - unbuffer bash ci/travis/tests/devpi after_success
 
     - stage: release
       name: devpi release
@@ -82,12 +82,12 @@ jobs:
         - "3.7"
       cache: pip
       before_install:
-        - sudo bash ci/release/devpi before_install
+        - sudo bash ci/travis/release/devpi before_install
       install:
-        - unbuffer bash ci/release/devpi install
+        - unbuffer bash ci/travis/release/devpi install
       before_script:
-        - unbuffer bash ci/release/devpi before_script
+        - unbuffer bash ci/travis/release/devpi before_script
       script:
-        - unbuffer bash ci/release/devpi script
+        - unbuffer bash ci/travis/release/devpi script
       after_success:
-        - unbuffer bash ci/release/devpi after_success
+        - unbuffer bash ci/travis/release/devpi after_success
