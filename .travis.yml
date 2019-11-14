@@ -10,27 +10,33 @@ addons:
       - docker-ce
       - expect-dev # for unbuffer: brings color back into travis logs
 
+
+stages:
+  - build
+  - test
+  - release
+
 jobs:
   include:
-    - stage: test
+      
+    - stage: build
+      if: branch = master
       name: devpi
       language: python
       python:
-        - "3.6"
         - "3.7"
       cache: pip
       before_install:
-        - sudo bash ci/travis/unit-testing/deployment-agent before_install
+        - sudo bash ci/build/devpi before_install
       install:
-        - unbuffer bash ci/travis/unit-testing/deployment-agent install
+        - unbuffer bash ci/build/devpi install
       before_script:
-        - unbuffer bash ci/travis/unit-testing/deployment-agent before_script
+        - unbuffer bash ci/build/devpi before_script
       script:
-        - unbuffer bash ci/travis/unit-testing/deployment-agent script
+        - unbuffer bash ci/build/devpi script
       after_success:
-        - unbuffer bash ci/travis/unit-testing/deployment-agent after_success
+        - unbuffer bash ci/build/devpi after_success
         
-        # build images ----------------------------------------------------------------------
     - stage: build
       # in pull request we do not have credentials to push, so this is useless
       if: NOT type = pull_request AND tag IS blank
@@ -56,5 +62,39 @@ jobs:
           on:
             all_branches: true
 
+    - stage: test
+          if: branch = master
+          name: devpi test
+          language: python
+          python:
+            - "3.7"
+          cache: pip
+          before_install:
+            - sudo bash ci/tests/devpi before_install
+          install:
+            - unbuffer bash ci/tests/devpi install
+          before_script:
+            - unbuffer bash ci/tests/devpi before_script
+          script:
+            - unbuffer bash ci/tests/devpi script
+          after_success:
+            - unbuffer bash ci/tests/devpi after_success
 
 
+    - stage: release
+          if: branch = master
+          name: devpi release
+          language: python
+          python:
+            - "3.7"
+          cache: pip
+          before_install:
+            - sudo bash ci/release/devpi before_install
+          install:
+            - unbuffer bash ci/release/devpi install
+          before_script:
+            - unbuffer bash ci/release/devpi before_script
+          script:
+            - unbuffer bash ci/release/devpi script
+          after_success:
+            - unbuffer bash ci/release/devpi after_success
