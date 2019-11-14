@@ -9,8 +9,6 @@ addons:
     packages:
       - docker-ce
       - expect-dev # for unbuffer: brings color back into travis logs
-
-
 stages:
   - build
   - test
@@ -18,7 +16,6 @@ stages:
 
 jobs:
   include:
-      
     - stage: build
       name: devpi
       language: python
@@ -62,36 +59,35 @@ jobs:
             all_branches: true
 
     - stage: test
-          name: devpi test
-          language: python
-          python:
-            - "3.7"
-          cache: pip
-          before_install:
-            - sudo bash ci/tests/devpi before_install
-          install:
-            - unbuffer bash ci/tests/devpi install
-          before_script:
-            - unbuffer bash ci/tests/devpi before_script
-          script:
-            - unbuffer bash ci/tests/devpi script
-          after_success:
-            - unbuffer bash ci/tests/devpi after_success
-
+      name: devpi test
+      language: python
+      python:
+        - "3.7"
+      cache: pip
+      before_install:
+        - sudo bash ci/tests/devpi before_install
+      install:
+        - unbuffer bash ci/tests/devpi install
+      before_script:
+        - unbuffer bash ci/tests/devpi before_script
+      script:
+        - unbuffer bash ci/tests/devpi script
+      after_success:
+        - unbuffer bash ci/tests/devpi after_success
 
     - stage: release
-          name: devpi release
-          language: python
-          python:
-            - "3.7"
-          cache: pip
-          before_install:
-            - sudo bash ci/release/devpi before_install
-          install:
-            - unbuffer bash ci/release/devpi install
-          before_script:
-            - unbuffer bash ci/release/devpi before_script
-          script:
-            - unbuffer bash ci/release/devpi script
-          after_success:
-            - unbuffer bash ci/release/devpi after_success
+      name: devpi release
+      language: python
+      python:
+        - "3.7"
+      cache: pip
+      before_install:
+        - sudo bash ci/release/devpi before_install
+      install:
+        - unbuffer bash ci/release/devpi install
+      before_script:
+        - unbuffer bash ci/release/devpi before_script
+      script:
+        - unbuffer bash ci/release/devpi script
+      after_success:
+        - unbuffer bash ci/release/devpi after_success
