@@ -20,7 +20,6 @@ jobs:
   include:
       
     - stage: build
-      if: branch = master
       name: devpi
       language: python
       python:
@@ -63,7 +62,6 @@ jobs:
             all_branches: true
 
     - stage: test
-          if: branch = master
           name: devpi test
           language: python
           python:
@@ -82,7 +80,6 @@ jobs:
 
 
     - stage: release
-          if: branch = master
           name: devpi release
           language: python
           python:
