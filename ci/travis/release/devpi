@@ -19,10 +19,6 @@ before_script() {
 }
 
 script() {
-    test="$DOCKER_PASSWORD"
-    echo "$test"
-    test2="$DOCKER_USERNAME"
-    echo "$test2"
     echo "$DOCKER_PASSWORD" | docker login -u "$DOCKER_USERNAME" --password-stdin;
     pushd devpi; make release; popd
 }
