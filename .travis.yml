@@ -24,7 +24,7 @@ jobs:
         - "3.7"
       cache: pip
       before_install:
-        - sudo bash ci/travis/build/devpi before_install || travis_terminate 0
+        - sudo bash ci/travis/build/devpi before_install || travis_terminate 0 # before-install countains a script that check if any changes have been made in the repo'folder. If not the build is stopped
       install:
         - unbuffer bash ci/travis/build/devpi install
       before_script:
@@ -37,7 +37,7 @@ jobs:
     - stage: build
       # in pull request we do not have credentials to push, so this is useless
       if: NOT type = pull_request AND tag IS blank
-      name: build images
+      name: build rabbit-mq
       language: minimal
       sudo: required
       before_install:
