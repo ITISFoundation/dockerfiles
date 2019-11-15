@@ -24,7 +24,7 @@ jobs:
         - "3.7"
       cache: pip
       before_install:
-        - sudo bash ci/travis/build/devpi before_install
+        - sudo bash ci/travis/build/devpi before_install || travis_terminate 0
       install:
         - unbuffer bash ci/travis/build/devpi install
       before_script:
@@ -41,7 +41,7 @@ jobs:
       language: minimal
       sudo: required
       before_install:
-        - sudo bash ci/travis/build/rabbit-mq before_install
+        - sudo bash ci/travis/build/rabbit-mq before_install || travis_terminate 0
       install:
         - unbuffer bash ci/travis/build/rabbit-mq install
       before_script:

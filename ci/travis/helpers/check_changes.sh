@@ -14,8 +14,8 @@ LATEST_COMMIT_IN_PATH=$(git log -1 --format=format:%H --full-diff $PATH_TO_SEARC
 if [ $LATEST_COMMIT != $LATEST_COMMIT_IN_PATH ]; then
     echo "Exiting this job because code in the following path have not changed:"
     echo $PATH_TO_SEARCH
-    return 1
+    exit 1
 fi
 
 echo "Paths have changed, the build will be deployed"
-return
+exit 0
