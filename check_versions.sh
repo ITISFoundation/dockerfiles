@@ -34,6 +34,6 @@ if $(version_gt $APP_USER_VERSION $LAST_VERSION); then
      echo "From $LAST_VERSION to $APP_USER_VERSION"
      exit 0;
 else
-     echo "There is a problem in your versionning, the last version on the repository is $LAST_VERSION and you are trying to push the version $APP_USER_VERSION"
+     echo "There is a problem in your versionning, the last version on the repository is $LAST_VERSION and you are trying to push the version $APP_USER_VERSION" >&2
      exit 1;
 fi

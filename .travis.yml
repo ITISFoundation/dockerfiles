@@ -10,15 +10,21 @@ addons:
       - docker-ce
       - expect-dev # for unbuffer: brings color back into travis logs
 stages:
+  - builddevpi
+  - testdevpi
+  - releasedevpi
+
+stages:
   - build
-  - test
+  - testd
   - release
 
 jobs:
   include:
-    - stage: build
+    - stage: builddevpi
       name: devpi
       language: python
+      sudo: required
       python:
         - "3.7"
       cache: pip
@@ -58,9 +64,10 @@ jobs:
           on:
             all_branches: true
 
-    - stage: test
+    - stage: testdevpi
       name: devpi test
       language: python
+      sudo: required
       python:
         - "3.7"
       cache: pip
@@ -75,9 +82,10 @@ jobs:
       after_success:
         - unbuffer bash ci/travis/tests/devpi after_success
 
-    - stage: release
+    - stage: releasedevpi
       name: devpi release
       language: python
+      sudo: required
       python:
         - "3.7"
       cache: pip
