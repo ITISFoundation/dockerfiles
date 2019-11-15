@@ -24,7 +24,7 @@ jobs:
         - "3.7"
       cache: pip
       before_install:
-        - sudo bash ci/travis/build/devpi before_install
+        - sudo exec ci/travis/build/devpi before_install
       install:
         - unbuffer bash ci/travis/build/devpi install
       before_script:

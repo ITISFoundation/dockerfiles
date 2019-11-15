@@ -7,6 +7,7 @@ before_install() {
     bash ci/travis/helpers/install_docker_compose;
     bash ci/travis/helpers/show_system_versions;
     env
+    bash ci/travis/helpers/check_changes.sh devpi/;
 }
 
 install() {
@@ -14,7 +15,7 @@ install() {
 }
 
 before_script() {
-    bash ci/travis/helpers/check_changes.sh devpi/;
+    echo "nothing to do..."
 }
 
 script() {

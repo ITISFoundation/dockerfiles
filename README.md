@@ -64,3 +64,12 @@ Selection of publications worth reading on this topic:
 
 - [Docker & Makefile | X-Ops — sharing infra-as-code parts](https://itnext.io/docker-makefile-x-ops-sharing-infra-as-code-parts-ea6fa0d22946)
 - [Auto-documented makefiles](https://marmelab.com/blog/2016/02/29/auto-documented-makefile.html)
+
+
+## In case a new project is added to this repo, follows this steps to make it conpliant with the Travis worklow
+
+1. Create a folder and give to this folder the name of your project. Inside of this folder have to be present :
+  1. A docker-compose.yml file
+  2. A Makefile with the usual commands (build, build-nc, test, up, down, tag, release, info, clean). Recommanded thing to do is to copy a Makefile fron another project of the repo.
+  3. A VERSION file. This file is MANDATORY as it is used for the tag system that will tag the docker'images before sending them to Docker'hub. The versionning MUST follow this format : X.X.X , example : 1.5.6
+  4. 

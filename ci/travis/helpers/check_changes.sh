@@ -2,8 +2,7 @@
 # As this repo is following the Monorepo pattern, we want to avoid that Travis make a build for every projects each time one project is updated
 # This script check if one project has been updated.
 #
-# 1. Get all the arguments of the script
-# https://unix.stackexchange.com/a/197794
+
 PATH_TO_SEARCH="$1"
 
 # 3. Get the latest commit
@@ -17,3 +16,5 @@ if [ $LATEST_COMMIT != $LATEST_COMMIT_IN_PATH ]; then
     echo $PATH_TO_SEARCH
     travis_terminate 0
 fi
+
+echo "Paths have changed, the build will be deployed"
