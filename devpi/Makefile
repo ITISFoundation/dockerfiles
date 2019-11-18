@@ -1,6 +1,6 @@
 PREDEFINED_VARIABLES := $(.VARIABLES)
 
-DOCKER_REPO        = allexandre
+DOCKER_REPO        = itisfoundation
 APP_NAME           = $(notdir $(PWD))
 DOCKER_IMAGE_NAME  = $(DOCKER_REPO)/$(APP_NAME)
 DOCKER_IMAGE_VERSION_FULL = $(shell cat VERSION)
