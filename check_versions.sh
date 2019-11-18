@@ -1,5 +1,8 @@
 #!/bin/bash
-set -e
+# http://redsymbol.net/articles/unofficial-bash-strict-mode/
+set -euo pipefail
+IFS=$'\n\t'
+
 #
 # This script compare the version given in parameter to the latest version present in the repository. Fail if the given version <= repository version
 #
@@ -24,14 +27,13 @@ LAST_DIGEST=$(curl -s "https://hub.docker.com/v2/repositories/$DOCKER_REPO/$APP_
 
 # List of tags based on the last digest
 TAGS_LAST_DIGEST=$(curl -s "https://hub.docker.com/v2/repositories/$DOCKER_REPO/$APP_NAME/tags" | jq -c ".results | map(select( any(.images[]; .digest==$LAST_DIGEST)))")
-
 LAST_VERSION=$( echo $TAGS_LAST_DIGEST | jq -c '.[] | select(.name|test("^([0-9]+).([0-9]+).([0-9]+)")) | .name' | tr -d \")
 
 echo "The last version on the repo is currently : $LAST_VERSION"
 
 
 if $(version_gt $APP_USER_VERSION $LAST_VERSION); then
-     echo "From $LAST_VERSION to $APP_USER_VERSION"
+     echo "A release would update from $LAST_VERSION to $APP_USER_VERSION on Dockerhub."
      exit 0;
 else
      echo "There is a problem in your versionning, the last version on the repository is $LAST_VERSION and you are trying to push the version $APP_USER_VERSION" >&2

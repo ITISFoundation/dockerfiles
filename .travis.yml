@@ -78,6 +78,7 @@ jobs:
         - unbuffer bash ci/travis/tests/devpi after_success
 
     - stage: release
+      if: NOT type = pull_request and branch = master
       name: devpi release
       language: python
       sudo: required
@@ -94,3 +95,5 @@ jobs:
         - unbuffer bash ci/travis/release/devpi script
       after_success:
         - unbuffer bash ci/travis/release/devpi after_success
+      
+      

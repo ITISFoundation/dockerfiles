@@ -1,6 +1,11 @@
+#!/bin/bash
+# http://redsymbol.net/articles/unofficial-bash-strict-mode/
+set -euo pipefail
+IFS=$'\n\t'
+
 #
 # As this repo follows the Monorepo pattern, we want to avoid that Travis make a build for every projects each time one project is updated
-# This script check if one project has been updated. Thanks to https://travis-ci.community/t/how-to-skip-jobs-based-on-the-files-changed-in-a-subdirectory/2979/11
+# This script checks if one project has been updated. Thanks to https://travis-ci.community/t/how-to-skip-jobs-based-on-the-files-changed-in-a-subdirectory/2979/11
 #
 
 PATH_TO_SEARCH="$1"

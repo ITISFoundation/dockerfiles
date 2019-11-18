@@ -57,6 +57,19 @@ Here some of the guidelines we have collected so far:
 10. If the "payload" has no explicit internal signal handling add tini as an init replacement (same effect as when running the docker with --init)
   https://github.com/krallin/tini
 
+11. You MUST change your version file for each Pull request following the  [Semantic Versioning](https://semver.org/)
+
+
+## Travis workflow
+
+
+![worklow](ci/travis/doc/worflow.PNG)
+
+
+## Starting a new project in this repository
+
+Follow the README in the folder example-config.
+
 
 ## References
 
@@ -66,13 +79,3 @@ Selection of publications worth reading on this topic:
 - [Auto-documented makefiles](https://marmelab.com/blog/2016/02/29/auto-documented-makefile.html)
 
 
-## Requirements for each project 
-
-You can take the files from the folder DEVPI which is following all the requirements. 
-
-1. Create a folder and give to this folder the name of your project. At the root of this folder have to be present :
-   1. A docker-compose.yml file (MANDATORY)
-   2. A Makefile with the usual commands (build, build-nc, test, up, down, tag, release, info, clean). (MANDATORY)
-   3. A VERSION file. This file is MANDATORY as it is used for the tag system that will tag the docker'images before sending them to Docker'hub. The versioning MUST follow this format : X.X.X , example : 1.5.6
-   4. A test folder (RECOMMANDED)
-   5. A Dockerfile (Mandatory)
