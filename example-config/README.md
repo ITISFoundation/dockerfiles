@@ -14,5 +14,6 @@
 ## Guidelines once your project has been set
 
 1. You MUST change your version file for each Pull request following the  [Semantic Versioning](https://semver.org/)
+3. The VERSION file MUST follows the following format : x.x.x, e.g. 1.5.3
 2. You SHOULD have some tests in the folder test. 
 
