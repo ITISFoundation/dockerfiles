@@ -63,7 +63,7 @@ Here some of the guidelines we have collected so far:
 ## Travis workflow
 
 
-![worklow](ci/travis/doc/worflow.PNG)
+![worklow](ci/travis/doc/workflow.PNG)
 
 
 ## Starting a new project in this repository
