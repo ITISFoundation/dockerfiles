@@ -12,20 +12,13 @@ This repo keeps a curated list of dockerfiles that are continuously deployed int
 
 ## Usage
 
-#### Running tools
-
-```console
-$ docker run -it itisfoundation/pip-kit --help
-```
-
-#### Developing
-
 ```console
 $ make help
-all – Builds all images
-build – Builds all images
-clean – Cleans all unversioned files in project
-help – Display all callable targets
+help                 This colourful help
+build                Builds all images (uses cache)
+build-nc             Builds all images from scratch
+devenv               Builds python environment and installs some tooling for operations
+clean                Cleans all unversioned files in project
 ```
 
 ## Guidelines
@@ -38,11 +31,13 @@ Here some of the guidelines we have collected so far:
 
 2. Every image MUST include some of the labels defined in [label-schema.org](http://label-schema.org/rc1/)
 
-3. One of the image names MUST be formatted as ``itisfoundation/${folder-name}:${tag}``
+3. One of the image names MUST be formatted as ``itisfoundation/${folder-name}:${tag}``.
 
-4. Every image MUST build from ``make build`` (see [docker-compose](docker-compose.yaml))
+4. Releases MUST be tagged according to [semantic versioning](https://semver.org/) and the corresponding alias (e.g. ``latest``, ``X.Y``, etc)
 
-5. Containers SHALL not address many applications at once
+5. Every image MUST build from ``make build``
+
+6. Containers SHALL not address many applications at once
 
    1. One application per container is the prefered setup. E.g. the ``cookiecutter`` containers runs the application with the same name
 

@@ -9,9 +9,6 @@
 [itis.dockerhub]:https://img.shields.io/website/https/hub.docker.com/u/itisfoundation.svg?down_color=red&label=dockerhub%20repos&up_color=green
 <!---------------------------->
 
-
-TODO: https://github.com/ITISFoundation/osparc-simcore/issues/572
-
 ## Content
 
 - [qooxdoo] compiler
