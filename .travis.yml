@@ -18,7 +18,7 @@ jobs:
   include:
     - stage: build
       name: devpi
-      language: python
+      language: minimal
       sudo: required
       python:
         - "3.7"
@@ -61,7 +61,7 @@ jobs:
 
     - stage: test
       name: devpi test
-      language: python
+      language: minimal
       sudo: required
       python:
         - "3.7"
@@ -80,7 +80,7 @@ jobs:
     - stage: release
       if: NOT type = pull_request and branch = master
       name: devpi release
-      language: python
+      language: minimal
       sudo: required
       python:
         - "3.7"
