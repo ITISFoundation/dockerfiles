@@ -1,29 +1,18 @@
-RABBIT_VERSION  =3.8.0-management
-DOCKER_REGISTRY ?=itisfoundation
+.DEFAULT_GOAL   := help
+export RABBIT_VERSION  :=3.8.0-management
+export DOCKER_REGISTRY ?=itisfoundation
 
-VCS_URL          := $(shell git config --get remote.origin.url)
-VCS_REF          := $(shell git rev-parse --short HEAD)
-BUILD_DATE       := $(shell date -u +"%Y-%m-%dT%H:%M:%SZ")
+export VCS_URL         := $(shell git config --get remote.origin.url)
+export VCS_REF         := $(shell git rev-parse --short HEAD)
+export BUILD_DATE      := $(shell date -u +"%Y-%m-%dT%H:%M:%SZ")
 
 .PHONY: help
 help: ## displays targets
-ifeq ($(IS_WIN),)
-	@awk 'BEGIN {FS = ":.*?## "} /^[a-zA-Z_-]+:.*?## / {printf "\033[36m%-20s\033[0m %s\n", $$1, $$2}' $(MAKEFILE_LIST)
-else
 	@awk 'BEGIN {FS = ":.*?## "} /^[a-zA-Z_-]+:.*?## / {printf "%-20s %s\n", $$1, $$2}' $(MAKEFILE_LIST)
-endif
-
-.DEFAULT_GOAL := help
 
 .PHONY: build
 build: ## builds image
-	@docker build --build-arg VERSION=$(RABBIT_VERSION) \
-		--label org.label-schema.schema-version=1.0 \
-        --label org.label-schema.build-date=${BUILD_DATE} \
-        --label org.label-schema.vcs-url=${VCS_URL} \
-        --label org.label-schema.vcs-ref=${VCS_REF} \
-		--tag $(DOCKER_REGISTRY)/rabbitmq:$(RABBIT_VERSION) \
-		.
+	@docker-compose build
 
 .PHONY: push
 push: ## pushes image to Dockerhub
@@ -38,8 +27,7 @@ define show-meta
 		docker image inspect $(iid) | jq '.[0] | .RepoTags, .ContainerConfig.Labels';)
 endef
 
-
-.PHONY: info-image
-info-image: ## gives some information about the docker image
+.PHONY: info
+info: ## gives some information about the docker image
 	@docker images */rabbitmq:*;\
 	$(call show-meta,rabbitmq)

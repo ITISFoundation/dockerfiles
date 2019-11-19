@@ -1,0 +1,13 @@
+version: '3.7'
+services:
+  python-with-pandas:
+    image: ${DOCKER_REGISTRY}/rabbitmq:${RABBIT_VERSION}
+    build:
+      context: .
+      labels:
+        org.label-schema.schema-version: "1.0"
+        org.label-schema.build-date: "${BUILD_DATE}"
+        org.label-schema.vcs-url: "${VCS_URL}"
+        org.label-schema.vcs-ref: "${VCS_REF}"
+      args:
+        - VERSION=${RABBIT_VERSION}
