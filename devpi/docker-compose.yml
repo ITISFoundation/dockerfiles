@@ -11,6 +11,11 @@ services:
         org.label-schema.build-date: "${BUILD_DATE}"
         org.label-schema.vcs-url: "${VCS_URL}"
         org.label-schema.vcs-ref: "${VCS_REF}"
+        swiss.itis.dockerfiles.devpi.devpi-server-version  : "${DEVPI-SERVER_VERSION}"
+        swiss.itis.dockerfiles.devpi.devpi-web-version : "${DEVPI-WEB_VERSION}"
+        swiss.itis.dockerfiles.devpi.devpi-client-version : "${DEVPI-CLIENT_VERSION}"
+        swiss.itis.dockerfiles.devpi.devpi-cleaner-version : "${DEVPI-CLEANER_VERSION}"
+        swiss.itis.dockerfiles.devpi.devpi-ldap-version : "${DEVPI-LDAP_VERSION}"
     working_dir: /data
     volumes:
       - ./data:/data

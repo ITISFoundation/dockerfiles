@@ -16,15 +16,21 @@ export VCS_URL    := $(shell git config --get remote.origin.url)
 export VCS_REF    := $(shell git rev-parse --short HEAD)
 export BUILD_DATE := $(shell date -u +"%Y-%m-%dT%H:%M:%SZ")
 export DOCKER_REPO := $(DOCKER_REPO)
+export DEVPI-SERVER_VERSION  := $(shell grep -Eo "devpi-server==[0-9]+\.[0-9]+\.[0-9]" Dockerfile | grep -Eo "[0-9]+\.[0-9]+\.[0-9]")
+export DEVPI-WEB_VERSION  := $(shell grep -Eo "devpi-web==[0-9]+\.[0-9]+\.[0-9]" Dockerfile | grep -Eo "[0-9]+\.[0-9]+\.[0-9]")
+export DEVPI-CLIENT_VERSION  := $(shell grep -Eo "devpi-client==[0-9]+\.[0-9]+\.[0-9]" Dockerfile | grep -Eo "[0-9]+\.[0-9]+\.[0-9]")
+export DEVPI-CLEANER_VERSION  := $(shell grep -Eo "devpi-cleaner==[0-9]+\.[0-9]+\.[0-9]" Dockerfile | grep -Eo "[0-9]+\.[0-9]+\.[0-9]")
+export DEVPI-LDAP_VERSION  := $(shell grep -Eo "devpi-ldap==[0-9]+\.[0-9]+\.[0-9]" Dockerfile | grep -Eo "[0-9]+\.[0-9]+\.[0-9]")
+
+
 
 
 .PHONY: help
 # thanks to https://marmelab.com/blog/2016/02/29/auto-documented-makefile.html
 help: ## This help.
 	@awk 'BEGIN {FS = ":.*?## "} /^[a-zA-Z_-]+:.*?## / {printf "\033[36m%-20s\033[0m %s\n", $$1, $$2}' $(MAKEFILE_LIST)
-
+ 
 .DEFAULT_GOAL := help
-
 
 # Build the container
 .PHONY: build build-nc
