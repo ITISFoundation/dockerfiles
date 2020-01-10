@@ -7,9 +7,8 @@ Node-based container with
 ## Usage
 
 ```sh
-docker pull itisfoundation/openapi-kit
-docker run -v /local/path/to/folderWhereMyYamlFileExists:/spec itisfoundation/openapi-kit validate /api/spec/openapi.yaml
+make build
+make test
 ```
-
 
 Based in https://github.com/kelvintaywl/swagger-cli-docker
