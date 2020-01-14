@@ -48,7 +48,7 @@ build-nc: .docker-compose-build.yml ## Builds all images from scratch
 		setuptools \
 		wheel
 
-devenv: .venv ##  Builds python environment and installs some tooling for operations
+devenv: .venv ##  Builds python environment and installs some tooling for operations.
 	# Installing dev tools in $<
 	$</bin/pip3 install pip-tools
 	# Installing pre-commit hooks in current .git repo
