@@ -39,14 +39,27 @@ build-nc: .docker-compose-build.yml ## Builds all images from scratch
 	docker-compose -f $< build --parallel --no-cache
 
 .PHONY: devenv
-devenv: .venv ##  Nuilds python environment and installs some tooling for operations
 .venv:
-	python3 -m venv .venv
-	.venv/bin/pip install --upgrade pip setuptools wheel
-	.venv/bin/pip install pip-tools
+	# Creating virtual env in $@
+	python3 -m venv $@
+	# Upgrading package managers
+	$@/bin/pip install --upgrade \
+		pip \
+		setuptools \
+		wheel
+
+devenv: .venv ##  Builds python environment and installs some tooling for operations
+	# Installing dev tools in $<
+	$</bin/pip3 install pip-tools
+	# Installing pre-commit hooks in current .git repo
+	$</bin/pip3 install pre-commit
+	$</bin/pre-commit install
+	# Installed packages in $<
+	@$</bin/pip3 list --format=columns
+
+
 
 .PHONY: clean
 clean: ## Cleans all unversioned files in project
 	@echo -n "Are you sure? [y/N] " && read ans && [ $${ans:-N} = y ]
 	@git clean -dxf
-
