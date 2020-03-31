@@ -3,9 +3,11 @@
 
 # files and folders recursively
 Makefile                                  @pcrespov, @Surfict
-/.travis.yml                              @sanderegg, @Surfict
+.github                                   @pcrespov, @sanderegg, @Surfict
+.travis.yml                               @sanderegg, @Surfict
 /ci/                                      @sanderegg, @Surfict
 /devpi/                                   @oetiker
+/octave/                                  @pcrespov
 /pip-kits/                                @oetiker
 /python-with-pandas/                      @pcrespov
 /qooxdoo-kit/                             @ignapas , @pcrespov
