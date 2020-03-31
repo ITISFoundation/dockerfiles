@@ -4,7 +4,9 @@ set -euo pipefail
 IFS=$'\n\t'
 
 #
-# This script compare the version given in parameter to the latest version present in the repository. Fail if the given version <= repository version
+# This script compare the version given in parameter to the 
+# latest version present in the repository. 
+# Fail if the given version <= repository version
 #
 
 #
@@ -36,6 +38,6 @@ if $(version_gt $APP_USER_VERSION $LAST_VERSION); then
      echo "A release would update from $LAST_VERSION to $APP_USER_VERSION on Dockerhub."
      exit 0;
 else
-     echo "There is a problem in your versionning, the last version on the repository is $LAST_VERSION and you are trying to push the version $APP_USER_VERSION" >&2
+     echo "There is a problem in your versioning, the last version on the repository is $LAST_VERSION and you are trying to push the version $APP_USER_VERSION" >&2
      exit 1;
 fi
