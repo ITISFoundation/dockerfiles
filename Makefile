@@ -17,15 +17,21 @@ PROJECTS := \
 	pip-kit \
 	python-with-pandas \
 	qooxdoo-kit \
-	rabbitmq
+	rabbitmq \
+	octave
 
 docker_compose_configs = $(foreach folder,$(PROJECTS),$(CURDIR)/$(folder)/docker-compose.yml)
 
 ## Targets ----
 .PHONY: help
-help: ## This colourful help
-	@awk 'BEGIN {FS = ":.*?## "} /^[a-zA-Z_-.]+:.*?## / {printf "\033[36m%-20s\033[0m %s\n", $$1, $$2}' $(MAKEFILE_LIST)
-
+help: ## this colourful help
+	@echo "usage: make [target] ..."
+	@echo ""
+	@echo "Targets for '$(notdir $(CURDIR))':"
+	@echo ""
+	@awk --posix 'BEGIN {FS = ":.*?## "} /^[[:alpha:][:space:]_-]+:.*?## / {printf "\033[36m%-20s\033[0m %s\n", $$1, $$2}' $(MAKEFILE_LIST)
+	@echo ""
+	
 .docker-compose-build.yml: $(docker_compose_configs)
 	docker-compose $(foreach dc,$^,-f $(dc)) config >$@
 
