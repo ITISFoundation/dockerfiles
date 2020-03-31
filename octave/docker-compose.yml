@@ -1,0 +1,11 @@
+version: "3.7"
+services:
+  octave:
+    image: ${DOCKER_REPO}/octave:${VERSION:-latest}
+    build:
+      context: .
+      labels:
+        org.label-schema.schema-version: "1.0"
+        org.label-schema.build-date: "${BUILD_DATE}"
+        org.label-schema.vcs-url: "${VCS_URL}"
+        org.label-schema.vcs-ref: "${VCS_REF}"
