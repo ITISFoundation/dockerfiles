@@ -1,7 +1,9 @@
 .DEFAULT_GOAL := help
 
-DOCKER_REPO        = itisfoundation
-APP_NAME           = $(notdir $(PWD))
+export APP_NAME    := $(notdir $(PWD))
+export APP_VERSION := $(shell cat VERSION)
+
+DOCKER_REPO = itisfoundation
 DOCKER_IMAGE_NAME  = $(DOCKER_REPO)/$(APP_NAME)
 DOCKER_IMAGE_VERSION_FULL = $(shell cat VERSION)
 DOCKER_IMAGE_VERSION_TWO_DIGITS = $(shell cat VERSION | grep -Eo '^([0-9]+)\.([0-9])+')
@@ -12,9 +14,9 @@ TMPPREFIX := /tmp/$(APP_NAME)
 TMPDIR    := $(strip $(shell mktemp -d $(TMPPREFIX)-XXXXX))
 
 # Environments (affect docker-compose.yml)
-export VCS_URL    := $(shell git config --get remote.origin.url)
-export VCS_REF    := $(shell git rev-parse --short HEAD)
-export BUILD_DATE := $(shell date -u +"%Y-%m-%dT%H:%M:%SZ")
+export VCS_URL     := $(shell git config --get remote.origin.url)
+export VCS_REF     := $(shell git rev-parse --short HEAD)
+export BUILD_DATE  := $(shell date -u +"%Y-%m-%dT%H:%M:%SZ")
 export DOCKER_REPO := $(DOCKER_REPO)
 
 
