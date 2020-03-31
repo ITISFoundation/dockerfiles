@@ -7,7 +7,7 @@ before_install() {
     bash ci/travis/helpers/install_docker_compose;
     bash ci/travis/helpers/show_system_versions;
     env
-    bash ci/travis/helpers/check_changes.sh rabbitmq/;
+    bash ci/travis/helpers/check_changes.sh devpi/;
 }
 
 install() {
@@ -19,12 +19,12 @@ before_script() {
 }
 
 script() {
-    make -C rabbitmq build
+    pushd devpi; make build; popd
 }
 
 after_success() {
     echo "build succeeded"
-    make -C rabbitmq info
+    pushd devpi; make info-image; popd
 }
 
 after_failure() {
@@ -35,7 +35,7 @@ after_failure() {
 
 deploy() {
     echo "$DOCKER_PASSWORD" | docker login -u "$DOCKER_USERNAME" --password-stdin;
-    pushd rabbitmq; make push; popd
+    pushd devpi; make release; popd
 }
 
 # Check if the function exists (bash specific)

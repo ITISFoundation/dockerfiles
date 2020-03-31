@@ -6,8 +6,8 @@ IFS=$'\n\t'
 before_install() {
     bash ci/travis/helpers/install_docker_compose;
     bash ci/travis/helpers/show_system_versions;
+    bash ci/travis/helpers/check_changes.sh devpi/;
     env
-    bash ci/travis/helpers/check_changes.sh rabbitmq/;
 }
 
 install() {
@@ -19,23 +19,18 @@ before_script() {
 }
 
 script() {
-    make -C rabbitmq build
+    pushd devpi; make test; popd
 }
 
 after_success() {
-    echo "build succeeded"
-    make -C rabbitmq info
+    echo "Test succeeded"
+    pushd devpi; make info-image; popd
 }
 
 after_failure() {
-    echo "build failed"
+    echo "Test failed"
     env
     docker images
-}
-
-deploy() {
-    echo "$DOCKER_PASSWORD" | docker login -u "$DOCKER_USERNAME" --password-stdin;
-    pushd rabbitmq; make push; popd
 }
 
 # Check if the function exists (bash specific)

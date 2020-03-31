@@ -9,18 +9,39 @@ addons:
     packages:
       - docker-ce
       - expect-dev # for unbuffer: brings color back into travis logs
+stages:
+  - build
+  - test
+  - release
 
 jobs:
   include:
-    # build images ----------------------------------------------------------------------
+    - stage: build
+      name: devpi
+      language: minimal
+      sudo: required
+      python:
+        - "3.7"
+      cache: pip
+      before_install:
+        - sudo bash ci/travis/build/devpi before_install || travis_terminate 0 # before-install countains a script that check if any changes have been made in the repo'folder. If not the build is stopped
+      install:
+        - unbuffer bash ci/travis/build/devpi install
+      before_script:
+        - unbuffer bash ci/travis/build/devpi before_script
+      script:
+        - unbuffer bash ci/travis/build/devpi script
+      after_success:
+        - unbuffer bash ci/travis/build/devpi after_success
+        
     - stage: build
       # in pull request we do not have credentials to push, so this is useless
       if: NOT type = pull_request AND tag IS blank
-      name: build rabbit-mq
+      name: rabbit-mq
       language: minimal
       sudo: required
       before_install:
-        - sudo bash ci/travis/build/rabbit-mq before_install
+        - sudo bash ci/travis/build/rabbit-mq before_install || travis_terminate 0
       install:
         - unbuffer bash ci/travis/build/rabbit-mq install
       before_script:
@@ -37,3 +58,42 @@ jobs:
           script: unbuffer bash ci/travis/build/rabbit-mq deploy
           on:
             all_branches: true
+
+    - stage: test
+      name: devpi test
+      language: minimal
+      sudo: required
+      python:
+        - "3.7"
+      cache: pip
+      before_install:
+        - sudo bash ci/travis/tests/devpi before_install || travis_terminate 0
+      install:
+        - unbuffer bash ci/travis/tests/devpi install
+      before_script:
+        - unbuffer bash ci/travis/tests/devpi before_script
+      script:
+        - unbuffer bash ci/travis/tests/devpi script
+      after_success:
+        - unbuffer bash ci/travis/tests/devpi after_success
+
+    - stage: release
+      if: NOT type = pull_request and branch = master
+      name: devpi release
+      language: minimal
+      sudo: required
+      python:
+        - "3.7"
+      cache: pip
+      before_install:
+        - sudo bash ci/travis/release/devpi before_install || travis_terminate 0
+      install:
+        - unbuffer bash ci/travis/release/devpi install
+      before_script:
+        - unbuffer bash ci/travis/release/devpi before_script
+      script:
+        - unbuffer bash ci/travis/release/devpi script
+      after_success:
+        - unbuffer bash ci/travis/release/devpi after_success
+      
+      

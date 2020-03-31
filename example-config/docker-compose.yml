@@ -1,0 +1,13 @@
+version: '3.7'
+services:
+  devpi:
+    image: ${DOCKER_REPO}/example-config:${VERSION:-latest} # TODO Change example-config by the name of your project
+    build:
+      context: .
+      cache_from:
+        - itisfoundation/example-config:latest # TODO Change example-config by the name of your project
+      labels:
+        org.label-schema.schema-version: "1.0"
+        org.label-schema.build-date: "${BUILD_DATE}"
+        org.label-schema.vcs-url: "${VCS_URL}"
+        org.label-schema.vcs-ref: "${VCS_REF}"

@@ -52,6 +52,19 @@ Here some of the guidelines we have collected so far:
 10. If the "payload" has no explicit internal signal handling add tini as an init replacement (same effect as when running the docker with --init)
   https://github.com/krallin/tini
 
+11. You MUST change your version file for each Pull request following the  [Semantic Versioning](https://semver.org/)
+
+
+## Travis workflow
+
+
+![worklow](ci/travis/docs/workflow.PNG)
+
+
+## Starting a new project in this repository
+
+Follow the README in the folder example-config.
+
 
 ## References
 
@@ -59,3 +72,5 @@ Selection of publications worth reading on this topic:
 
 - [Docker & Makefile | X-Ops — sharing infra-as-code parts](https://itnext.io/docker-makefile-x-ops-sharing-infra-as-code-parts-ea6fa0d22946)
 - [Auto-documented makefiles](https://marmelab.com/blog/2016/02/29/auto-documented-makefile.html)
+
+
