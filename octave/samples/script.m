@@ -8,7 +8,7 @@ endfor
 printf ("\n");
 
 
-userid = getenv("SC_USER_ID")
+userid = getenv("ITIS_USER_ID")
 
 fileID = fopen("/tmp/output.txt", "wt")
 fprintf(fileID, "hello world\n")
