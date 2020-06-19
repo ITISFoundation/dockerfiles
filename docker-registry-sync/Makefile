@@ -1,7 +1,14 @@
 .DEFAULT_GOAL := help
 
-IMAGE_NAME := docker-registry-sync
 BRIDGE_NETWORK_NAME := dev_sync_net
+
+export IMAGE_NAME := docker-registry-sync
+export DOCKER_REG_SYNC_VERSION := 0.1.0
+export DOCKER_REGISTRY ?=itisfoundation
+
+export VCS_URL         := $(shell git config --get remote.origin.url)
+export VCS_REF         := $(shell git rev-parse --short HEAD)
+export BUILD_DATE      := $(shell date -u +"%Y-%m-%dT%H:%M:%SZ")
 
 current_dir = $(shell pwd)
 
@@ -64,10 +71,28 @@ development-run: _ensure-in-venv build ## used to test out changes during develo
 		-e SYNC_EXIT_ON_FIRST_ERROR=true \
 		-v $(current_dir)/dev/dev-sync-cfg.yml:/etc/cfg.yaml \
 		--network=${BRIDGE_NETWORK_NAME} \
-		${IMAGE_NAME}
+		${DOCKER_REGISTRY}/${IMAGE_NAME}:${DOCKER_REG_SYNC_VERSION}
 
+# Used by deployment stages
 
 .PHONY: build
 build: ## build and tag the iamge
-	@docker run --rm --entrypoint cat xelalex/dregsy@sha256:9b0fe252cb8bf88f67871efd6559ef89b76013c46dfbc49b961d396a4b8d1887  /usr/local/bin/dregsy > dregsy
-	@docker build -t ${IMAGE_NAME} . --progress=plain
+	@docker-compose build
+
+.PHONY: push
+push: ## pushes image to Dockerhub
+	@docker push ${DOCKER_REGISTRY}/${IMAGE_NAME}:${DOCKER_REG_SYNC_VERSION}
+
+.PHONY: pull
+pull: ## pulls image from Dockerhub
+	@docker pull ${DOCKER_REGISTRY}/${IMAGE_NAME}:${DOCKER_REG_SYNC_VERSION}
+
+define show-meta
+	$(foreach iid,$(shell docker images */$(1):* -q | sort | uniq),\
+		docker image inspect $(iid) | jq '.[0] | .RepoTags, .ContainerConfig.Labels';)
+endef
+
+.PHONY: info
+info: ## gives some information about the docker image
+	@docker images */${IMAGE_NAME}:*;\
+	$(call show-meta,${IMAGE_NAME})

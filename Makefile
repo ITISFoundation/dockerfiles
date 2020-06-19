@@ -17,7 +17,8 @@ PROJECTS := \
 	pip-kit \
 	python-with-pandas \
 	qooxdoo-kit \
-	rabbitmq
+	rabbitmq \
+	docker-registry-sync
 
 docker_compose_configs = $(foreach folder,$(PROJECTS),$(CURDIR)/$(folder)/docker-compose.yml)
 
