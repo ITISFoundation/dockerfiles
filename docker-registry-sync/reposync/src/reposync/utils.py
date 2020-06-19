@@ -17,6 +17,8 @@ def encode_credentials(username, password):
 
 
 def from_env(env_var_name: str) -> str:
+    if env_var_name not in os.environ:
+        raise KeyError(f"Expected '{env_var_name}' in environment variables")
     return os.environ[env_var_name]
 
 

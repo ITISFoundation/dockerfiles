@@ -1,5 +1,6 @@
+import os
 from jsonschema import Draft7Validator, validate
-
+from collections import deque
 
 SCHEMA = {
     "$schema": "http://json-schema.org/draft-07/schema#",
@@ -85,7 +86,24 @@ SCHEMA = {
     "required": ["registries", "stages"],
 }
 
-# Draft7Validator.check_schema(SCHEMA)
-def is_configuration_valid(configuration):
+
+def _validate_environment_vars(configuration: str) -> None:
+    keys_to_check = deque()
+    for registry in configuration["registries"].values():
+        keys_to_check.append(registry["env_user"])
+        keys_to_check.append(registry["env_password"])
+
+    missing_keys = deque()
+    for key in keys_to_check:
+        if key not in os.environ:
+            missing_keys.append(key)
+
+    raise KeyError(
+        f"The following environment variables are required: {list(missing_keys)}"
+    )
+
+
+def is_configuration_valid(configuration: str) -> None:
     """Raises exception if configuration is not valid"""
     validate(instance=configuration, schema=SCHEMA)
+    _validate_environment_vars(configuration)
