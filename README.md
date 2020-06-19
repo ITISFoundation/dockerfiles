@@ -54,6 +54,18 @@ Here some of the guidelines we have collected so far:
 
 11. You MUST change your version file for each Pull request following the  [Semantic Versioning](https://semver.org/)
 
+## GitHub workflow
+
+This repository defines a custom action àction-build-and-push` which is responsible for building, testing and pushing images to a registry (defaults to Docker Hub).
+
+To enable github workflow the following Git Hub secrets must be defined:
+
+- `DOCKER_HUB_USER` Docker Hub username
+- `DOCKER_HUB_PASSWORD` Docker Hub token (password usage is not advised)
+
+Projects under workflow:
+
+- `docker-registry-sync`
 
 ## Travis workflow
 
