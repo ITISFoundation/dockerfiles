@@ -4,7 +4,10 @@ FROM xelalex/dregsy@sha256:9b0fe252cb8bf88f67871efd6559ef89b76013c46dfbc49b961d3
 LABEL maintainer "neagu@itis.swiss"
 
 RUN apk add python3
-RUN pip3 install --upgrade pip setuptools
+RUN pip3 install --upgrade \
+        pip \
+        setuptools \
+        wheel
 
 RUN mkdir -p /app
 
