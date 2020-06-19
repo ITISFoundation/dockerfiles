@@ -98,9 +98,10 @@ def _validate_environment_vars(configuration: str) -> None:
         if key not in os.environ:
             missing_keys.append(key)
 
-    raise KeyError(
-        f"The following environment variables are required: {list(missing_keys)}"
-    )
+    if len(missing_keys) > 0:
+        raise KeyError(
+            f"The following environment variables are required: {list(missing_keys)}"
+        )
 
 
 def is_configuration_valid(configuration: str) -> None:
