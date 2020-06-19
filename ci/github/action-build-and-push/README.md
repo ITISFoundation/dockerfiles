@@ -1,6 +1,6 @@
 # About
 
-This Git Hub action `action-build-and-push` is used to build and publish images to a registry, default is **Docker Hub**.
+This Github action `action-build-and-push` is used to build and publish images to a registry, default is **Docker Hub**.
 
 ## Requirements
 To configure the action the following inputs are required:
@@ -10,7 +10,7 @@ To configure the action the following inputs are required:
 - `REGISTRY_PASSWORD`[**mandatory**] registry password or access token
 - `TARGET_PROJECT_PATH`[**mandatory**] registry password or access token
 
-Inside the `TARGET_PROJECT_PATH` the action expects to find a Makefile as te following commands will be issued:
+Inside the `TARGET_PROJECT_PATH` the action expects to find a Makefile as tke following commands will be issued:
 
 - `make github-ci-pull` will attempt to pull a previous image, this command may fail and the action will continue
 - `make github-ci-build` builds the image
