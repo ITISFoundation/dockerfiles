@@ -56,7 +56,7 @@ Here some of the guidelines we have collected so far:
 
 ## GitHub workflow
 
-This repository defines a custom action `àction-build-and-push` which is responsible for building, testing and pushing images to a registry (defaults to Docker Hub).
+This repository defines a custom action `action-build-and-push` which is responsible for building, testing and pushing images to a registry (defaults to Docker Hub).
 
 To enable github workflow the following Git Hub secrets must be defined:
 
