@@ -10,10 +10,14 @@ def assemble_header(message, default_length=80):
     print("| " + message + " " * spaces_length + " |")
     print("-" * computed_length)
 
-def main():
-    input_message = " ".join(sys.argv[1:])
-    assemble_header(input_message)
-    
 
-if __name__ == '__main__':
+def main(args=None):
+    if args is None:
+        args = sys.argv[1:]
+
+    input_message = " ".join(args)
+    assemble_header(input_message)
+
+
+if __name__ == "__main__":
     main()
