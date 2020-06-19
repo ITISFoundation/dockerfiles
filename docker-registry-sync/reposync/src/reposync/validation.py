@@ -29,7 +29,7 @@ SCHEMA = {
                 },
                 "required": ["url", "env_user", "env_password"],
             },
-            "minProperties": 2,
+            "minProperties": 1,
         },
         "stages": {
             "description": "List of entries used to describe repo sync actions",
