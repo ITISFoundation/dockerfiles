@@ -9,7 +9,7 @@ from .utils import encode_credentials
 
 
 class BaseSerializable:
-    def to_dict(self) -> Dict:
+    def as_dict(self) -> Dict:
         raise NotImplementedError("Must implement in subclass")
 
 
@@ -19,7 +19,7 @@ class Mapping(BaseSerializable):
     to_field: str
     tags: List[str]
 
-    def to_dict(self) -> Dict:
+    def as_dict(self) -> Dict:
         result = {
             "from": self.from_field,
             "to": self.to_field,
@@ -35,7 +35,7 @@ class TaskRegistry(BaseSerializable):
     auth: str
     skip_tls_verify: bool
 
-    def to_dict(self) -> Dict:
+    def as_dict(self) -> Dict:
         return {
             "registry": self.registry,
             "auth": self.auth,
@@ -51,7 +51,7 @@ class Task(BaseSerializable):
     target: TaskRegistry
     mappings: List[Mapping]
 
-    def to_dict(self) -> Dict:
+    def as_dict(self) -> Dict:
         return {
             "name": self.name,
             "verbose": self.verbose,
@@ -67,7 +67,7 @@ class DregsyYAML(BaseSerializable):
     skopeo: Dict[str, str]
     tasks: List[Task]
 
-    def to_dict(self) -> Dict:
+    def as_dict(self) -> Dict:
         return {"relay": self.relay, "skopeo": self.skopeo, "tasks": self.tasks}
 
     @classmethod
@@ -97,22 +97,22 @@ def create_dregsy_yamls(stages: List[Stage]) -> List[Tuple[str, str]]:
                     registry=stage.from_obj.source.url,
                     auth=source_auth,
                     skip_tls_verify=stage.from_obj.source.skip_tls_verify,
-                ).to_dict(),
+                ).as_dict(),
                 target=TaskRegistry(
                     registry=to_obj.destination.url,
                     auth=target_auth,
                     skip_tls_verify=to_obj.destination.skip_tls_verify,
-                ).to_dict(),
+                ).as_dict(),
                 mappings=[
                     Mapping(
                         from_field=stage.from_obj.repository,
                         to_field=to_obj.repository,
                         tags=to_obj.tags,
-                    ).to_dict()
+                    ).as_dict()
                 ],
-            ).to_dict()
+            ).as_dict()
 
-            dregsy_entry = DregsyYAML.assemble(tasks=[task]).to_dict()
+            dregsy_entry = DregsyYAML.assemble(tasks=[task]).as_dict()
             result.append(dregsy_entry)
 
     return [
