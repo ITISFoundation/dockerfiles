@@ -1,3 +1,4 @@
+import traceback
 import base64
 import json
 import os
@@ -33,8 +34,6 @@ def temp_configuration_file(stage_name: str, yaml_string: str) -> IO[Any]:
         f = target_file.open("w")
         yield f
     except Exception:
-        import traceback
-
         traceback.print_exc()
     finally:
         f.close()
@@ -42,7 +41,7 @@ def temp_configuration_file(stage_name: str, yaml_string: str) -> IO[Any]:
 
 
 if __name__ == "__main__":
-    # decodes the first arg on cli 
+    # decodes the first arg on cli
     import sys
 
     print(base64.b64decode(sys.argv[1]))
