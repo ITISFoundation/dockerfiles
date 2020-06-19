@@ -106,6 +106,7 @@ github-ci-pull: ## reserved for Git Hub CI to pull image
 .PHONY: github-ci-build
 github-ci-build: ## reserved for Git Hub CI to build image
 	@make build
+	docker tag ${DOCKER_REGISTRY}/${IMAGE_NAME}:${DOCKER_REG_SYNC_VERSION} ${DOCKER_REGISTRY}/${IMAGE_NAME}:stable
 	@make info
 
 .PHONY: github-ci-tests
@@ -115,4 +116,5 @@ github-ci-tests:	## reserved for Git Hub CI to start testsuite
 .PHONY: github-ci-push
 github-ci-push:	## reserved for Git Hub CI to push image
 	@make push
+	@docker push ${DOCKER_REGISTRY}/${IMAGE_NAME}:stable
 	
