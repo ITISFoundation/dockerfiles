@@ -51,3 +51,6 @@ clean: ## Cleans all unversioned files in project
 	@echo -n "Are you sure? [y/N] " && read ans && [ $${ans:-N} = y ]
 	@git clean -dxf
 
+.PHONY: debug-github-workflow
+debug-github-workflow: ## Runs the github worflow locally act is needed on the system
+	@act -v -s DOCKER_HUB_USER=docke_hub_username -s DOCKER_HUB_PASSWORD=docke_hub_password
