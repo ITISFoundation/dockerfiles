@@ -1,0 +1,62 @@
+# Registries contains access credentials to repositories
+# these can be used as input (source) or output (destination)
+# env_user and env_password refer to environment variables containing the credentials
+registries:
+  dockerhub:
+    # generally used only as source
+    url: index.docker.io # dockerhub
+    env_user: ENV_VAR_USERNAME_DOCKERHUB
+    env_password: ENV_PASSWORD_DOCKERHUB
+  master:
+    url: master:5000
+    env_user: ENV_VAR_USERNAME_MASTER
+    env_password: ENV_PASSWORD_MASTER
+    skip-tls-verify: true
+  staging:
+    url: staging:5000
+    env_user: ENV_VAR_USERNAME_STAGING
+    env_password: ENV_PASSWORD_STAGING
+    skip-tls-verify: true
+  aws:
+    url: aws:5000
+    env_user: ENV_VAR_USERNAME_AWS
+    env_password: ENV_PASSWORD_AWS
+    skip-tls-verify: true
+
+# array of stages which guarantees order of execution
+# you can sync from A to B and from B to C
+stages:
+  # generic usage
+  - from:
+      source: "dockerhub" # key comes from above registries definition
+      repository: "itisfoundation/sleeper"
+    to:
+      - destination: master # key comes from above registries definition
+        repository: "simcore/services/comp/sleeper"
+        tags: [] # will take all available tags
+      - destination: staging # key comes from registries
+        repository: "simcore/services/comp/sleeper"
+        tags: ["1.0.0"] # specify a tag
+      - destination: aws # key comes from registries
+        repository: "simcore/services/comp_v3/sleeper" # different namespace is also allowed
+        tags: ["0.0.1", "1.0.0"] # specify multiple tags
+
+  # more advanced usage
+  # pulls all sleeper tags from dockerhub and pushes to master
+  - from:
+      source: "dockerhub"
+      repository: "itisfoundation/sleeper"
+    to:
+      - destination: master
+        repository: "simcore/services/comp/sleeper"
+        tags: []
+  
+  # because the previous stage already synced the images
+  # pulls all the tag 1.0.0 of sleeper from master syncs to staging (also in a different namespace)
+  - from:
+      source: "master"
+      repository: "simcore/services/comp/sleeper"
+    to:
+      - destination: staging
+        repository: "simcore/services/comp_v4/sleeper"
+        tags: ["1.0.0"]

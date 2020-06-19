@@ -11,3 +11,4 @@ Makefile                                  @pcrespov, @Surfict
 /qooxdoo-kit/                             @ignapas , @pcrespov
 /rabbitmq/                                @sanderegg
 /scripts/                                 @pcrespov
+/docker-registry-sync/                    @GitHK

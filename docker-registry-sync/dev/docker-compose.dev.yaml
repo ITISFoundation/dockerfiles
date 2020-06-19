@@ -1,0 +1,53 @@
+version: "3"
+
+# credentials user=test password=test
+services:
+  master:
+    image: registry:2
+    ports:
+      - "5001:5000"
+    networks:
+      - dev_sync_net
+    environment:
+      REGISTRY_STORAGE_FILESYSTEM_ROOTDIRECTORY: /data
+      REGISTRY_AUTH: htpasswd
+      REGISTRY_AUTH_HTPASSWD_PATH: /auth/htpasswd
+      REGISTRY_AUTH_HTPASSWD_REALM: Registry Realm
+    volumes:
+      - ./data_a:/data
+      - ./registry_htpasswd:/auth/htpasswd
+
+  staging:
+    image: registry:2
+    ports:
+      - "5002:5000"
+    networks:
+      - dev_sync_net
+    environment:
+      REGISTRY_STORAGE_FILESYSTEM_ROOTDIRECTORY: /data
+      REGISTRY_AUTH: htpasswd
+      REGISTRY_AUTH_HTPASSWD_PATH: /auth/htpasswd
+      REGISTRY_AUTH_HTPASSWD_REALM: Registry Realm
+    volumes:
+      - ./data_b:/data
+      - ./registry_htpasswd:/auth/htpasswd
+
+  aws:
+    image: registry:2
+    ports:
+      - "5003:5000"
+    networks:
+      - dev_sync_net
+    environment:
+      REGISTRY_STORAGE_FILESYSTEM_ROOTDIRECTORY: /data
+      REGISTRY_AUTH: htpasswd
+      REGISTRY_AUTH_HTPASSWD_PATH: /auth/htpasswd
+      REGISTRY_AUTH_HTPASSWD_REALM: Registry Realm
+    volumes:
+      - ./data_c:/data
+      - ./registry_htpasswd:/auth/htpasswd
+
+
+networks:
+  dev_sync_net:
+    external: true
