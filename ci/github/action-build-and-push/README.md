@@ -1,6 +1,6 @@
 # About
 
-This github action `action-build-and-push` is used to build and publish images to a registry (default is **Docker Hub**).
+`action-build-and-push` is a customized github action used to build and publish images to a registry (default is **Docker Hub**).
 
 ## Requirements
 
