@@ -3,7 +3,7 @@ import yaml
 import argparse
 import datetime
 import subprocess
-from pathlib import Path
+from io import TextIOWrapper
 
 from reposync.validation import is_configuration_valid
 from reposync.prepare_stages import assemble_stages
@@ -11,8 +11,8 @@ from reposync.dregsy_config import create_dregsy_yamls
 from reposync.utils import temp_configuration_file, from_env_default
 
 
-def load_yaml_from_file(input_file: Path) -> str:
-    with input_file.open("r") as f:
+def load_yaml_from_file(input_file: TextIOWrapper) -> str:
+    with input_file as f:
         return yaml.safe_load(f)
 
 
@@ -81,6 +81,7 @@ def main() -> None:
     parser.add_argument(
         "-c",
         "--configfile",
+        type=argparse.FileType("r"),
         default="sync-cfg.yaml",
         help="configuration file to be used",
     )
@@ -98,19 +99,12 @@ def main() -> None:
     )
     # add exit on first error to force a quit
     args = parser.parse_args()
-    config_file = args.configfile
-
-    input_file = Path(config_file)
-
-    if not input_file.is_file():
-        print(f"Provided file '{input_file}' does not exist.")
-        exit(1)
 
     # Configuration checking:
     # - load from yaml file
     # - validate with json schema (yml must always be mappable to json)
     # - only raise error if invalid otherwise free to use
-    configuration = load_yaml_from_file(input_file)
+    configuration = load_yaml_from_file(args.configfile)
     is_configuration_valid(configuration)
 
     if args.verify_only:
