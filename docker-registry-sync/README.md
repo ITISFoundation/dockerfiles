@@ -118,8 +118,19 @@ The project is packaged as a Docker image and this is the standard way to runt i
       -v $(pwd)/dev/dev-sync-cfg.yml:/etc/cfg.yaml \
       itisfoundation/docker-registry-sync
 
+## Development
+
+Use the provided Makefile for all the needs. There are two commands used to start and stop an array of registries:
+
+    make start-dev-registry
+    make stop-dev-registry
+
+You can build and run your changes with (this command requires to run in a virtualenv):
+
+    make development-run
+
+
 ## TODOs
 
 - [ ] add unit testing
 - [ ] add integration testing
-- [ ] build with CI and push to dockerhub
