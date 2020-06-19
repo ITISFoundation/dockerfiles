@@ -96,3 +96,23 @@ endef
 info: ## gives some information about the docker image
 	@docker images */${IMAGE_NAME}:*;\
 	$(call show-meta,${IMAGE_NAME})
+
+# Used by GitHub Actions, these should be defined by each project
+
+.PHONY: github-ci-pull
+github-ci-pull: ## reserved for Git Hub CI to pull image
+	@make pull
+
+.PHONY: github-ci-build
+github-ci-build: ## reserved for Git Hub CI to build image
+	@make build
+	@make info
+
+.PHONY: github-ci-tests
+github-ci-tests:	## reserved for Git Hub CI to start testsuite
+	@echo "Not tests at this time..."
+
+.PHONY: github-ci-push
+github-ci-push:	## reserved for Git Hub CI to push image
+	@make push
+	
