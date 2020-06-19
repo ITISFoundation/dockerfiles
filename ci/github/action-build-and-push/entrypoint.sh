@@ -24,7 +24,7 @@ DOCKER_REGISTRY=$INPUT_REGISTRY_USER make github-ci-build
 python3 /code/print_as_header.py "Running tests"
 DOCKER_REGISTRY=$INPUT_REGISTRY_USER make github-ci-tests
 
-python3 /code/print_as_header.py "Pushign image"
+python3 /code/print_as_header.py "Pushing image"
 DOCKER_REGISTRY=$INPUT_REGISTRY_USER make github-ci-push
 
 python3 /code/print_as_header.py "Completed without errors"
