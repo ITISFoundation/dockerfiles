@@ -1,8 +1,8 @@
-name: Workflow to build and push images to Docker Hub
+name: build + test + push images to Docker Hub
 on: push
 jobs:
   docker-registry-sync:
-    name: build+test+push -> docker-registry-sync
+    name: docker-registry-sync
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v1
