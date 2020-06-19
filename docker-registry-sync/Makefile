@@ -4,6 +4,8 @@ BRIDGE_NETWORK_NAME := dev_sync_net
 
 export IMAGE_NAME := docker-registry-sync
 export DOCKER_REG_SYNC_VERSION := 0.1.0
+# if this image is built by this script it will be tagged as stable
+export DOCKER_REG_SYNC_TAS_AS_STABLEVERSION := 0.1.0
 export DOCKER_REGISTRY ?=itisfoundation
 
 export VCS_URL         := $(shell git config --get remote.origin.url)
@@ -106,7 +108,10 @@ github-ci-pull: ## reserved for Git Hub CI to pull image
 .PHONY: github-ci-build
 github-ci-build: ## reserved for Git Hub CI to build image
 	@make build
+	# checkk the version for stable
+ifeq (${DOCKER_REG_SYNC_VERSION}, ${DOCKER_REG_SYNC_TAS_AS_STABLEVERSION})
 	docker tag ${DOCKER_REGISTRY}/${IMAGE_NAME}:${DOCKER_REG_SYNC_VERSION} ${DOCKER_REGISTRY}/${IMAGE_NAME}:stable
+endif
 	@make info
 
 .PHONY: github-ci-tests
@@ -115,6 +120,8 @@ github-ci-tests:	## reserved for Git Hub CI to start testsuite
 
 .PHONY: github-ci-push
 github-ci-push:	## reserved for Git Hub CI to push image
-	@make push
+	#@make push
+ifeq (${DOCKER_REG_SYNC_VERSION}, ${DOCKER_REG_SYNC_TAS_AS_STABLEVERSION})
 	@docker push ${DOCKER_REGISTRY}/${IMAGE_NAME}:stable
+endif
 	
