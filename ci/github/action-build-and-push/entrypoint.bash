@@ -12,7 +12,7 @@ docker --version
 docker-compose --version
 
 python3 /code/print_as_header.py "Logging into registry"
-echo "--$INPUT_REGISTRY_URL--$INPUT_REGISTRY_USER--"
+
 echo "$INPUT_REGISTRY_PASSWORD" | docker login "$INPUT_REGISTRY_URL" --username "$INPUT_REGISTRY_USER" --password-stdin
 
 python3 /code/print_as_header.py "Switching to project directory '$INPUT_TARGET_PROJECT_PATH_IN_GIT_REPO'"
