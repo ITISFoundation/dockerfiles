@@ -1,5 +1,5 @@
 name: "Build&Push to Docker Hub"
-description: "Builds and pushes specific image to Docker Hub. The Makefile of each project must expose make build and make push"
+description: "Builds and pushes specific image to Docker Hub. Refer to README.md for usage"
 author: "neagu@itis.swiss"
 
 inputs:

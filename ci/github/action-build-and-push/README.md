@@ -13,7 +13,7 @@ To configure the action the following inputs are required:
 
 Inside the `TARGET_PROJECT_PATH` the action expects to find a Makefile as the following commands will be issued:
 
-- `make github-ci-pull` will attempt to pull a previous image, this command may fail and the action will continue
+- `make github-ci-pull` will attempt to pull a previous image (used as caching stage), this command may fail and the action will continue
 - `make github-ci-build` builds the image
 - `make github-ci-tests` runs the tests packaged with the image
 - `make github-ci-push` pushes the image to the registry
