@@ -7,7 +7,6 @@
 SHELL         := /bin/bash
 # including .env file used for development
 include .env
-export $(shell sed 's/=.*//' .env)
 
 # Environments
 export VCS_URL          := $(shell git config --get remote.origin.url)
