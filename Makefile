@@ -53,4 +53,8 @@ clean: ## Cleans all unversioned files in project
 
 .PHONY: debug-github-workflow
 debug-github-workflow: ## Runs the github worflow locally act is needed on the system
-	@act -v -s DOCKER_HUB_USER=docke_hub_username -s DOCKER_HUB_PASSWORD=docke_hub_password
+	@act -v \
+		-s DOCKER_HUB_USER=dockerhub_username \
+		-s DOCKER_HUB_TARGET_REGISTRY_NAME=dockerhub_username \
+		-s DOCKER_HUB_PASSWORD=dockerhub_password
+		
