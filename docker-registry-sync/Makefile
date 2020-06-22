@@ -116,7 +116,7 @@ endif
 
 .PHONY: github-ci-tests
 github-ci-tests:	## reserved for Git Hub CI to start testsuite
-	@echo "Not tests at this time..."
+	@echo "No tests at this time..."
 
 .PHONY: github-ci-push
 github-ci-push:	## reserved for Git Hub CI to push image
