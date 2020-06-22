@@ -1,7 +1,6 @@
 name: build + test + push images to Docker Hub
 on:
   push:
-  pull_request:
 
 jobs:
   docker-registry-sync:
