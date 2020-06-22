@@ -5,6 +5,8 @@
 #
 .DEFAULT_GOAL := help
 SHELL         := /bin/bash
+# including .env file used for development
+include .env
 
 # Environments
 export VCS_URL          := $(shell git config --get remote.origin.url)
@@ -53,4 +55,7 @@ clean: ## Cleans all unversioned files in project
 
 .PHONY: debug-github-workflow
 debug-github-workflow: ## Runs the github worflow locally act is needed on the system
-	@act -v -s DOCKER_HUB_USER=docke_hub_username -s DOCKER_HUB_PASSWORD=docke_hub_password
+	@act -v \
+		-s DOCKER_HUB_USER=${DOCKER_HUB_USER} \
+		-s DOCKER_HUB_TARGET_REGISTRY_NAME=${DOCKER_HUB_TARGET_REGISTRY_NAME} \
+		-s DOCKER_HUB_PASSWORD=${DOCKER_HUB_PASSWORD}

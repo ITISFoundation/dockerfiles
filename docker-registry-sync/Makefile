@@ -120,7 +120,7 @@ github-ci-tests:	## reserved for Git Hub CI to start testsuite
 
 .PHONY: github-ci-push
 github-ci-push:	## reserved for Git Hub CI to push image
-	#@make push
+	@make push
 ifeq (${DOCKER_REG_SYNC_VERSION}, ${DOCKER_REG_SYNC_TAS_AS_STABLEVERSION})
 	@docker push ${DOCKER_REGISTRY}/${IMAGE_NAME}:stable
 endif

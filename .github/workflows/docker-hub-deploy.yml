@@ -1,7 +1,6 @@
 name: build + test + push images to Docker Hub
 on:
   push:
-  pull_request:
 
 jobs:
   docker-registry-sync:
@@ -13,4 +12,5 @@ jobs:
         with:
           REGISTRY_USER: ${{ secrets.DOCKER_HUB_USER }}
           REGISTRY_PASSWORD: ${{ secrets.DOCKER_HUB_PASSWORD }}
-          TARGET_PROJECT_PATH: "docker-registry-sync"
+          TARGET_REGISTRY_NAME: ${{ secrets.DOCKER_HUB_TARGET_REGISTRY_NAME }}
+          TARGET_PROJECT_PATH_IN_GIT_REPO: "docker-registry-sync"

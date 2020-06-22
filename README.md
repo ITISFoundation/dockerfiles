@@ -62,10 +62,18 @@ To enable github workflow the following Git Hub secrets must be defined:
 
 - `DOCKER_HUB_USER` Docker Hub username
 - `DOCKER_HUB_PASSWORD` Docker Hub token (password usage is not advised)
+- `DOCKER_HUB_TARGET_REGISTRY_NAME` if using an organization might be different then the login credentials
 
 Projects under workflow:
 
 - `docker-registry-sync`
+
+To test locally please you would need to install [act](https://github.com/nektos/act) and use the same secret names as environment 
+variables following in a .env file:
+
+- DOCKER_HUB_USER
+- DOCKER_HUB_PASSWORD
+- DOCKER_HUB_TARGET_REGISTRY_NAME
 
 ## Travis workflow
 
