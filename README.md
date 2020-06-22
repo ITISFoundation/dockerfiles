@@ -62,6 +62,7 @@ To enable github workflow the following Git Hub secrets must be defined:
 
 - `DOCKER_HUB_USER` Docker Hub username
 - `DOCKER_HUB_PASSWORD` Docker Hub token (password usage is not advised)
+- `DOCKER_HUB_TARGET_REGISTRY_NAME` if using an organization might be different then the login credentials
 
 Projects under workflow:
 
