@@ -53,8 +53,9 @@ clean: ## Cleans all unversioned files in project
 
 .PHONY: debug-github-workflow
 debug-github-workflow: ## Runs the github worflow locally act is needed on the system
+	# get the dependency from https://github.com/nektos/act if you need to use it on your machine
 	@act -v \
-		-s DOCKER_HUB_USER=dockerhub_username \
-		-s DOCKER_HUB_TARGET_REGISTRY_NAME=dockerhub_username \
-		-s DOCKER_HUB_PASSWORD=dockerhub_password
+		-s DOCKER_HUB_USER=your_dockerhub_username \
+		-s DOCKER_HUB_TARGET_REGISTRY_NAME=your_dockerhub_username \
+		-s DOCKER_HUB_PASSWORD=your_dockerhub_password
 		
