@@ -13,8 +13,8 @@ inputs:
   REGISTRY_PASSWORD:
     description: "registry password or access token"
     required: true
-  TARGET_PROJECT_PATH:
-    description: "registry password or access token"
+  REPOSITORY_IMAGE_NAME:
+    description: "name of the image"
     required: true
 
 runs:

@@ -10,9 +10,9 @@ To configure the action the following inputs are required:
 - `REGISTRY_USER`[**mandatory**] registry username
 - `REGISTRY_PASSWORD`[**mandatory**] registry password or access token
 - `TARGET_REGISTRY_NAME`[**mandatory**] identifies the final namespace where to push the image (might be different from the login name)
-- `TARGET_PROJECT_PATH`[**mandatory**] registry password or access token
+- `REPOSITORY_IMAGE_NAME`[**mandatory**] name of the image
 
-Inside the `TARGET_PROJECT_PATH` the action expects to find a Makefile as the following commands will be issued:
+Inside the `REPOSITORY_IMAGE_NAME` the action expects to find a Makefile as the following commands will be issued:
 
 - `make github-ci-pull` will attempt to pull a previous image (used as caching stage), this command may fail and the action will continue
 - `make github-ci-build` builds the image
