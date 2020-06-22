@@ -1,6 +1,8 @@
 #!/bin/bash
 
-set -e
+# reference http://redsymbol.net/articles/unofficial-bash-strict-mode/
+set -euo pipefail
+IFS=$'\n\t'
 
 python3 /code/print_as_header.py "Listing tooling versions"
 
