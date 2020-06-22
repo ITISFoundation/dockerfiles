@@ -14,8 +14,8 @@ docker-compose --version
 python3 /code/print_as_header.py "Logging into registry"
 docker login -u "$INPUT_REGISTRY_USER" -p "$INPUT_REGISTRY_PASSWORD" $INPUT_REGISTRY_URL
 
-python3 /code/print_as_header.py "Switching to project directory '$INPUT_REPOSITORY_IMAGE_NAME'"
-cd $INPUT_REPOSITORY_IMAGE_NAME
+python3 /code/print_as_header.py "Switching to project directory '$INPUT_TARGET_PROJECT_PATH_IN_GIT_REPO'"
+cd $INPUT_TARGET_PROJECT_PATH_IN_GIT_REPO
 
 python3 /code/print_as_header.py "Trying to pull existing image to enable caching"
 DOCKER_REGISTRY=$TARGET_REGISTRY_NAME make github-ci-pull  || true

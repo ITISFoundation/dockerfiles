@@ -13,8 +13,8 @@ inputs:
   REGISTRY_PASSWORD:
     description: "registry password or access token"
     required: true
-  REPOSITORY_IMAGE_NAME:
-    description: "name of the image"
+  TARGET_PROJECT_PATH_IN_GIT_REPO:
+    description: "name of the folder and project name to be uploaded to Docker Hub"
     required: true
 
 runs:

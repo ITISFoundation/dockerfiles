@@ -14,4 +14,4 @@ jobs:
           REGISTRY_USER: ${{ secrets.DOCKER_HUB_USER }}
           REGISTRY_PASSWORD: ${{ secrets.DOCKER_HUB_PASSWORD }}
           TARGET_REGISTRY_NAME: ${{ secrets.DOCKER_HUB_TARGET_REGISTRY_NAME }}
-          REPOSITORY_IMAGE_NAME: "docker-registry-sync"
+          TARGET_PROJECT_PATH_IN_GIT_REPO: "docker-registry-sync"
