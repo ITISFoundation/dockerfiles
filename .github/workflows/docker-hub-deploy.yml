@@ -1,0 +1,16 @@
+name: build + test + push images to Docker Hub
+on:
+  push:
+  pull_request:
+
+jobs:
+  docker-registry-sync:
+    name: docker-registry-sync
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v1
+      - uses: ./ci/github/action-build-and-push
+        with:
+          REGISTRY_USER: ${{ secrets.DOCKER_HUB_USER }}
+          REGISTRY_PASSWORD: ${{ secrets.DOCKER_HUB_PASSWORD }}
+          TARGET_PROJECT_PATH: "docker-registry-sync"

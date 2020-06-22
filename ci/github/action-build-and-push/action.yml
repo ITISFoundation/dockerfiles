@@ -1,0 +1,26 @@
+name: "Build&Push to Docker Hub"
+description: "Builds and pushes specific image to Docker Hub. Refer to README.md for usage"
+author: "neagu@itis.swiss"
+
+inputs:
+  REGISTRY_URL:
+    description: "url of the Docker registry defaults to Docker Hub"
+    required: false
+    default: "docker.io"
+  REGISTRY_USER:
+    description: "registry username"
+    required: true
+  REGISTRY_PASSWORD:
+    description: "registry password or access token"
+    required: true
+  TARGET_PROJECT_PATH:
+    description: "registry password or access token"
+    required: true
+
+runs:
+  using: "docker"
+  image: "Dockerfile"
+
+branding:
+  icon: "box"
+  color: "purple"
