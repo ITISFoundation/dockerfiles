@@ -9,11 +9,11 @@ from pathlib import Path
 from sanitize_filename import sanitize
 
 
-def encode_string(message, encoding="utf-8"):
+def encode_string(message: str, encoding: str = "utf-8") -> bytes:
     return base64.b64encode(message.encode(encoding)).decode(encoding)
 
 
-def encode_credentials(username, password):
+def encode_credentials(username: str, password: str) -> bytes:
     return encode_string(json.dumps({"username": username, "password": password}))
 
 
