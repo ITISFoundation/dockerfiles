@@ -75,7 +75,8 @@ development-run: _ensure-in-venv build ## used to test out changes during develo
 		-e SYNC_EXIT_ON_FIRST_ERROR=${SYNC_EXIT_ON_FIRST_ERROR} \
 		-v $(current_dir)/dev/dev-sync-cfg.yml:/etc/cfg.yaml \
 		--network=${BRIDGE_NETWORK_NAME} \
-		${DOCKER_REGISTRY}/${IMAGE_NAME}:${DOCKER_REG_SYNC_VERSION}
+		${DOCKER_REGISTRY}/${IMAGE_NAME}:${DOCKER_REG_SYNC_VERSION} \
+		run-reposync -c /etc/cfg.yaml
 
 # Used by deployment stages
 
