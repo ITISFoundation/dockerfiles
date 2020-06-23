@@ -65,17 +65,18 @@ def run_dregsy_task(dregsy_entry: DregsyYAML, debug: bool):
         return completed_successfully, current_logs
 
 
-def sync_based_on_configuration(configuration: str, debug: bool) -> None:
+def sync_based_on_configuration(
+    configuration: str, parallel_sync_tasks: int, debug: bool
+) -> None:
     # get stages from own configuration file
     stages = assemble_stages(configuration)
     # convert stagest to dregsy yaml format
     dregsy_entries = create_dregsy_yamls(stages)
 
     finished_without_errors = False
-
     start_date = datetime.datetime.utcnow()
 
-    with futures.ThreadPoolExecutor(max_workers=10) as executor:
+    with futures.ThreadPoolExecutor(max_workers=parallel_sync_tasks) as executor:
         started_futures = deque()
         for dregsy_task in dregsy_entries:
             future = executor.submit(run_dregsy_task, dregsy_task, debug)
@@ -130,6 +131,12 @@ def main() -> None:
         help="check configuration file only",
     )
     parser.add_argument(
+        "--parallel-sync-tasks",
+        default=100,
+        type=int,
+        help="amount of parallel sync tasks to be run at once",
+    )
+    parser.add_argument(
         "--debug",
         default=False,
         action="store_true",
@@ -151,7 +158,7 @@ def main() -> None:
 
     print(f"Starting configuration \n{args}")
     # all checks look ok, starting repository sync
-    sync_based_on_configuration(configuration, args.debug)
+    sync_based_on_configuration(configuration, args.parallel_sync_tasks, args.debug)
 
 
 if __name__ == "__main__":
