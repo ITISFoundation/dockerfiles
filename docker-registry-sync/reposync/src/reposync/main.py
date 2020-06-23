@@ -3,6 +3,7 @@ import yaml
 import argparse
 import datetime
 import subprocess
+from collections import deque
 from io import TextIOWrapper
 
 from reposync.validation import is_configuration_valid
@@ -23,12 +24,12 @@ def error_exit(start_date):
 
 
 def sync_based_on_configuration(
-    configuration: str, flag_exit_on_first_error: bool
+    configuration: str, flag_exit_on_first_error: bool, debug: bool
 ) -> None:
     # get stages from own configuration file
     stages = assemble_stages(configuration)
     # convert stagest to dregsy yaml format
-    dregsy_yamls = create_dregsy_yamls(stages)
+    dregsy_entries = create_dregsy_yamls(stages)
 
     # will cause the process to quit if an error is detected during dregsy output
     exit_on_first_error = (
@@ -39,16 +40,18 @@ def sync_based_on_configuration(
 
     start_date = datetime.datetime.utcnow()
 
-    for stage_name, yaml_string in dregsy_yamls:
-        with temp_configuration_file(stage_name, yaml_string) as f:
+    for dregsy_entry in dregsy_entries:
+        yaml_string = dregsy_entry.as_yaml()
+        with temp_configuration_file(dregsy_entry.stage_file_name) as f:
             f.write(yaml_string)
             f.close()  # close to commit write changes
 
-            header = f">>>>>>>>> {stage_name} <<<<<<<<<<<<"
+            header = f"| {dregsy_entry.ci_print_header} |"
             print(f"\n{'-' * len(header)}")
             print(header)
             print(f"{'-' * len(header)}")
-            print(subprocess.check_output(f"cat {f.name}", shell=True).decode())
+            if debug:
+                print(dregsy_entry.ci_print())
 
             # do our work with the file like running the command and at the end it will be automatically removed
 
@@ -56,7 +59,8 @@ def sync_based_on_configuration(
             process = subprocess.Popen(
                 dregsy_command, stdout=subprocess.PIPE, stderr=subprocess.STDOUT
             )
-            # stream progress in real time
+            # stream progress in real time and monitor for errors
+            current_logs = deque()
             for line in iter(process.stdout.readline, b""):
                 decoded_line = line.decode()
                 if (
@@ -65,8 +69,13 @@ def sync_based_on_configuration(
                 ):
                     completed_successful = False
                     if exit_on_first_error:
+                        if not debug:
+                            print("".join(current_logs))
                         error_exit(start_date)
-                sys.stdout.write(decoded_line)
+                if debug:
+                    sys.stdout.write(decoded_line)
+                else:
+                    current_logs.append(decoded_line)
 
     if not completed_successful:
         error_exit(start_date)
@@ -97,6 +106,12 @@ def main() -> None:
         action="store_true",
         help="if an error occurs do not continue sync",
     )
+    parser.add_argument(
+        "--debug",
+        default=False,
+        action="store_true",
+        help="show additional information during sync",
+    )
     # add exit on first error to force a quit
     args = parser.parse_args()
 
@@ -112,7 +127,7 @@ def main() -> None:
         exit(0)
 
     # all checks look ok, starting repository sync
-    sync_based_on_configuration(configuration, args.exit_on_first_error)
+    sync_based_on_configuration(configuration, args.exit_on_first_error, args.debug)
 
 
 if __name__ == "__main__":

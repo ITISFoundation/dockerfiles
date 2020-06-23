@@ -1,11 +1,11 @@
-import yaml
+import uuid
 
 from typing import Dict, Tuple
 from dataclasses import dataclass, field
 from collections import deque
 
 from .prepare_stages import Stage, List
-from .utils import encode_credentials
+from .utils import encode_credentials, dict_to_yaml
 
 
 class BaseSerializable:
@@ -70,6 +70,26 @@ class DregsyYAML(BaseSerializable):
     def as_dict(self) -> Dict:
         return {"relay": self.relay, "skopeo": self.skopeo, "tasks": self.tasks}
 
+    def as_yaml(self) -> str:
+        return dict_to_yaml(self.as_dict())
+
+    def ci_print(self) -> str:
+        """Returns a string usable in the CI, obscures secrets """
+        dict_formatted = self.as_dict()
+        # obscuring secrets in UI
+        for task in dict_formatted["tasks"]:
+            task["source"]["auth"] = "***"
+            task["target"]["auth"] = "***"
+        return dict_to_yaml(dict_formatted)
+
+    @property
+    def ci_print_header(self) -> str:
+        return self.tasks[0]["name"]
+
+    @property
+    def stage_file_name(self) -> str:
+        return f"{uuid.uuid4()}.yaml"
+
     @classmethod
     def assemble(cls, tasks):
         return DregsyYAML(
@@ -79,7 +99,7 @@ class DregsyYAML(BaseSerializable):
         )
 
 
-def create_dregsy_yamls(stages: List[Stage]) -> List[Tuple[str, str]]:
+def create_dregsy_yamls(stages: List[Stage]) -> List[DregsyYAML]:
     result = deque()
     for k, stage in enumerate(stages):
         source_auth = encode_credentials(
@@ -90,8 +110,17 @@ def create_dregsy_yamls(stages: List[Stage]) -> List[Tuple[str, str]]:
             target_auth = encode_credentials(
                 to_obj.destination.user, to_obj.destination.password
             )
+            task_name = "Stage {stage_number}: [{task_number}/{total_tasks}] {from_url}/{from_repo} -> {to_url}/{to_repo}".format(
+                stage_number=k + 1,
+                task_number=j + 1,
+                total_tasks=len(stage.to_entries),
+                from_url=stage.from_obj.source.url,
+                from_repo=stage.from_obj.repository,
+                to_url=to_obj.destination.url,
+                to_repo=to_obj.repository,
+            )
             task = Task(
-                name=f"Stage {k+1}: [{j+1}/{len(stage.to_entries)}] {stage.from_obj.source.key} -> {to_obj.destination.key}",
+                name=task_name,
                 verbose=True,
                 source=TaskRegistry(
                     registry=stage.from_obj.source.url,
@@ -112,14 +141,7 @@ def create_dregsy_yamls(stages: List[Stage]) -> List[Tuple[str, str]]:
                 ],
             ).as_dict()
 
-            dregsy_entry = DregsyYAML.assemble(tasks=[task]).as_dict()
-            result.append(dregsy_entry)
+            result.append(DregsyYAML.assemble(tasks=[task]))
 
-    return [
-        (
-            x["tasks"][0]["name"],
-            yaml.dump(x, allow_unicode=True, default_flow_style=False, sort_keys=False),
-        )
-        for x in result
-    ]
+    return result
 

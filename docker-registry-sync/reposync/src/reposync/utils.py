@@ -1,9 +1,10 @@
 import traceback
 import base64
 import json
+import yaml
 import os
 
-from typing import IO, Any
+from typing import IO, Any, Dict
 from contextlib import contextmanager
 from pathlib import Path
 from sanitize_filename import sanitize
@@ -27,8 +28,14 @@ def from_env_default(env_var_name: str, default=None) -> str:
     return os.environ.get(env_var_name, default)
 
 
+def dict_to_yaml(payload: Dict) -> str:
+    return yaml.dump(
+        payload, allow_unicode=True, default_flow_style=False, sort_keys=False
+    )
+
+
 @contextmanager
-def temp_configuration_file(stage_name: str, yaml_string: str) -> IO[Any]:
+def temp_configuration_file(stage_name: str) -> IO[Any]:
     target_file = Path("/tmp") / f"{sanitize(stage_name.replace(' ', ''))}.yaml"
     try:
         f = target_file.open("w")
