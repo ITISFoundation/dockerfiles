@@ -68,9 +68,9 @@ def sync_based_on_configuration(
                     in decoded_line
                 ):
                     completed_successfully = False
+                    if not debug:
+                        print("".join(current_logs))
                     if exit_on_first_error:
-                        if not debug:
-                            print("".join(current_logs))
                         error_exit(start_date)
                 if debug:
                     sys.stdout.write(decoded_line)
@@ -126,6 +126,7 @@ def main() -> None:
         print("Configuration is OK, closing gracefully.")
         exit(0)
 
+    print(f"Starting configuration \n{args}")
     # all checks look ok, starting repository sync
     sync_based_on_configuration(configuration, args.exit_on_first_error, args.debug)
 
