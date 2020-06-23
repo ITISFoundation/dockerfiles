@@ -36,7 +36,7 @@ def sync_based_on_configuration(
         from_env_default("SYNC_EXIT_ON_FIRST_ERROR", False) or flag_exit_on_first_error
     )
 
-    completed_successful = True
+    completed_successfully = True
 
     start_date = datetime.datetime.utcnow()
 
@@ -67,7 +67,7 @@ def sync_based_on_configuration(
                     "[ERROR] one or more tasks had errors, please see log for details"
                     in decoded_line
                 ):
-                    completed_successful = False
+                    completed_successfully = False
                     if exit_on_first_error:
                         if not debug:
                             print("".join(current_logs))
@@ -77,7 +77,7 @@ def sync_based_on_configuration(
                 else:
                     current_logs.append(decoded_line)
 
-    if not completed_successful:
+    if not completed_successfully:
         error_exit(start_date)
 
     print(f"Image sync took: {datetime.datetime.utcnow() - start_date}")
