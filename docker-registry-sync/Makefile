@@ -1,4 +1,6 @@
 .DEFAULT_GOAL := help
+# including .env file used for development
+include .env
 
 BRIDGE_NETWORK_NAME := dev_sync_net
 
@@ -62,15 +64,15 @@ stop-dev-registry: ## stops development registries used by development-run
 .PHONY: development-run
 development-run: _ensure-in-venv build ## used to test out changes during developmen
 	@docker run --rm -it \
-		-e ENV_VAR_USERNAME_DOCKERHUB=dockerhub_user \
-		-e ENV_PASSWORD_DOCKERHUB=dockerhub_password \
-		-e ENV_VAR_USERNAME_MASTER=testuser \
-		-e ENV_PASSWORD_MASTER=testpassword \
-		-e ENV_VAR_USERNAME_STAGING=testuser \
-		-e ENV_PASSWORD_STAGING=testpassword \
-		-e ENV_VAR_USERNAME_AWS=testuser \
-		-e ENV_PASSWORD_AWS=testpassword \
-		-e SYNC_EXIT_ON_FIRST_ERROR=true \
+		-e ENV_VAR_USERNAME_DOCKERHUB=${ENV_VAR_USERNAME_DOCKERHUB} \
+		-e ENV_PASSWORD_DOCKERHUB=${ENV_PASSWORD_DOCKERHUB} \
+		-e ENV_VAR_USERNAME_MASTER=${ENV_VAR_USERNAME_MASTER} \
+		-e ENV_PASSWORD_MASTER=${ENV_PASSWORD_MASTER} \
+		-e ENV_VAR_USERNAME_STAGING=${ENV_VAR_USERNAME_STAGING} \
+		-e ENV_PASSWORD_STAGING=${ENV_PASSWORD_STAGING} \
+		-e ENV_VAR_USERNAME_AWS=${ENV_VAR_USERNAME_AWS} \
+		-e ENV_PASSWORD_AWS=${ENV_PASSWORD_AWS} \
+		-e SYNC_EXIT_ON_FIRST_ERROR=${SYNC_EXIT_ON_FIRST_ERROR} \
 		-v $(current_dir)/dev/dev-sync-cfg.yml:/etc/cfg.yaml \
 		--network=${BRIDGE_NETWORK_NAME} \
 		${DOCKER_REGISTRY}/${IMAGE_NAME}:${DOCKER_REG_SYNC_VERSION}
