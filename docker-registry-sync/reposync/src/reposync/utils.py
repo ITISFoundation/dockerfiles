@@ -2,12 +2,16 @@ import traceback
 import base64
 import json
 import yaml
+import random
+import string
 import os
 
 from typing import IO, Any, Dict
 from contextlib import contextmanager
 from pathlib import Path
 from sanitize_filename import sanitize
+
+_cached_worker_ids = set()
 
 
 def encode_string(message: str, encoding: str = "utf-8") -> bytes:
@@ -32,6 +36,16 @@ def dict_to_yaml(payload: Dict) -> str:
     return yaml.dump(
         payload, allow_unicode=True, default_flow_style=False, sort_keys=False
     )
+
+
+def make_task_id(length=5) -> str:
+    generated_worker_id = "".join(
+        random.choices(string.ascii_letters + string.digits, k=length)
+    )
+    if generated_worker_id in _cached_worker_ids:
+        return make_task_id(length=length)
+    _cached_worker_ids.add(generated_worker_id)
+    return generated_worker_id
 
 
 @contextmanager
