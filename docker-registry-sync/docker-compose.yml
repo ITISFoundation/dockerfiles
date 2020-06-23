@@ -3,7 +3,8 @@ services:
   docker-registry-sync:
     image: ${DOCKER_REGISTRY}/${IMAGE_NAME}:${DOCKER_REG_SYNC_VERSION}
     build:
-      context: .
+      context: ./reposync
+      dockerfile: ../Dockerfile
       labels:
         org.label-schema.schema-version: "1.0"
         org.label-schema.build-date: "${BUILD_DATE}"
