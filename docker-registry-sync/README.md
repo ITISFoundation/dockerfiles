@@ -129,6 +129,17 @@ You can build and run your changes with (this command requires to run in a virtu
 
     make development-run
 
+Make sure you have defined a `.env` file next to this Makefile containing the following:
+
+    ENV_VAR_USERNAME_DOCKERHUB=_YOUR_DOCKER_HUB_USERNAME_
+    ENV_PASSWORD_DOCKERHUB=_YOUR_DOCKER_HUB_PASSWORD_
+    ENV_VAR_USERNAME_MASTER=testuser
+    ENV_PASSWORD_MASTER=testpassword
+    ENV_VAR_USERNAME_STAGING=testuser
+    ENV_PASSWORD_STAGING=testpassword
+    ENV_VAR_USERNAME_AWS=testuser
+    ENV_PASSWORD_AWS=testpassword
+    SYNC_EXIT_ON_FIRST_ERROR=true
 
 ## TODOs
 
