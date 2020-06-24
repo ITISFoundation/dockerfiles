@@ -101,7 +101,7 @@ class DregsyYAML(BaseSerializable):
 
 def create_dregsy_yamls(stages: List[Stage]) -> List[DregsyYAML]:
     result = deque()
-    for k, stage in enumerate(stages):
+    for stage in stages:
         source_auth = encode_credentials(
             stage.from_obj.source.user, stage.from_obj.source.password
         )
@@ -110,8 +110,8 @@ def create_dregsy_yamls(stages: List[Stage]) -> List[DregsyYAML]:
             target_auth = encode_credentials(
                 to_obj.destination.user, to_obj.destination.password
             )
-            task_name = "Stage {stage_number}: [{task_number}/{total_tasks}] {from_url}/{from_repo} -> {to_url}/{to_repo}".format(
-                stage_number=k + 1,
+            task_name = "Stage {stage_id}: [{task_number}/{total_tasks}] {from_url}/{from_repo} -> {to_url}/{to_repo}".format(
+                stage_id=stage.id,
                 task_number=j + 1,
                 total_tasks=len(stage.to_entries),
                 from_url=stage.from_obj.source.url,

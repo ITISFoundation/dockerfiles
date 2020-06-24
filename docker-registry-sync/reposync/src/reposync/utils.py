@@ -12,6 +12,7 @@ from pathlib import Path
 from sanitize_filename import sanitize
 
 _cached_worker_ids = set()
+_cached_stage_ids = set()
 
 
 def encode_string(message: str, encoding: str = "utf-8") -> bytes:
@@ -38,14 +39,27 @@ def dict_to_yaml(payload: Dict) -> str:
     )
 
 
+def random_alphanumerical_string(length):
+    return "".join(random.choices(string.ascii_letters + string.digits, k=length))
+
+
 def make_task_id(length=5) -> str:
-    generated_worker_id = "".join(
-        random.choices(string.ascii_letters + string.digits, k=length)
-    )
+    generated_worker_id = random_alphanumerical_string(length=length)
     if generated_worker_id in _cached_worker_ids:
         return make_task_id(length=length)
+
     _cached_worker_ids.add(generated_worker_id)
     return generated_worker_id
+
+
+def make_stage_id(proposed_id: str) -> str:
+    if proposed_id is None:
+        proposed_id = random_alphanumerical_string(10)
+    if proposed_id in _cached_stage_ids:
+        return make_stage_id(None)
+
+    _cached_stage_ids.add(proposed_id)
+    return proposed_id
 
 
 @contextmanager
