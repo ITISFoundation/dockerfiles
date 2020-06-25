@@ -35,18 +35,26 @@ dev-dependencies: _ensure-in-venv ## install development depenencies in your ven
 
 .PHONY: compile-dependencies
 compile-dependencies: _ensure-in-venv ## snapshot dependencies
-	@pip-compile --build-isolation $(current_dir)/reposync/requirements/base.in --output-file $(current_dir)/reposync/requirements/base.txt 
-	@pip-compile --build-isolation $(current_dir)/reposync/requirements/test.in --output-file $(current_dir)/reposync/requirements/test.txt 
+	@pip-compile --build-isolation reposync/requirements/base.in --output-file reposync/requirements/base.txt 
+	@pip-compile --build-isolation reposync/requirements/test.in --output-file reposync/requirements/test.txt 
 
 
 .PHONY: install-dependencies
 install-dependencies: _ensure-in-venv ## install package dependencies
-	@pip install -r $(current_dir)/reposync/requirements/base.txt 
+	@pip install -r reposync/requirements/base.txt 
+
+.PHONY: install-test-dependencies
+install-test-dependencies: _ensure-in-venv ## install package test dependencies
+	@pip install -r reposync/requirements/test.txt 
 
 
 .PHONY: install-py-package
 install-py-package: _ensure-in-venv ## install package dependencies
 	@pip install -e reposync
+
+.PHONY: tests
+tests: _ensure-in-venv ## install package dependencies
+	@tox -c reposync/tox.ini
 
 ##### PYTHON PACKAGE - END
 

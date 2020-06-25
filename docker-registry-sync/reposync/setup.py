@@ -1,10 +1,11 @@
+import os
 import re
 import sys
 from pathlib import Path
 
 from setuptools import find_packages, setup
 
-current_dir = Path(sys.argv[0] if __name__ == "__main__" else __file__).resolve().parent
+current_dir = Path(os.path.dirname(os.path.realpath(__file__)))
 
 
 def read_reqs(reqs_path: Path):
@@ -18,7 +19,7 @@ test_requirements = read_reqs(current_dir / "requirements" / "test.txt")
 
 setup(
     name="reposync",
-    version="0.1.0",
+    version="0.2.0",
     packages=find_packages(where="src"),
     package_dir={"": "src",},
     include_package_data=True,
@@ -26,5 +27,5 @@ setup(
     python_requires=">=3.7",
     install_requires=install_requirements,
     tests_require=test_requirements,
-    setup_requires=["pytest-runner"],
+    setup_requires=["setuptools_scm"],
 )
