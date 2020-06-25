@@ -43,11 +43,11 @@ def dict_to_yaml(payload: Dict) -> str:
     )
 
 
-def random_alphanumerical_string(length):
+def random_alphanumerical_string(length: int) -> str:
     return "".join(random.choices(string.ascii_letters + string.digits, k=length))
 
 
-def make_task_id(length=5) -> str:
+def make_task_id(length: int = 5) -> str:
     generated_worker_id = random_alphanumerical_string(length=length)
     if generated_worker_id in _cached_worker_ids:
         return make_task_id(length=length)

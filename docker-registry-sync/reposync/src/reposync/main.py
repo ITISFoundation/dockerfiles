@@ -29,11 +29,11 @@ def error_exit(start_date: datetime.datetime) -> None:
     exit(1)
 
 
-def sch_print(message):
+def sch_print(message: str) -> None:
     print(f"[scheduler] {message}")
 
 
-def run_dregsy_task(dregsy_task: Task, results_queue: Queue, debug: bool):
+def run_dregsy_task(dregsy_task: Task, results_queue: Queue, debug: bool) -> None:
     try:
         dregsy_entry = DregsyYAML.assemble([dregsy_task])
         with temp_configuration_file(dregsy_entry.stage_file_name) as f:
