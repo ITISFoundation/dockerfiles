@@ -15,6 +15,10 @@ _cached_worker_ids = set()
 _cached_stage_ids = set()
 
 
+class CyclicDependencyException(Exception):
+    pass
+
+
 def encode_string(message: str, encoding: str = "utf-8") -> bytes:
     return base64.b64encode(message.encode(encoding)).decode(encoding)
 
