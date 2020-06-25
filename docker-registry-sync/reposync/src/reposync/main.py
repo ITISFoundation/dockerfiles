@@ -139,7 +139,7 @@ def queued_scheduler(configuration: str, parallel_sync_tasks: int, debug: bool) 
     print(f"Image sync took: {datetime.datetime.utcnow() - start_date}")
 
 
-def main() -> None:
+def input_args() -> argparse.Namespace:
     parser = argparse.ArgumentParser(
         description="Syncs registry images based on configuration"
     )
@@ -168,9 +168,10 @@ def main() -> None:
         action="store_true",
         help="show additional information during sync",
     )
-    # add exit on first error to force a quit
-    args = parser.parse_args()
+    return parser.parse_args()
 
+
+def main(args: argparse.Namespace) -> None:
     # Configuration checking:
     # - load from yaml file
     # - validate with json schema (yml must always be mappable to json)
@@ -188,5 +189,5 @@ def main() -> None:
 
 
 if __name__ == "__main__":
-    main()
+    main(input_args())
 
