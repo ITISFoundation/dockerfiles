@@ -1,6 +1,6 @@
 .DEFAULT_GOAL := help
 # including .env file used for development
-include .env
+-include .env
 
 BRIDGE_NETWORK_NAME := dev_sync_net
 

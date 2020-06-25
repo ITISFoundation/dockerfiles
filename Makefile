@@ -6,7 +6,7 @@
 .DEFAULT_GOAL := help
 SHELL         := /bin/bash
 # including .env file used for development
-include .env
+-include .env
 
 # Environments
 export VCS_URL          := $(shell git config --get remote.origin.url)
