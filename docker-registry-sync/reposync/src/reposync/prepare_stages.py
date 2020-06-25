@@ -45,6 +45,7 @@ class Stage:
     from_obj: From
     to_entries: List[ToEntry]
     id: str
+    depends_on: str
 
 
 class StageParser:
@@ -83,6 +84,7 @@ class StageParser:
                 from_obj=from_obj,
                 to_entries=to_entries,
                 id=make_stage_id(stage.get("id", None)),
+                depends_on=stage.get("depends_on", []),
             )
             stages.append(stage_obj)
         return list(stages)
