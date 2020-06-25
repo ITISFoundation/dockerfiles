@@ -5,9 +5,9 @@ include .env
 BRIDGE_NETWORK_NAME := dev_sync_net
 
 export IMAGE_NAME := docker-registry-sync
-export DOCKER_REG_SYNC_VERSION := 0.1.1
+export DOCKER_REG_SYNC_VERSION := 0.2.0
 # if this image is built by this script it will be tagged as stable
-export DOCKER_REG_SYNC_TAS_AS_STABLEVERSION := 0.1.0
+export DOCKER_REG_SYNC_TAS_AS_STABLEVERSION := 0.2.0
 export DOCKER_REGISTRY ?=itisfoundation
 
 export VCS_URL         := $(shell git config --get remote.origin.url)
@@ -72,7 +72,6 @@ development-run: _ensure-in-venv build ## used to test out changes during develo
 		-e ENV_PASSWORD_STAGING=${ENV_PASSWORD_STAGING} \
 		-e ENV_VAR_USERNAME_AWS=${ENV_VAR_USERNAME_AWS} \
 		-e ENV_PASSWORD_AWS=${ENV_PASSWORD_AWS} \
-		-e SYNC_EXIT_ON_FIRST_ERROR=${SYNC_EXIT_ON_FIRST_ERROR} \
 		-v $(current_dir)/dev/dev-sync-cfg.yml:/etc/cfg.yaml \
 		--network=${BRIDGE_NETWORK_NAME} \
 		${DOCKER_REGISTRY}/${IMAGE_NAME}:${DOCKER_REG_SYNC_VERSION} \
