@@ -1,11 +1,13 @@
 import uuid
+import networkx as nx
 
 from typing import Dict, Tuple
 from dataclasses import dataclass, field
 from collections import deque
 
+
 from .prepare_stages import Stage, List
-from .utils import encode_credentials, dict_to_yaml
+from .utils import encode_credentials, dict_to_yaml, CyclicDependencyException
 
 
 class BaseSerializable:
@@ -50,6 +52,9 @@ class Task(BaseSerializable):
     source: TaskRegistry
     target: TaskRegistry
     mappings: List[Mapping]
+    # needed for scheduling
+    id: str
+    depends_on: List[str]
 
     def as_dict(self) -> Dict:
         return {
@@ -84,7 +89,7 @@ class DregsyYAML(BaseSerializable):
 
     @property
     def ci_print_header(self) -> str:
-        return self.tasks[0]["name"]
+        return self.tasks[0].name
 
     @property
     def stage_file_name(self) -> str:
@@ -99,8 +104,26 @@ class DregsyYAML(BaseSerializable):
         )
 
 
-def create_dregsy_yamls(stages: List[Stage]) -> List[DregsyYAML]:
-    result = deque()
+def create_dregsy_task_graph(
+    stages: List[Stage],
+) -> Tuple[Dict[str, Task], Dict[str, List[str]]]:
+    def get_task_number(task_index):
+        return task_index + 1
+
+    def get_task_name(stage_id, task_number):
+        return f"{stage_id}.{task_number}"
+
+    # compute dependency mapping from stages to Dregsy_tasks
+    dependency_remapper = {None: []}
+    for stage in stages:
+        dependency_remapper[stage.id] = set()
+        for j, to_obj in enumerate(stage.to_entries):
+            dependency_remapper[stage.id].add(
+                get_task_name(stage.id, get_task_number(j))
+            )
+
+    tasks = deque()
+
     for stage in stages:
         source_auth = encode_credentials(
             stage.from_obj.source.user, stage.from_obj.source.password
@@ -110,15 +133,24 @@ def create_dregsy_yamls(stages: List[Stage]) -> List[DregsyYAML]:
             target_auth = encode_credentials(
                 to_obj.destination.user, to_obj.destination.password
             )
-            task_name = "Stage {stage_id}: [{task_number}/{total_tasks}] {from_url}/{from_repo} -> {to_url}/{to_repo}".format(
+            requires_option = (
+                "" if stage.depends_on is None else f"(requires {stage.depends_on})"
+            )
+            task_name = "Stage {stage_id}.{task_number} {requires}: [{task_number}/{total_tasks}] {from_url}/{from_repo} -> {to_url}/{to_repo}".format(
                 stage_id=stage.id,
-                task_number=j + 1,
+                requires=requires_option,
+                task_number=get_task_number(j),
                 total_tasks=len(stage.to_entries),
                 from_url=stage.from_obj.source.url,
                 from_repo=stage.from_obj.repository,
                 to_url=to_obj.destination.url,
                 to_repo=to_obj.repository,
             )
+
+            depends_on = set()
+            for stage_depends_on in stage.depends_on:
+                depends_on.update(dependency_remapper[stage_depends_on])
+
             task = Task(
                 name=task_name,
                 verbose=True,
@@ -139,9 +171,29 @@ def create_dregsy_yamls(stages: List[Stage]) -> List[DregsyYAML]:
                         tags=to_obj.tags,
                     ).as_dict()
                 ],
-            ).as_dict()
+                id=get_task_name(stage.id, get_task_number(j)),
+                depends_on=depends_on,
+            )
+            tasks.append(task)
 
-            result.append(DregsyYAML.assemble(tasks=[task]))
+    task_mapping = {task.id: task for task in tasks}
 
-    return result
+    graph = nx.DiGraph()
+    graph.add_nodes_from(task_mapping.keys())
+    # print("NODES:", task_map.keys())
+    for task in tasks:
+        node_edges = [(x, task.id) for x in task.depends_on]
+        graph.add_edges_from(node_edges)
+        # print(node_edges, ",")
+
+    predecessors = {}
+    for node in task_mapping.keys():
+        predecessors[node] = [x for x in graph.predecessors(node)]
+
+    if not nx.is_directed_acyclic_graph(graph):
+        raise CyclicDependencyException(
+            f"Please remove cyclic dependencies. Check predecessors:\n{predecessors}"
+        )
+
+    return task_mapping, predecessors
 
