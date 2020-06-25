@@ -2,18 +2,23 @@ import sys
 import yaml
 import argparse
 import datetime
+import traceback
 import subprocess
 from collections import deque
 from io import TextIOWrapper
 from concurrent import futures
+from typing import Dict
+from queue import Queue
+from pprint import pprint
+
 
 from reposync.validation import is_configuration_valid
 from reposync.prepare_stages import assemble_stages
-from reposync.dregsy_config import create_dregsy_yamls, DregsyYAML
+from reposync.dregsy_config import create_dregsy_task_graph, DregsyYAML, Task
 from reposync.utils import temp_configuration_file, from_env_default, make_task_id
 
 
-def load_yaml_from_file(input_file: TextIOWrapper) -> str:
+def load_yaml_from_file(input_file: TextIOWrapper) -> Dict:
     with input_file as f:
         return yaml.safe_load(f)
 
@@ -24,91 +29,112 @@ def error_exit(start_date: datetime.datetime) -> None:
     exit(1)
 
 
-def run_dregsy_task(dregsy_entry: DregsyYAML, debug: bool):
-    yaml_string = dregsy_entry.as_yaml()
-    with temp_configuration_file(dregsy_entry.stage_file_name) as f:
-        f.write(yaml_string)
-        f.close()  # close to commit write changes
-        task_id = make_task_id()
+def sch_print(message):
+    print(f"[scheduler] {message}")
 
-        if debug:
-            header = f"| {dregsy_entry.ci_print_header} |"
-            dashes = len(header) - 2
-            print(
-                f"\n{task_id}| {'-' * dashes}\n{task_id}{header}\n{task_id}| {'-' * dashes}"
-            )
-            print(f"\n{task_id}| Below dregsy configuration\n{dregsy_entry.ci_print()}")
-        else:
-            print(f"{task_id}| {dregsy_entry.ci_print_header}")
 
-        # do our work with the file like running the command and at the end it will be automatically removed
-        completed_successfully = True
-        dregsy_command = f"dregsy -config={f.name}".split(" ")
-        process = subprocess.Popen(
-            dregsy_command, stdout=subprocess.PIPE, stderr=subprocess.STDOUT
-        )
-        # stream progress in real time and monitor for errors
-        current_logs = deque()
+def run_dregsy_task(dregsy_task: Task, results_queue: Queue, debug: bool):
+    try:
+        dregsy_entry = DregsyYAML.assemble([dregsy_task])
+        with temp_configuration_file(dregsy_entry.stage_file_name) as f:
+            f.write(dregsy_entry.as_yaml())
+            f.close()  # close to commit write changes
+            task_id = make_task_id()
 
-        for line in iter(process.stdout.readline, b""):
-            decoded_line = f"{task_id}| {line.decode()}"
-            if (
-                "[ERROR] one or more tasks had errors, please see log for details"
-                in decoded_line
-            ):
-                completed_successfully = False
             if debug:
-                sys.stdout.write(decoded_line)
+                header = f"| {dregsy_entry.ci_print_header} |"
+                dashes = len(header) - 2
+                print(
+                    f"\n{task_id}| {'-' * dashes}\n{task_id}{header}\n{task_id}| {'-' * dashes}"
+                )
+                print(
+                    f"\n{task_id}| Below dregsy configuration\n{dregsy_entry.ci_print()}"
+                )
             else:
-                current_logs.append(decoded_line)
+                print(f"{task_id}| {dregsy_entry.ci_print_header}")
 
-        return completed_successfully, current_logs
+            # do our work with the file like running the command and at the end it will be automatically removed
+            completed_successfully = True
+            dregsy_command = f"dregsy -config={f.name}".split(" ")
+            process = subprocess.Popen(
+                dregsy_command, stdout=subprocess.PIPE, stderr=subprocess.STDOUT
+            )
+            # stream progress in real time and monitor for errors
+            current_logs = deque()
+
+            for line in iter(process.stdout.readline, b""):
+                decoded_line = f"{task_id}| {line.decode()}"
+                if (
+                    "[ERROR] one or more tasks had errors, please see log for details"
+                    in decoded_line
+                ):
+                    completed_successfully = False
+                if debug:
+                    sys.stdout.write(decoded_line)
+                else:
+                    current_logs.append(decoded_line)
+        results_queue.put((completed_successfully, current_logs, dregsy_task.id))
+    except Exception:
+        results_queue.put((False, traceback.format_exc(), dregsy_task.id))
 
 
-def sync_based_on_configuration(
-    configuration: str, parallel_sync_tasks: int, debug: bool
-) -> None:
+def queued_scheduler(configuration: str, parallel_sync_tasks: int, debug: bool) -> None:
     # get stages from own configuration file
     stages = assemble_stages(configuration)
-    # convert stagest to dregsy yaml format
-    dregsy_entries = create_dregsy_yamls(stages)
+    # compute dependency graph for execution and return predecessors
+    task_mapping, predecessors = create_dregsy_task_graph(stages)
 
-    finished_without_errors = False
+    completed_tasks = {k: False for k in task_mapping.keys()}
+    already_started_tasks = set()
+
+    results_queue = Queue()
+
+    def predecessors_complete(task_predecessors):
+        return all([completed_tasks[x] for x in task_predecessors])
+
     start_date = datetime.datetime.utcnow()
+    overall_completed_successfully = True
 
     with futures.ThreadPoolExecutor(max_workers=parallel_sync_tasks) as executor:
-        started_futures = deque()
-        for dregsy_task in dregsy_entries:
-            future = executor.submit(run_dregsy_task, dregsy_task, debug)
-            started_futures.append(future)
 
-        result = futures.wait(
-            started_futures, timeout=None, return_when=futures.ALL_COMPLETED
-        )
+        def schedule_wating_tasks():
+            for task_id, task in task_mapping.items():
+                if completed_tasks[task_id]:
+                    continue  # skiping task already completed
+                if not predecessors_complete(predecessors[task_id]):
+                    continue  # still waiting for predecessors to finish
+                if task_id in already_started_tasks:
+                    continue  # task is already running
 
-        # check the state of the future
-        for done_future in result.done:
-            if not done_future.done():
-                print(f"Future failed: {done_future}")
-                finished_without_errors = True
-                continue
+                executor.submit(run_dregsy_task, task, results_queue, debug)
+                sch_print(f"started => Stage {task_id}")
+                already_started_tasks.add(task_id)
 
-            future_error = done_future.exception()
-            if future_error is not None:
-                print(f"Future with error: {future_error}")  # not expected
-                finished_without_errors = True
-                continue
+        schedule_wating_tasks()  # initial scheduling
 
-            finished_successfully, output = done_future.result()
-            if not finished_successfully:
-                print("".join(output))
+        while not all(completed_tasks.values()):
+            completed_successfully, task_logs, task_id = results_queue.get()
 
-        # doing this here so it can error out after printing all the errors
-        if len(result.not_done) > 0:
-            raise Exception(f"Some futures did not finish {result.not_done}")
+            # mark task as completed, user has to check logs if something went wrong
+            completed_tasks[task_id] = True
 
-        if finished_without_errors:
-            error_exit(start_date)
+            if debug:
+                pprint(completed_tasks)
+
+            if not completed_successfully:
+                overall_completed_successfully = False
+                sch_print(f"Logs from Stage {task_id}\n" + "".join(task_logs))
+
+            completed_task_count = len(
+                [x for x in completed_tasks if completed_tasks[x]]
+            )
+            sch_print(
+                f"completed@{completed_task_count}/{len(completed_tasks)} => Stage {task_id}"
+            )
+            schedule_wating_tasks()
+
+    if not overall_completed_successfully:
+        error_exit(start_date)
 
     print(f"Image sync took: {datetime.datetime.utcnow() - start_date}")
 
@@ -158,7 +184,7 @@ def main() -> None:
 
     print(f"Starting configuration \n{args}")
     # all checks look ok, starting repository sync
-    sync_based_on_configuration(configuration, args.parallel_sync_tasks, args.debug)
+    queued_scheduler(configuration, args.parallel_sync_tasks, args.debug)
 
 
 if __name__ == "__main__":
