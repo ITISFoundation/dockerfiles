@@ -33,8 +33,9 @@ registries:
     env_password: ENV_PASSWORD_AWS
     skip-tls-verify: true
 
-# array of stages which guarantees order of execution
-# you can sync from A to B and from B to C
+# the scheduler will try to run all stages in parallel
+# if a stage has a depends_on key it will wait for previous stages
+# to complete before starting
 stages:
   # generic usage
   - from:
@@ -50,9 +51,12 @@ stages:
       - destination: aws # key comes from registries
         repository: "simcore/services/comp_v3/sleeper" # different namespace is also allowed
         tags: ["0.0.1", "1.0.0"] # specify multiple tags
+    id: "i-am-not-required" # optional, not needed here
 
   # more advanced usage
   # pulls all sleeper tags from dockerhub and pushes to master
+  # to run this stage before another one, give it an id so it can be 
+  # referred by other stages
   - from:
       source: "dockerhub"
       repository: "itisfoundation/sleeper"
@@ -60,9 +64,13 @@ stages:
       - destination: master
         repository: "simcore/services/comp/sleeper"
         tags: []
+    id: "i-run-before"  # eeded for the stage below
   
-  # because the previous stage already synced the images
-  # pulls all the tag 1.0.0 of sleeper from master syncs to staging (also in a different namespace)
+  # because the depends_on tag was added, this stage will wait for the specified
+  # sages to complete before starting
+  # Please note: if an error occurs in one of the depends_on stages execution
+  # still goes on. Error logs will always be displayed if something went wrong
+  # for easy debugging
   - from:
       source: "master"
       repository: "simcore/services/comp/sleeper"
@@ -70,6 +78,7 @@ stages:
       - destination: staging
         repository: "simcore/services/comp_v4/sleeper"
         tags: ["1.0.0"]
+    depends_on: ["i-run-before"]
 
 ```
 
@@ -96,10 +105,10 @@ When starting the process also inject all the environment variables needed by th
         ENV_PASSWORD_AWS=testpassword \
     run-reposync -c dev/dev-sync-cfg.yml
 
-By default if an error occurs during the sync of an image the process is not stopped, but the error message is logged.
-If you'd like to cause your process to fail the first time an error occurs you are given the following options:
-- a command line flag `--exit-on-first-error`
-- an environment variable  `SYNC_EXIT_ON_FIRST_ERROR` which if set will have the same effect as the flag
+By default if an error occurs during the sync of an image the process is not stopped, but the error message is logged and the process will exit with code 1 at the end.
+
+The flag `--parallel-sync-tasks` is available to overwrite the default number of 
+parallel tasks, set to 100.
 
 ## Running in Docker
 
@@ -114,7 +123,6 @@ The project is packaged as a Docker image and this is the standard way to runt i
       -e ENV_PASSWORD_STAGING=testpassword \
       -e ENV_VAR_USERNAME_AWS=testuser \
       -e ENV_PASSWORD_AWS=testpassword \
-      -e SYNC_EXIT_ON_FIRST_ERROR=true \
       -v $(pwd)/dev/dev-sync-cfg.yml:/etc/cfg.yaml \
       itisfoundation/docker-registry-sync
 
@@ -139,7 +147,6 @@ Make sure you have defined a `.env` file next to this Makefile containing the fo
     ENV_PASSWORD_STAGING=testpassword
     ENV_VAR_USERNAME_AWS=testuser
     ENV_PASSWORD_AWS=testpassword
-    SYNC_EXIT_ON_FIRST_ERROR=true
 
 ## TODOs
 
