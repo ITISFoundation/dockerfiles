@@ -7,3 +7,4 @@
 * added a debug mode to enable verbose debugging
 * exit on first error was removed
 * documentation reflects new changes
+* added tox for test management
