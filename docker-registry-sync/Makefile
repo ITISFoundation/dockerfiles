@@ -56,6 +56,20 @@ install-py-package: _ensure-in-venv ## install package dependencies
 tests: _ensure-in-venv ## install package dependencies
 	@tox -c reposync/tox.ini
 
+
+.PHONY: setup-env
+setup-env: ## creates the .env still need to change your credentials
+
+	@echo "ENV_VAR_USERNAME_DOCKERHUB=_YOUR_DOCKER_HUB_USERNAME_" > .env
+	@echo "ENV_PASSWORD_DOCKERHUB=_YOUR_DOCKER_HUB_PASSWORD_" >> .env
+	@echo "ENV_VAR_USERNAME_MASTER=testuser" >> .env
+	@echo "ENV_PASSWORD_MASTER=testpassword" >> .env
+	@echo "ENV_VAR_USERNAME_STAGING=testuser" >> .env
+	@echo "ENV_PASSWORD_STAGING=testpassword" >> .env
+	@echo "ENV_VAR_USERNAME_AWS=testuser" >> .env
+	@echo "ENV_PASSWORD_AWS=testpassword" >> .env
+
+
 ##### PYTHON PACKAGE - END
 
 .PHONY: start-dev-registry
