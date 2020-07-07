@@ -41,11 +41,11 @@ compile-dependencies: _ensure-in-venv ## snapshot dependencies
 
 .PHONY: install-dependencies
 install-dependencies: _ensure-in-venv ## install package dependencies
-	@pip install -r reposync/requirements/base.txt 
+	@cd reposync/requirements; pip-sync base.txt
 
 .PHONY: install-test-dependencies
 install-test-dependencies: _ensure-in-venv ## install package test dependencies
-	@pip install -r reposync/requirements/test.txt 
+	@cd reposync/requirements; pip-sync test.txt 
 
 
 .PHONY: install-py-package
