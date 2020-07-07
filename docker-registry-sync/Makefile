@@ -140,7 +140,7 @@ endif
 
 .PHONY: github-ci-tests
 github-ci-tests:	## reserved for Git Hub CI to start testsuite
-	@pip install tox==3.16.1
+	@pip3 install tox==3.16.1
 	@make tests
 
 .PHONY: github-ci-push
