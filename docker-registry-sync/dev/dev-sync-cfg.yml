@@ -54,7 +54,7 @@ stages:
       - destination: master
         repository: "simcore/services/comp/sleeper"
         tags: []
-    id: "i-run-before"  # eeded for the stage below
+    id: "i-run-before"  # needed for the stage below
   
   # because the depends_on tag was added, this stage will wait for the specified
   # sages to complete before starting
