@@ -140,7 +140,7 @@ endif
 
 .PHONY: github-ci-tests
 github-ci-tests:	## reserved for Git Hub CI to start testsuite
-	docker run -it --rm \
+	docker run --rm \
 		-v $(current_dir)/:/code \
 		-w /code \
 		python:3.8-buster \
