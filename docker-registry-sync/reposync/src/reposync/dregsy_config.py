@@ -12,7 +12,7 @@ from .utils import encode_credentials, dict_to_yaml, CyclicDependencyException
 
 class BaseSerializable:
     def as_dict(self) -> Dict:
-        raise NotImplementedError("Must implement in subclass")
+        raise NotImplementedError("Must implement in subclass")  # pragma: no cover
 
 
 @dataclass
@@ -55,15 +55,6 @@ class Task(BaseSerializable):
     # needed for scheduling
     id: str
     depends_on: List[str]
-
-    def as_dict(self) -> Dict:
-        return {
-            "name": self.name,
-            "verbose": self.verbose,
-            "source": self.source,
-            "target": self.target,
-            "mappings": self.mappings,
-        }
 
 
 @dataclass

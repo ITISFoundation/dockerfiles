@@ -54,7 +54,7 @@ install-py-package: _ensure-in-venv ## install package dependencies
 
 .PHONY: tests
 tests: _ensure-in-venv ## install package dependencies
-	@tox -c reposync/tox.ini
+	@tox -r -c reposync/tox.ini
 
 
 .PHONY: setup-env

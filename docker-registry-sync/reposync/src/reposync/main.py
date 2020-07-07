@@ -15,7 +15,7 @@ from pprint import pprint
 from reposync.validation import is_configuration_valid
 from reposync.prepare_stages import assemble_stages
 from reposync.dregsy_config import create_dregsy_task_graph, DregsyYAML, Task
-from reposync.utils import temp_configuration_file, from_env_default, make_task_id
+from reposync.utils import temp_configuration_file, make_task_id
 
 
 def load_yaml_from_file(input_file: TextIOWrapper) -> Dict:
@@ -26,7 +26,7 @@ def load_yaml_from_file(input_file: TextIOWrapper) -> Dict:
 def error_exit(start_date: datetime.datetime) -> None:
     print("\nThere were errors during sync, check the logs above")
     print(f"Error after after: {datetime.datetime.utcnow() - start_date}\n")
-    exit(1)
+    sys.exit(1)
 
 
 def sch_print(message: str) -> None:
@@ -36,6 +36,12 @@ def sch_print(message: str) -> None:
 def run_dregsy_task(dregsy_task: Task, results_queue: Queue, debug: bool) -> None:
     try:
         dregsy_entry = DregsyYAML.assemble([dregsy_task])
+
+        # do our work with the file like running the command and at the end it will be automatically removed
+        completed_successfully = True
+        # stream progress in real time and monitor for errors
+        current_logs = deque()
+
         with temp_configuration_file(dregsy_entry.stage_file_name) as f:
             f.write(dregsy_entry.as_yaml())
             f.close()  # close to commit write changes
@@ -53,14 +59,10 @@ def run_dregsy_task(dregsy_task: Task, results_queue: Queue, debug: bool) -> Non
             else:
                 print(f"{task_id}| {dregsy_entry.ci_print_header}")
 
-            # do our work with the file like running the command and at the end it will be automatically removed
-            completed_successfully = True
             dregsy_command = f"dregsy -config={f.name}".split(" ")
             process = subprocess.Popen(
                 dregsy_command, stdout=subprocess.PIPE, stderr=subprocess.STDOUT
             )
-            # stream progress in real time and monitor for errors
-            current_logs = deque()
 
             for line in iter(process.stdout.readline, b""):
                 decoded_line = f"{task_id}| {line.decode()}"
@@ -94,7 +96,7 @@ def queued_scheduler(configuration: str, parallel_sync_tasks: int, debug: bool) 
 
     start_date = datetime.datetime.utcnow()
     overall_completed_successfully = True
-
+    jobs = []
     with futures.ThreadPoolExecutor(max_workers=parallel_sync_tasks) as executor:
 
         def schedule_wating_tasks():
@@ -106,7 +108,9 @@ def queued_scheduler(configuration: str, parallel_sync_tasks: int, debug: bool) 
                 if task_id in already_started_tasks:
                     continue  # task is already running
 
-                executor.submit(run_dregsy_task, task, results_queue, debug)
+                jobs.append(
+                    executor.submit(run_dregsy_task, task, results_queue, debug)
+                )
                 sch_print(f"started => Stage {task_id}")
                 already_started_tasks.add(task_id)
 
@@ -139,7 +143,7 @@ def queued_scheduler(configuration: str, parallel_sync_tasks: int, debug: bool) 
     print(f"Image sync took: {datetime.datetime.utcnow() - start_date}")
 
 
-def input_args() -> argparse.Namespace:
+def input_args() -> argparse.Namespace:  # pragma: no cover
     parser = argparse.ArgumentParser(
         description="Syncs registry images based on configuration"
     )
@@ -171,7 +175,7 @@ def input_args() -> argparse.Namespace:
     return parser.parse_args()
 
 
-def main(args: argparse.Namespace) -> None:
+def run_app(args: argparse.Namespace) -> None:
     # Configuration checking:
     # - load from yaml file
     # - validate with json schema (yml must always be mappable to json)
@@ -188,6 +192,10 @@ def main(args: argparse.Namespace) -> None:
     queued_scheduler(configuration, args.parallel_sync_tasks, args.debug)
 
 
+def main():
+    run_app(input_args())  # pragma: no cover
+
+
 if __name__ == "__main__":
-    main(input_args())
+    main()  # pragma: no cover
 

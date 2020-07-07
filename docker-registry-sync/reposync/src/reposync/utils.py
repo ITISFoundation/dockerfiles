@@ -28,13 +28,7 @@ def encode_credentials(username: str, password: str) -> bytes:
 
 
 def from_env(env_var_name: str) -> str:
-    if env_var_name not in os.environ:
-        raise KeyError(f"Expected '{env_var_name}' in environment variables")
     return os.environ[env_var_name]
-
-
-def from_env_default(env_var_name: str, default=None) -> str:
-    return os.environ.get(env_var_name, default)
 
 
 def dict_to_yaml(payload: Dict) -> str:
@@ -50,7 +44,7 @@ def random_alphanumerical_string(length: int) -> str:
 def make_task_id(length: int = 5) -> str:
     generated_worker_id = random_alphanumerical_string(length=length)
     if generated_worker_id in _cached_worker_ids:
-        return make_task_id(length=length)
+        return make_task_id(length=length)  # pragma: no cover
 
     _cached_worker_ids.add(generated_worker_id)
     return generated_worker_id
@@ -60,8 +54,7 @@ def make_stage_id(proposed_id: str) -> str:
     if proposed_id is None:
         proposed_id = random_alphanumerical_string(10)
     if proposed_id in _cached_stage_ids:
-        return make_stage_id(None)
-
+        return make_stage_id(None)  # pragma: no cover
     _cached_stage_ids.add(proposed_id)
     return proposed_id
 
@@ -79,7 +72,7 @@ def temp_configuration_file(stage_name: str) -> IO[Any]:
         target_file.unlink()
 
 
-if __name__ == "__main__":
+if __name__ == "__main__":  # pragma: no cover
     # decodes the first arg on cli
     import sys
 
