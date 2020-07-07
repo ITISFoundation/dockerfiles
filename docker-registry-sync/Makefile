@@ -84,7 +84,7 @@ stop-dev-registry: ## stops development registries used by development-run
 	@sudo rm -rf dev/data_*
 
 .PHONY: development-run
-development-run: _ensure-in-venv build ## used to test out changes during developmen
+development-run: _ensure-in-venv build ## used to test out changes during development
 	@docker run --rm -it \
 		-e ENV_VAR_USERNAME_DOCKERHUB=${ENV_VAR_USERNAME_DOCKERHUB} \
 		-e ENV_PASSWORD_DOCKERHUB=${ENV_PASSWORD_DOCKERHUB} \
@@ -140,8 +140,11 @@ endif
 
 .PHONY: github-ci-tests
 github-ci-tests:	## reserved for Git Hub CI to start testsuite
-	@pip3 install tox==3.16.1
-	@make tests
+	docker run -it --rm \
+		-v $(current_dir)/:/code \
+		-w /code \
+		python:3.8-buster \
+		sh -c 'export VIRTUAL_ENV=1 && git init && pip install tox && make tests'
 
 .PHONY: github-ci-push
 github-ci-push:	## reserved for Git Hub CI to push image
