@@ -143,7 +143,7 @@ github-ci-tests:	## reserved for Git Hub CI to start testsuite
 	pwd
 	ls -la
 	docker run --rm \
-		-v $(current_dir)/:/code \
+		-v $(current_dir):/code \
 		-w /code \
 		python:3.8-buster \
 		sh -c 'pwd && ls -la && export VIRTUAL_ENV=1 && git init && pip install tox && make tests'
