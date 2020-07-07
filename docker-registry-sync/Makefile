@@ -3,9 +3,9 @@
 BRIDGE_NETWORK_NAME := dev_sync_net
 
 export IMAGE_NAME := docker-registry-sync
-export DOCKER_REG_SYNC_VERSION := 0.1.0
+export DOCKER_REG_SYNC_VERSION := 0.2.0
 # if this image is built by this script it will be tagged as stable
-export DOCKER_REG_SYNC_TAS_AS_STABLEVERSION := 0.1.0
+export DOCKER_REG_SYNC_TAS_AS_STABLEVERSION := 0.2.0
 export DOCKER_REGISTRY ?=itisfoundation
 
 export VCS_URL         := $(shell git config --get remote.origin.url)
@@ -33,18 +33,31 @@ dev-dependencies: _ensure-in-venv ## install development depenencies in your ven
 
 .PHONY: compile-dependencies
 compile-dependencies: _ensure-in-venv ## snapshot dependencies
-	@pip-compile --build-isolation $(current_dir)/reposync/requirements/base.in --output-file $(current_dir)/reposync/requirements/base.txt 
-	@pip-compile --build-isolation $(current_dir)/reposync/requirements/test.in --output-file $(current_dir)/reposync/requirements/test.txt 
+	@pip-compile --build-isolation reposync/requirements/base.in --output-file reposync/requirements/base.txt 
+	@pip-compile --build-isolation reposync/requirements/test.in --output-file reposync/requirements/test.txt 
 
 
 .PHONY: install-dependencies
 install-dependencies: _ensure-in-venv ## install package dependencies
-	@pip install -r $(current_dir)/reposync/requirements/base.txt 
+	@cd reposync/requirements; pip-sync base.txt
+
+.PHONY: install-test-dependencies
+install-test-dependencies: _ensure-in-venv ## install package test dependencies
+	@cd reposync/requirements; pip-sync test.txt 
 
 
 .PHONY: install-py-package
 install-py-package: _ensure-in-venv ## install package dependencies
 	@pip install -e reposync
+
+.PHONY: tests
+tests: _ensure-in-venv ## install package dependencies
+	@tox -r -c reposync/tox.ini
+
+
+.PHONY: setup-env
+setup-env: ## creates the .env still need to change your credentials
+	cp .env.default .env
 
 ##### PYTHON PACKAGE - END
 
@@ -60,20 +73,13 @@ stop-dev-registry: ## stops development registries used by development-run
 	@sudo rm -rf dev/data_*
 
 .PHONY: development-run
-development-run: _ensure-in-venv build ## used to test out changes during developmen
+development-run: _ensure-in-venv build ## used to test out changes during development
 	@docker run --rm -it \
-		-e ENV_VAR_USERNAME_DOCKERHUB=dockerhub_user \
-		-e ENV_PASSWORD_DOCKERHUB=dockerhub_password \
-		-e ENV_VAR_USERNAME_MASTER=testuser \
-		-e ENV_PASSWORD_MASTER=testpassword \
-		-e ENV_VAR_USERNAME_STAGING=testuser \
-		-e ENV_PASSWORD_STAGING=testpassword \
-		-e ENV_VAR_USERNAME_AWS=testuser \
-		-e ENV_PASSWORD_AWS=testpassword \
-		-e SYNC_EXIT_ON_FIRST_ERROR=true \
+		--env-file .env \
 		-v $(current_dir)/dev/dev-sync-cfg.yml:/etc/cfg.yaml \
 		--network=${BRIDGE_NETWORK_NAME} \
-		${DOCKER_REGISTRY}/${IMAGE_NAME}:${DOCKER_REG_SYNC_VERSION}
+		${DOCKER_REGISTRY}/${IMAGE_NAME}:${DOCKER_REG_SYNC_VERSION} \
+		run-reposync -c /etc/cfg.yaml
 
 # Used by deployment stages
 
@@ -116,7 +122,19 @@ endif
 
 .PHONY: github-ci-tests
 github-ci-tests:	## reserved for Git Hub CI to start testsuite
-	@echo "No tests at this time..."
+	echo "Running tests in isolation"
+	docker run --rm \
+		-v $(current_dir):/code \
+		-w /code \
+		python:3.8-buster \
+		sh -c ' export VIRTUAL_ENV=1 && \
+				rm -rf orig_repo && \
+				git clone $(shell VCS_URL="$(VCS_URL)" python3 convert_vcs_url.py) orig_repo && \
+				cd orig_repo && \
+				git checkout $(GITHUB_SHA) && \
+				pip install tox && \
+				cd docker-registry-sync && \
+				make tests'
 
 .PHONY: github-ci-push
 github-ci-push:	## reserved for Git Hub CI to push image

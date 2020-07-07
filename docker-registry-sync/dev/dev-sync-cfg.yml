@@ -23,8 +23,9 @@ registries:
     env_password: ENV_PASSWORD_AWS
     skip-tls-verify: true
 
-# array of stages which guarantees order of execution
-# you can sync from A to B and from B to C
+# the scheduler will try to run all stages in parallel
+# if a stage has a depends_on key it will wait for previous stages
+# to complete before starting
 stages:
   # generic usage
   - from:
@@ -40,9 +41,12 @@ stages:
       - destination: aws # key comes from registries
         repository: "simcore/services/comp_v3/sleeper" # different namespace is also allowed
         tags: ["0.0.1", "1.0.0"] # specify multiple tags
+    id: "i-am-not-required" # optional, not needed here
 
   # more advanced usage
   # pulls all sleeper tags from dockerhub and pushes to master
+  # to run this stage before another one, give it an id so it can be 
+  # referred by other stages
   - from:
       source: "dockerhub"
       repository: "itisfoundation/sleeper"
@@ -50,9 +54,13 @@ stages:
       - destination: master
         repository: "simcore/services/comp/sleeper"
         tags: []
+    id: "i-run-before"  # needed for the stage below
   
-  # because the previous stage already synced the images
-  # pulls all the tag 1.0.0 of sleeper from master syncs to staging (also in a different namespace)
+  # because the depends_on tag was added, this stage will wait for the specified
+  # sages to complete before starting
+  # Please note: if an error occurs in one of the depends_on stages execution
+  # still goes on. Error logs will always be displayed if something went wrong
+  # for easy debugging
   - from:
       source: "master"
       repository: "simcore/services/comp/sleeper"
@@ -60,3 +68,4 @@ stages:
       - destination: staging
         repository: "simcore/services/comp_v4/sleeper"
         tags: ["1.0.0"]
+    depends_on: ["i-run-before"]

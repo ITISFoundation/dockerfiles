@@ -1,7 +1,7 @@
 from __future__ import annotations
 
 from dataclasses import dataclass
-from .utils import from_env
+from .utils import from_env, make_stage_id
 from cached_property import cached_property
 from collections import deque
 
@@ -44,6 +44,8 @@ class ToEntry:
 class Stage:
     from_obj: From
     to_entries: List[ToEntry]
+    id: str
+    depends_on: str
 
 
 class StageParser:
@@ -78,7 +80,12 @@ class StageParser:
                 )
                 for entry in stage["to"]
             ]
-            stage_obj = Stage(from_obj=from_obj, to_entries=to_entries)
+            stage_obj = Stage(
+                from_obj=from_obj,
+                to_entries=to_entries,
+                id=make_stage_id(stage.get("id", None)),
+                depends_on=stage.get("depends_on", []),
+            )
             stages.append(stage_obj)
         return list(stages)
 

@@ -11,7 +11,7 @@ RUN pip3 install --upgrade \
 
 RUN mkdir -p /app
 
-COPY reposync /app/reposync
+COPY . /app/reposync
 
 WORKDIR /app/reposync
 
