@@ -4,8 +4,10 @@ import os
 # os.environ["VCS_URL"] = "git@github.com:GitHK/dockerfiles-forked.git"
 
 
-def from_git_ssh_to_https(ssh_url):
-    return "https://" + ssh_url.replace(":", "/").split("@")[-1]
+def from_git_ssh_to_https(possible_ssh_url):
+    if "https://" in possible_ssh_url:
+        return possible_ssh_url
+    return "https://" + possible_ssh_url.replace(":", "/").split("@")[-1]
 
 
 if __name__ == "__main__":
