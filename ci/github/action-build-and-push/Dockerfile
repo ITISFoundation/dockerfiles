@@ -1,6 +1,6 @@
 FROM docker:dind
 
-RUN apt-get update && apt-get install -y \
+RUN apk update && apk add \
         make \
         curl \
         git \
