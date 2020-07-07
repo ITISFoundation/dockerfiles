@@ -1,6 +1,4 @@
 .DEFAULT_GOAL := help
-# including .env file used for development
--include .env
 
 BRIDGE_NETWORK_NAME := dev_sync_net
 
@@ -59,16 +57,7 @@ tests: _ensure-in-venv ## install package dependencies
 
 .PHONY: setup-env
 setup-env: ## creates the .env still need to change your credentials
-
-	@echo "ENV_VAR_USERNAME_DOCKERHUB=_YOUR_DOCKER_HUB_USERNAME_" > .env
-	@echo "ENV_PASSWORD_DOCKERHUB=_YOUR_DOCKER_HUB_PASSWORD_" >> .env
-	@echo "ENV_VAR_USERNAME_MASTER=testuser" >> .env
-	@echo "ENV_PASSWORD_MASTER=testpassword" >> .env
-	@echo "ENV_VAR_USERNAME_STAGING=testuser" >> .env
-	@echo "ENV_PASSWORD_STAGING=testpassword" >> .env
-	@echo "ENV_VAR_USERNAME_AWS=testuser" >> .env
-	@echo "ENV_PASSWORD_AWS=testpassword" >> .env
-
+	cp .env.default .env
 
 ##### PYTHON PACKAGE - END
 
@@ -86,14 +75,7 @@ stop-dev-registry: ## stops development registries used by development-run
 .PHONY: development-run
 development-run: _ensure-in-venv build ## used to test out changes during development
 	@docker run --rm -it \
-		-e ENV_VAR_USERNAME_DOCKERHUB=${ENV_VAR_USERNAME_DOCKERHUB} \
-		-e ENV_PASSWORD_DOCKERHUB=${ENV_PASSWORD_DOCKERHUB} \
-		-e ENV_VAR_USERNAME_MASTER=${ENV_VAR_USERNAME_MASTER} \
-		-e ENV_PASSWORD_MASTER=${ENV_PASSWORD_MASTER} \
-		-e ENV_VAR_USERNAME_STAGING=${ENV_VAR_USERNAME_STAGING} \
-		-e ENV_PASSWORD_STAGING=${ENV_PASSWORD_STAGING} \
-		-e ENV_VAR_USERNAME_AWS=${ENV_VAR_USERNAME_AWS} \
-		-e ENV_PASSWORD_AWS=${ENV_PASSWORD_AWS} \
+		--env-file .env \
 		-v $(current_dir)/dev/dev-sync-cfg.yml:/etc/cfg.yaml \
 		--network=${BRIDGE_NETWORK_NAME} \
 		${DOCKER_REGISTRY}/${IMAGE_NAME}:${DOCKER_REG_SYNC_VERSION} \
