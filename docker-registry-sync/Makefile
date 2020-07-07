@@ -144,7 +144,7 @@ github-ci-tests:	## reserved for Git Hub CI to start testsuite
 		-v $(current_dir)/:/code \
 		-w /code \
 		python:3.8-buster \
-		sh -c 'export VIRTUAL_ENV=1 && git init && pip install tox && make tests'
+		sh -c 'pwd && ls -la && export VIRTUAL_ENV=1 && git init && pip install tox && make tests'
 
 .PHONY: github-ci-push
 github-ci-push:	## reserved for Git Hub CI to push image
