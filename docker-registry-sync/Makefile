@@ -140,13 +140,19 @@ endif
 
 .PHONY: github-ci-tests
 github-ci-tests:	## reserved for Git Hub CI to start testsuite
-	pwd
-	ls -la
+	echo "Running tests in isolation"
 	docker run --rm \
 		-v $(current_dir):/code \
 		-w /code \
 		python:3.8-buster \
-		sh -c 'pwd && ls -la && export VIRTUAL_ENV=1 && git init && pip install tox && make tests'
+		sh -c ' export VIRTUAL_ENV=1 && \
+				rm -rf orig_repo && \
+				git clone $(shell VCS_URL="$(VCS_URL)" python3 convert_vcs_url.py) orig_repo && \
+				cd orig_repo && \
+				git checkout $(GITHUB_SHA) && \
+				pip install tox && \
+				cd docker-registry-sync && \
+				make tests'
 
 .PHONY: github-ci-push
 github-ci-push:	## reserved for Git Hub CI to push image
