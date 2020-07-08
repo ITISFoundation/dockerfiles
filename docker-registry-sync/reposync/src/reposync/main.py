@@ -162,7 +162,7 @@ def input_args() -> argparse.Namespace:  # pragma: no cover
     )
     parser.add_argument(
         "--parallel-sync-tasks",
-        default=100,
+        default=10,
         type=int,
         help="amount of parallel sync tasks to be run at once",
     )
