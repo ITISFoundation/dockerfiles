@@ -150,5 +150,4 @@ Make sure you have defined a `.env` file next to this Makefile containing the fo
 
 ## TODOs
 
-- [ ] add unit testing
 - [ ] add integration testing
