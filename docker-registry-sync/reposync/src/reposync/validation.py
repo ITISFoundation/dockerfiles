@@ -31,7 +31,7 @@ SCHEMA = {
                     "skip-tls-verify": {
                         "type": "boolean",
                         "description": "Disables certificate checks when not using https registry",
-                    }
+                    },
                 },
                 "required": ["url", "env_user", "env_password"],
             },
