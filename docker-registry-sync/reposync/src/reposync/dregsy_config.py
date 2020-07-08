@@ -74,8 +74,8 @@ class DregsyYAML(BaseSerializable):
         dict_formatted = self.as_dict()
         # obscuring secrets in UI
         for task in dict_formatted["tasks"]:
-            task["source"]["auth"] = "***"
-            task["target"]["auth"] = "***"
+            task.source["auth"] = "***"
+            task.target["auth"] = "***"
         return dict_to_yaml(dict_formatted)
 
     @property
