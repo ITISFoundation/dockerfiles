@@ -6,6 +6,16 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.2.1] - 2020-07-8
+### Changed
+- reduced parallel sync operations to 10 at a time to reduce third party system pressure
+
+### Fixed
+- debug mode no longer causes all syncs to fail
+
+### Added
+- missing skip-tls-verify in jsonschema
+
 ## [0.2.0] - 2020-06-25
 ### Added
 - started this changelog
