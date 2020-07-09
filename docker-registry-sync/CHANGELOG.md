@@ -15,6 +15,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Added
 - missing skip-tls-verify in jsonschema
+- coverage badge generation embedded locally in the project
 
 ## [0.2.0] - 2020-06-25
 ### Added
