@@ -65,7 +65,7 @@ def temp_configuration_file(stage_name: str) -> IO[Any]:
     try:
         f = target_file.open("w")
         yield f
-    except Exception:
+    except Exception:  # pragma: no cover
         traceback.print_exc()
     finally:
         f.close()

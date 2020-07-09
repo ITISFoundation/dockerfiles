@@ -1,5 +1,7 @@
 # About
 
+![tox + https://github.com/dbrgn/coverage-badge](reposync/coverage.svg)
+
 This project is built on top of [dregsy](https://github.com/xelalexv/dregsy) with [skopeo](https://github.com/containers/skopeo) relay.
 
 
@@ -150,5 +152,4 @@ Make sure you have defined a `.env` file next to this Makefile containing the fo
 
 ## TODOs
 
-- [ ] add unit testing
 - [ ] add integration testing

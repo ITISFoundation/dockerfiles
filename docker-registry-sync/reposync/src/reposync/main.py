@@ -76,7 +76,7 @@ def run_dregsy_task(dregsy_task: Task, results_queue: Queue, debug: bool) -> Non
                 else:
                     current_logs.append(decoded_line)
         results_queue.put((completed_successfully, current_logs, dregsy_task.id))
-    except Exception:
+    except Exception:  # pragma: no cover
         results_queue.put((False, traceback.format_exc(), dregsy_task.id))
 
 
@@ -162,7 +162,7 @@ def input_args() -> argparse.Namespace:  # pragma: no cover
     )
     parser.add_argument(
         "--parallel-sync-tasks",
-        default=100,
+        default=10,
         type=int,
         help="amount of parallel sync tasks to be run at once",
     )
