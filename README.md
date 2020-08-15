@@ -1,5 +1,7 @@
 # dockerfiles
 
+[![Build Status](https://travis-ci.com/ITISFoundation/dockerfiles.svg?branch=master)](https://travis-ci.com/ITISFoundation/dockerfiles)
+
 A collection of curated dockefiles used to develop great software at the [IT'IS Foundation](https://itis.swiss/)
 
 ## Why?
@@ -10,20 +12,13 @@ This repo keeps a curated list of dockerfiles that are continuously deployed int
 
 ## Usage
 
-#### Running tools
-
-```console
-$ docker run -it itisfoundation/pip-kit --help
-```
-
-#### Developing
-
 ```console
 $ make help
-all – Builds all images
-build – Builds all images
-clean – Cleans all unversioned files in project
-help – Display all callable targets
+help                 This colourful help
+build                Builds all images (uses cache)
+build-nc             Builds all images from scratch
+devenv               Builds python environment and installs some tooling for operations
+clean                Cleans all unversioned files in project
 ```
 
 ## Guidelines
@@ -36,11 +31,13 @@ Here some of the guidelines we have collected so far:
 
 2. Every image MUST include some of the labels defined in [label-schema.org](http://label-schema.org/rc1/)
 
-3. One of the image names MUST be formatted as ``itisfoundation/${folder-name}:${tag}``
+3. One of the image names MUST be formatted as ``itisfoundation/${folder-name}:${tag}``.
 
-4. Every image MUST build from ``make build`` (see [docker-compose](docker-compose.yaml))
+4. Releases MUST be tagged according to [semantic versioning](https://semver.org/) and the corresponding alias (e.g. ``latest``, ``X.Y``, etc)
 
-5. Containers SHALL not address many applications at once
+5. Every image MUST build from ``make build``
+
+6. Containers SHALL not address many applications at once
 
    1. One application per container is the prefered setup. E.g. the ``cookiecutter`` containers runs the application with the same name
 
@@ -54,3 +51,46 @@ Here some of the guidelines we have collected so far:
 
 10. If the "payload" has no explicit internal signal handling add tini as an init replacement (same effect as when running the docker with --init)
   https://github.com/krallin/tini
+
+11. You MUST change your version file for each Pull request following the  [Semantic Versioning](https://semver.org/)
+
+## GitHub workflow
+
+This repository defines a custom action `action-build-and-push` which is responsible for building, testing and pushing images to a registry (defaults to Docker Hub).
+
+To enable github workflow the following Git Hub secrets must be defined:
+
+- `DOCKER_HUB_USER` Docker Hub username
+- `DOCKER_HUB_PASSWORD` Docker Hub token (password usage is not advised)
+- `DOCKER_HUB_TARGET_REGISTRY_NAME` if using an organization might be different then the login credentials
+
+Projects under workflow:
+
+- `docker-registry-sync`
+
+To test locally please you would need to install [act](https://github.com/nektos/act) and use the same secret names as environment 
+variables following in a .env file:
+
+- DOCKER_HUB_USER
+- DOCKER_HUB_PASSWORD
+- DOCKER_HUB_TARGET_REGISTRY_NAME
+
+## Travis workflow
+
+
+![worklow](ci/travis/docs/workflow.PNG)
+
+
+## Starting a new project in this repository
+
+Follow the README in the folder example-config.
+
+
+## References
+
+Selection of publications worth reading on this topic:
+
+- [Docker & Makefile | X-Ops — sharing infra-as-code parts](https://itnext.io/docker-makefile-x-ops-sharing-infra-as-code-parts-ea6fa0d22946)
+- [Auto-documented makefiles](https://marmelab.com/blog/2016/02/29/auto-documented-makefile.html)
+
+

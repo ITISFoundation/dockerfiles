@@ -10,9 +10,9 @@ a qooxdoo compiler and a copy of the qooxdoo sdk.
 Use the compiler in the same way as you would use it if you
 had a local installation.
 
- docker run -it -v $(pwd):/project itisfoundation/qx-kit:latest qx create myapp -t desktop -I
- docker run -it -v $(pwd)/myapp:/project itisfoundation/qx-kit:latest qx compile
- docker run -it -v $(pwd)/myapp:/project -p 8080:8080 itisfoundation/qx-kit:latest qx serve
+ docker run -it -v $(pwd):/project itisfoundation/qooxdoo-kit:latest qx create myapp -t desktop -I
+ docker run -it -v $(pwd)/myapp:/project itisfoundation/qooxdoo-kit:latest qx compile
+ docker run -it -v $(pwd)/myapp:/project -p 8080:8080 itisfoundation/qooxdoo-kit:latest qx serve
 
 HELLO_END
 exit 1
@@ -27,7 +27,6 @@ ERROR_END
 exit 1
 fi
 
-export PATH=/home/node/node_modules/.bin:$PATH
 USERID=$(stat -c %u ${PROJECT_DIR})
 USERNAME=$(getent passwd ${USERID} | cut -d: -f1)
 GROUPID=$(stat -c %g ${PROJECT_DIR})
@@ -46,8 +45,10 @@ else
     adduser $USERNAME $GROUPNAME
 fi
 
+
 cd $PROJECT_DIR
 mkdir -p .qooxdoo
 ln -s $PROJECT_DIR/.qooxdoo /home/$USERNAME/.qooxdoo
+
 echo "[RUN]: Running command ($@) as ${USERNAME}($USERID):${GROUPNAME}($GROUPID)"
 exec su-exec ${USERNAME}:${GROUPNAME} "$@"

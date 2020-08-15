@@ -1,47 +1,132 @@
-APP_NAME=qx-kit
-DOCKER_REPO=itisfoundation
-VERSION:=$(shell date +0.0.%Y%m%d-%H%M%S)
+#
+# qooxdoo-kit
+#
+.DEFAULT_GOAL := help
+
+DOCKER_REPO        = itisfoundation
+APP_NAME           = $(notdir $(PWD))
+DOCKER_IMAGE_NAME  = $(DOCKER_REPO)/$(APP_NAME)
+DOCKER_IMAGE_TAG  := $(shell date +0.0.%Y%m%d-%H%M%S)
+
+TMPPREFIX := /tmp/$(APP_NAME)
+TMPDIR    := $(strip $(shell mktemp -d $(TMPPREFIX)-XXXXX))
+
+# Environments (affect docker-compose.yml)
+export VCS_URL    := $(shell git config --get remote.origin.url)
+export VCS_REF    := $(shell git rev-parse --short HEAD)
+export BUILD_DATE := $(shell date -u +"%Y-%m-%dT%H:%M:%SZ")
+
+# Installed versions
+export QOOXDOO_COMPILER_VERSION  := $(shell jq '.dependencies."@qooxdoo/compiler".version'  package-lock.json)
+export QOOXDOO_FRAMEWORK_VERSION := $(shell jq '.dependencies."@qooxdoo/compiler".dependencies."@qooxdoo/framework".version'  package-lock.json)
+export PUPPETEER_VERSION := $(shell jq '.dependencies."puppeteer".version'  package-lock.json)
 
 
-# HELP
-# This will output the help for each task
-# thanks to https://marmelab.com/blog/2016/02/29/auto-documented-makefile.html
 .PHONY: help
-
+# thanks to https://marmelab.com/blog/2016/02/29/auto-documented-makefile.html
 help: ## This help.
 	@awk 'BEGIN {FS = ":.*?## "} /^[a-zA-Z_-]+:.*?## / {printf "\033[36m%-20s\033[0m %s\n", $$1, $$2}' $(MAKEFILE_LIST)
 
-.DEFAULT_GOAL := help
 
+.PHONY: update-packages
 
-# DOCKER TASKS
+# TODO: do this with docker instead! See https://github.com/ITISFoundation/dockerfiles/issues/12
+package-lock.json: package.json
+	# Updating package-lock.json
+	npm update --save-dev --package-lock-only
+
+# TODO:  Requires installing and running npm! make update-packages (see https://flaviocopes.com/update-npm-dependencies/)
+update-packages: ## updates dependencies and recreates package-lock.json
+	touch package.json
+	$(MAKE) package-lock.json
+
 # Build the container
-build: ## Build the container
-	docker build -t $(APP_NAME) .
+.PHONY: build build-nc
 
-build-nc: ## Build the container without caching
-	docker build --no-cache -t $(APP_NAME) .
+build: package-lock.json ## Build the container
+	export VERSION=lastbuild; \
+	docker-compose -f docker-compose.build.yml build $(APP_NAME)
 
-release: build-nc publish ## Make a release by building and publishing the `{version}` ans `latest` tagged containers to ECR
+build-nc: package-lock.json ## Build the container without caching
+	export VERSION=lastbuild; \
+	docker-compose -f docker-compose.build.yml build --no-cache $(APP_NAME)
 
-# Docker publish
-publish: publish-latest publish-version ## Publish the `{version}` ans `latest` tagged containers to ECR
 
-publish-latest: tag-latest ## Publish the `latest` taged container to ECR
-	@echo 'publish latest to $(DOCKER_REPO)'
-	docker push $(DOCKER_REPO)/$(APP_NAME):latest
+# Run the container
+.PHONY: shell
+# TODO: add make shell cmd=''
+# TODO: separate test script?
+shell: ## opens shell in container
+	# starting container $(APP_NAME) shell on `$(TMPDIR)`
+	cp -r tests $(TMPDIR)
+	@export VERSION=lastbuild; \
+	export PROJECT_DIR=$(TMPDIR);\
+	docker-compose run $(APP_NAME)
 
-publish-version: tag-version ## Publish the `{version}` taged container to ECR
-	@echo 'publish $(VERSION) to $(DOCKER_REPO)'
-	docker push $(DOCKER_REPO)/$(APP_NAME):$(VERSION)
+
+.PHONY: test
+test: ## tests
+	# Executes tests/run.sh
+	cp -r tests $(TMPDIR)
+	@export VERSION=lastbuild;
+	export PROJECT_DIR=$(TMPDIR);\
+	docker-compose run $(APP_NAME) /bin/sh ./tests/run.sh
+
 
 # Docker tagging
-tag: tag-latest tag-version ## Generate container tags for the `{version}` ans `latest` tags
+.PHONY: tag .tag-latest .tag-version
 
-tag-latest: ## Generate container `{version}` tag
-	@echo 'create tag latest'
-	docker tag $(APP_NAME) $(DOCKER_REPO)/$(APP_NAME):latest
+tag: .tag-latest .tag-version ## Generate container tags for the `{version}` and `latest` tags
 
-tag-version: ## Generate container `latest` tag
-	@echo 'create tag $(VERSION)'
-	docker tag $(APP_NAME) $(DOCKER_REPO)/$(APP_NAME):$(VERSION)
+.tag-latest:
+	# Generate container `latest` tag
+	docker tag $(DOCKER_IMAGE_NAME):lastbuild $(DOCKER_IMAGE_NAME):latest
+
+.tag-version:
+	# Generate container `$(DOCKER_IMAGE_TAG)` tag
+	docker tag $(DOCKER_IMAGE_NAME):lastbuild $(DOCKER_IMAGE_NAME):$(DOCKER_IMAGE_TAG)
+	@echo $(DOCKER_IMAGE_TAG) >.TAG
+
+
+# Docker publish
+PHONY: publish publish-latest publish-version release
+
+publish: .publish-latest .publish-version ## Publish the `{version}` and `latest` tagged containers to ECR
+
+.publish-latest: .tag-latest
+	# Publish the `latest` tagged container to `$(DOCKER_REPO)`
+	docker push $(DOCKER_IMAGE_NAME):latest
+
+.publish-version: .tag-version
+	# Publish the $(shell cat .TAG) tagged to `$(DOCKER_REPO)`
+	docker push $(DOCKER_IMAGE_NAME):$(shell cat .TAG)
+
+release: publish ## Tags lastbuild and pushes `{version}` and `latest` to ECR
+
+
+
+# Misc tools
+.PHONY: info
+info: ## shows info
+	# Labels in `$(DOCKER_IMAGE_NAME):lastbuild` image (metadata)
+	@docker image inspect $(DOCKER_IMAGE_NAME):lastbuild | jq .[0].ContainerConfig.Labels
+	# Tagged images
+	@docker images $(DOCKER_IMAGE_NAME)*:*
+
+.PHONY: clean
+clean:
+	@git clean -nXdf
+	@echo -n "Are you sure? [y/N] " && read ans && [ $${ans:-N} = y ]
+	# cleaning unversioned
+	@git clean -Xdf
+	# removes all temporary folders
+	@-rm -rf $(wildcard $(TMPPREFIX)*)
+	# cleans close docker-compose
+	@-docker-compose down
+
+.PHONY: clean-images
+clean-images:
+	# remove all images as $(DOCKER_IMAGE_NAME)*:*
+	@echo -n "Are you sure? [y/N] " && read ans && [ $${ans:-N} = y ]
+	-docker image rm -f $(shell docker images $(DOCKER_IMAGE_NAME)*:* -q)
+

@@ -1,69 +1,61 @@
-SHELL = /bin/bash
+#
+#
+# Main targets for https://github.com/ITISFoundation/osparc-ops.git
+#
+#
+.DEFAULT_GOAL := help
+SHELL         := /bin/bash
+# including .env file used for development
+-include .env
 
-##
-# Definitions.
-.SUFFIXES:
+# Environments
+export VCS_URL          := $(shell git config --get remote.origin.url)
+export VCS_REF          := $(shell git rev-parse --short HEAD)
+export BUILD_DATE       := $(shell date -u +"%Y-%m-%dT%H:%M:%SZ")
 
+# TODO: all folders with a $(folder)/docker-compose.yml or $(folder)/.docker-compose-build.yml inside
+PROJECTS := \
+	devpi \
+	pip-kit \
+	python-with-pandas \
+	qooxdoo-kit \
+	rabbitmq \
+	docker-registry-sync
 
+docker_compose_configs = $(foreach folder,$(PROJECTS),$(CURDIR)/$(folder)/docker-compose.yml)
 
-## Tools.
-tools =
+## Targets ----
+.PHONY: help
+help: ## This colourful help
+	@awk 'BEGIN {FS = ":.*?## "} /^[a-zA-Z_-.]+:.*?## / {printf "\033[36m%-20s\033[0m %s\n", $$1, $$2}' $(MAKEFILE_LIST)
 
-ifeq ($(shell uname -s),Darwin)
-	SED = gsed
-else
-	SED = sed
-endif
-
-DOCKER = docker
-DOCKER_COMPOSE = docker-compose
-
-
-## Targets .
-.PHONY: .env
-.env:
-	@echo VCS_REF=$(shell git rev-parse --short HEAD)           >.env
-	@echo VCS_URL=$(shell git config --get remote.origin.url)  >>.env
-	@echo BUILD_DATE=$(shell date -u +"%Y-%m-%dT%H:%M:%SZ")    >>.env
-
-.PHONY: all
-# target: all – Builds all images
-all: build
+.docker-compose-build.yml: $(docker_compose_configs)
+	docker-compose $(foreach dc,$^,-f $(dc)) config >$@
 
 .PHONY: build
-# target: build – Builds all images (uses cache)
-build: .env 
-	${DOCKER_COMPOSE} build
+build: .docker-compose-build.yml ## Builds all images (uses cache)
+	# building $$(PROJECTS)
+	docker-compose -f $< build --parallel
 
-.PHONY: rebuild
-# target: rebuild – Builds all images from scratch
-rebuild: .env 
-	${DOCKER_COMPOSE} build --no-cache
+.PHONY: build-nc
+build-nc: .docker-compose-build.yml ## Builds all images from scratch
+	docker-compose -f $< build --parallel --no-cache
 
-
-.PHONY: deploy
-# target: deploy – Tags images and pushes to dockerhub's registry [TODO]
-deploy: .env 
-	echo TODO: tagging images and pushing to dockerhub ...
-	#${DOCKER_COMPOSE} push
-
-
-.PHONY: clean
-# target: clean – Cleans all unversioned files in project
-clean:
-	@git clean -dxf
-
-
-.PHONY: tools
-tools:
+.PHONY: devenv
+devenv: .venv ##  Nuilds python environment and installs some tooling for operations
+.venv:
 	python3 -m venv .venv
 	.venv/bin/pip install --upgrade pip setuptools wheel
 	.venv/bin/pip install pip-tools
 
-.PHONY: help
-# target: help – Display all callable targets
-help:
-	@echo
-	@egrep "^\s*#\s*target\s*:\s*" [Mm]akefile \
-	| $(SED) -r "s/^\s*#\s*target\s*:\s*//g"
-	@echo
+.PHONY: clean
+clean: ## Cleans all unversioned files in project
+	@echo -n "Are you sure? [y/N] " && read ans && [ $${ans:-N} = y ]
+	@git clean -dxf
+
+.PHONY: debug-github-workflow
+debug-github-workflow: ## Runs the github worflow locally act is needed on the system
+	@act -v \
+		-s DOCKER_HUB_USER=${DOCKER_HUB_USER} \
+		-s DOCKER_HUB_TARGET_REGISTRY_NAME=${DOCKER_HUB_TARGET_REGISTRY_NAME} \
+		-s DOCKER_HUB_PASSWORD=${DOCKER_HUB_PASSWORD}

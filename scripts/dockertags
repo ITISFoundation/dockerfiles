@@ -1,12 +1,14 @@
 #!/bin/bash
-# credits to https://stackoverflow.com/questions/28320134/how-to-list-all-tags-for-a-docker-image-on-a-remote-registry
+#
+# Credits to https://stackoverflow.com/questions/28320134/how-to-list-all-tags-for-a-docker-image-on-a-remote-registry
+#
 if [ $# -lt 1 ]
 then
 cat << HELP
 
 dockertags  --  list all tags for a Docker image on a remote registry.
 
-EXAMPLE: 
+EXAMPLE:
     - list all tags for ubuntu:
        dockertags ubuntu
 

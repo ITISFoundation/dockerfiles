@@ -8,7 +8,7 @@ myapp
 
 # Distribution / packaging
 .Python
-build/
+/build/
 develop-eggs/
 dist/
 downloads/
@@ -102,3 +102,8 @@ venv.bak/
 
 # mypy
 .mypy_cache/
+
+
+.docker-compose-build.yml
+.vscode/
+data_*/

@@ -1,0 +1,8 @@
+.qooxdoo
+
+# mode
+node_modules
+
+# makefile tmps
+.TAG
+myapp

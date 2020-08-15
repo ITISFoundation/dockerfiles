@@ -1,0 +1,101 @@
+# osparc-simcore stack (framework stack)
+version: '3.7'
+services:
+
+
+  webclient:
+    image: services_webclient:build
+    init: true
+    build:
+      context: ./web/client/
+      dockerfile: Dockerfile
+      cache_from:
+        - ${DOCKER_REGISTRY:-itisfoundation}/webclient:cache
+        - services_webclient:latest
+      target: build
+      labels:
+        org.label-schema.schema-version: "1.0"
+        org.label-schema.build-date: "${BUILD_DATE}"
+        org.label-schema.vcs-url: "https://github.com/ITISFoundation/osparc-simcore"
+        org.label-schema.vcs-ref: "${VCS_REF}"
+      args:
+        - VCS_URL=${VCS_URL}
+        - VCS_REF=${VCS_REF}
+        - VCS_REF_CLIENT=${VCS_REF_CLIENT}
+        - VCS_STATUS_CLIENT=${VCS_STATUS_CLIENT}
+    command: >
+      /bin/sh -c "ls -l build-output;cat build-output/version.txt"
+
+  webserver:
+    image: ${DOCKER_REGISTRY:-itisfoundation}/webserver:${DOCKER_IMAGE_TAG:-latest}
+    init: true
+    build:
+      context: ../
+      dockerfile: services/web/Dockerfile
+      cache_from:
+        - ${DOCKER_REGISTRY:-itisfoundation}/webserver:cache
+        - ${DOCKER_REGISTRY:-itisfoundation}/webserver:${DOCKER_IMAGE_TAG:-latest}
+      target: production
+      labels:
+        org.label-schema.schema-version: "1.0"
+        org.label-schema.build-date: "${BUILD_DATE}"
+        org.label-schema.vcs-url: "https://github.com/ITISFoundation/osparc-simcore"
+        org.label-schema.vcs-ref: "${VCS_REF}"
+    ports:
+      - ${SIMCORE_PORT:-9081}:8080
+    environment:
+      - APIHUB_HOST=apihub
+      - APIHUB_PORT=8043
+      - DIRECTOR_HOST=director
+      - DIRECTOR_PORT=8080
+      - STORAGE_HOST=storage
+      - STORAGE_PORT=8080
+      - WEBSERVER_MONITORING_ENABLED=1
+      - WEBSERVER_LOGLEVEL=INFO
+    env_file:
+      - ../.env
+    stdin_open: true
+    tty: true
+    depends_on:
+      - apihub
+      - postgres
+      - minio
+      - rabbit
+    deploy:
+      placement:
+        constraints:
+          - node.platform.os == linux
+          - node.role == manager
+    networks:
+      - default
+      - interactive_services_subnet
+
+
+volumes:
+  input: {}
+  output: {}
+  log: {}
+  postgres_data: {}
+  minio: {}
+
+networks:
+  interactive_services_subnet:
+    driver: overlay
+    attachable: true
+    internal: false
+    labels:
+      com.simcore.description: "interactive services network"
+    ipam:
+      driver: default
+      config:
+        - subnet: "172.8.0.0/16"
+  computational_services_subnet:
+    driver: overlay
+    attachable: true
+    internal: false
+    labels:
+      com.simcore.description: "computational services network"
+    ipam:
+      driver: default
+      config:
+        - subnet: "172.9.0.0/16"
