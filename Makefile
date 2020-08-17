@@ -17,7 +17,6 @@ export BUILD_DATE       := $(shell date -u +"%Y-%m-%dT%H:%M:%SZ")
 PROJECTS := \
 	devpi \
 	pip-kit \
-	python-with-pandas \
 	qooxdoo-kit \
 	rabbitmq \
 	docker-registry-sync
