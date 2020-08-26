@@ -7,8 +7,7 @@ Makefile                                  @pcrespov, @Surfict
 /ci/                                      @sanderegg, @Surfict
 /devpi/                                   @oetiker
 /pip-kits/                                @oetiker
-/python-with-pandas/                      @pcrespov
-/qooxdoo-kit/                             @ignapas , @pcrespov
+/qooxdoo-kit/                             @ignapas, @pcrespov
 /rabbitmq/                                @sanderegg
 /scripts/                                 @pcrespov
 /docker-registry-sync/                    @GitHK
