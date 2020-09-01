@@ -1,0 +1,46 @@
+version: "3.7"
+services:
+  auto-deployment-agent:
+    dns:
+      8.8.8.8
+    build:
+      context: ./
+      dockerfile: Dockerfile
+      target: production
+      labels:
+        org.label-schema.schema-version: "1.0"
+        org.label-schema.build-date: "${BUILD_DATE}"
+        org.label-schema.vcs-url: "https://github.com/ITISFoundation/osparc-simcore"
+        org.label-schema.vcs-ref: "${VCS_REF}"
+    image: ${DOCKER_REGISTRY}/deployment-agent:${DOCKER_IMAGE_TAG}
+    init: true
+    ports:
+      - "8888"
+    configs:
+      - source: deployment_config
+        target: /home/scu/config-prod.yaml
+    networks:
+      - portainer_agent_network
+    volumes:
+      - /var/run/docker.sock:/var/run/docker.sock
+    environment:
+      - PREFIX_STACK_NAME=${PREFIX_STACK_NAME}
+      - SIMCORE_STACK_NAME=${SIMCORE_STACK_NAME}
+      - SIMCORE_IMAGE_TAG=${SIMCORE_IMAGE_TAG}
+      - SIMCORE_DOCKER_REGISTRY=${SIMCORE_DOCKER_REGISTRY}
+      - PUBLIC_NETWORK=${PUBLIC_NETWORK}
+      - MONITORED_NETWORK=${MONITORED_NETWORK}
+    deploy:
+      mode: replicated
+      replicas: 1
+      placement:
+        constraints: [node.role == manager]
+
+
+networks:
+  portainer_agent_network:
+    external: true
+
+configs:
+  deployment_config:
+    file: ./${DEPLOYMENT_AGENT_CONFIG}

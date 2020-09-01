@@ -1,0 +1,15 @@
+#
+# Specifies third-party dependencies for 'services/deployment-agent/src'
+#
+
+aiohttp
+openapi-core
+docker
+psycopg2-binary
+ptvsd
+semantic_version
+tenacity
+trafaret_config
+
+
+attrs<=17.4.0 ## BUG: https://github.com/avast/pytest-docker bug. convert argument is deprecated since  17.4: https://www.attrs.org/en/stable/api.html#attr.ib

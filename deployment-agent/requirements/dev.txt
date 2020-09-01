@@ -1,0 +1,15 @@
+# Shortcut to install all packages needed to develop 'services/deployment-agent'
+#
+# - As ci.txt but with current and repo packages in develop (edit) mode
+#
+# Usage:
+#   pip install -r requirements/dev.txt
+#
+
+# installs base + tests requirements
+-r _test.txt
+# osparc-simcore packages
+git+https://github.com/ITISFoundation/osparc-simcore.git#subdirectory=packages/service-library
+
+# installs current package
+-e .
