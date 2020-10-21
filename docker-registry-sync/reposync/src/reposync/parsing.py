@@ -35,20 +35,24 @@ class ConfigurationRegistry(CustomBaseModel):
         False,
         description="disable image removal for this registry; no images will be deleted",
     )
+    tls_verify: bool = Field(
+        True,
+        description="enforces certificate verification",
+    )
 
-    @classmethod
     @validator("user")
-    def user_env_var_exists(cls, v):
-        if v not in os.environ:
-            raise ValueError("environment variable not defined")
-        return v
-
     @classmethod
-    @validator("password")
-    def password_env_var_exists(cls, v):
+    def user_from_environment(cls, v):
         if v not in os.environ:
             raise ValueError("environment variable not defined")
-        return v
+        return os.environ[v]
+
+    @validator("password")
+    @classmethod
+    def password_from_environment(cls, v):
+        if v not in os.environ:
+            raise ValueError("environment variable not defined")
+        return os.environ[v]
 
 
 class ConfigurationSyncStepTo(CustomBaseModel):
@@ -111,6 +115,18 @@ class Configuration(CustomBaseModel):
         description="list of sync operations to be launched; a sync graph will be created for massive parallelism",
     )
 
+    def image_requires_tls_verify(self, image: str) -> bool:
+        parts = image.split("/")
+        if not parts:
+            raise ValueError(f"Could not determine DNS from image '{image}'")
+
+        dns = parts[0]
+        if dns not in self.registries:
+            raise ValueError(
+                f"Could not find DNS '{dns}' in registries '{list(self.registries.keys())}'"
+            )
+        return self.registries[dns].tls_verify
+
 
 class SyncPayload(CustomBaseModel):
     """Used only for syncing not for validating configration"""
@@ -134,7 +150,7 @@ class YamlArrayFile(CustomBaseModel):
         return self.__root__[item]
 
 
-def validate_configuration(configuration_file: Path):
+def validate_configuration(configuration_file: Path) -> Configuration:
     data = load_yaml_file(configuration_file)
     try:
         return Configuration(**data)
@@ -143,10 +159,10 @@ def validate_configuration(configuration_file: Path):
         raise e
 
 
-def validate_yaml_array_file(yaml_array_file: Path):
+def validate_yaml_array_file(yaml_array_file: Path) -> List[str]:
     data = load_yaml_file(yaml_array_file)
     try:
-        return YamlArrayFile(__root__=data)
+        return YamlArrayFile(__root__=data).__root__
     except ValidationError as e:
         print(f"Error while validating {yaml_array_file}")
         raise e
