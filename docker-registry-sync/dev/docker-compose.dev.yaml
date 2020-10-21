@@ -2,7 +2,7 @@ version: "3"
 
 # credentials user=test password=test
 services:
-  master:
+  rega:
     image: registry:2
     ports:
       - "5001:5000"
@@ -17,7 +17,7 @@ services:
       - ./data_a:/data
       - ./registry_htpasswd:/auth/htpasswd
 
-  staging:
+  regb:
     image: registry:2
     ports:
       - "5002:5000"
@@ -32,7 +32,7 @@ services:
       - ./data_b:/data
       - ./registry_htpasswd:/auth/htpasswd
 
-  aws:
+  regc:
     image: registry:2
     ports:
       - "5003:5000"

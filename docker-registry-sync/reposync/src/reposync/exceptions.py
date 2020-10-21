@@ -1,0 +1,2 @@
+class DuplicateDestinationException(Exception):
+    pass

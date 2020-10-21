@@ -19,11 +19,11 @@ test_requirements = read_reqs(current_dir / "requirements" / "test.txt")
 
 setup(
     name="reposync",
-    version="0.2.0",
+    version="2.0.0",
     packages=find_packages(where="src"),
     package_dir={"": "src",},
     include_package_data=True,
-    entry_points={"console_scripts": ["run-reposync=reposync.main:main",]},
+    entry_points={"console_scripts": ["run-reposync=reposync.entrypoint:main",]},
     python_requires=">=3.7",
     install_requires=install_requirements,
     tests_require=test_requirements,

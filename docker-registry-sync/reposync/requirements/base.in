@@ -3,3 +3,4 @@ jsonschema
 cached-property
 sanitize_filename
 networkx
+pydantic

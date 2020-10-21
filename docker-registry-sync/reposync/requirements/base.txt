@@ -9,6 +9,7 @@ cached-property==1.5.1    # via -r reposync/requirements/base.in
 decorator==4.4.2          # via networkx
 jsonschema==3.2.0         # via -r reposync/requirements/base.in
 networkx==2.4             # via -r reposync/requirements/base.in
+pydantic==1.6.1           # via -r reposync/requirements/base.in
 pyrsistent==0.16.0        # via jsonschema
 pyyaml==5.3.1             # via -r reposync/requirements/base.in
 sanitize-filename==1.2.0  # via -r reposync/requirements/base.in

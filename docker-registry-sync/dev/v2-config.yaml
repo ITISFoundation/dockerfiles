@@ -1,0 +1,45 @@
+# maximum number of sync jobs to run in parallel
+max-parallel-syncs: 1
+
+published-image-catalogs:
+  # all images stored in this catalog are never to be deleted from the registry
+  # provides a path to a catalog
+  "index.docker.io": /tmp/v2-image-catalog.yaml
+
+registries:
+  "index.docker.io":
+    user: ENV_USER_NAME
+    password: ENV_PASSWORD
+    # tags from this registry will never be deleted
+    # if a tag needs to be deleted an error will be shown from that job which was trying to delete it
+    disable_delete: true # default false
+  "rega:5000":
+    user: ENV_USER_NAME_MASTER
+    password: ENV_PASSWORD_MASTER
+
+sync-steps:
+  - from: index.docker.io/comp/shit
+    to:
+      - destination: "rega:5000/new/cool/thing"
+        tags: ["latest"] # all tags except `latest` will be removed from this registry
+        email_owners_upon_publishing: true
+      - destination: "master:4000/old/cool/thing"
+        # if a string is provided the tags will be searched in a text file each on a new line
+        # automates CI workflows and allows the CI to automatically publish new versions to target environments
+        tags: /tmp/v2-tags-for-ci.yaml
+    name: optional_sync_name # can be ignored, used only by before
+    before: ["no-stage"] # can be ignored
+
+  - from: not.somthing.i.know/casd/asads
+    to:
+      - destination: repo/now/sing
+        tags: ["a", "1", "ciao"]
+      - destination: me.io/not/good
+        tags: [] # this will remote all tags present in the destination repository
+    name: "no-stage"
+
+  - from: what-happend.here/the/repo
+    to:
+      - destination: repos/list/me
+        tags: []
+# check the tag deletion https://gist.github.com/jaytaylor/86d5efaddda926a25fa68c263830dac1
