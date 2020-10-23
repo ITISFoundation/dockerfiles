@@ -25,8 +25,8 @@ async def send_notification_to_owner(
 
     print(
         f"\n{message_title}\n"
-        f"💌 Informing owner '{owner}' that for image '{image}'' "
+        f"💌 Informing owner '{owner}' that for image '{image}' "
         f"the following tags were removed {list(removed_tags)} "
-        f"and the following tags were added '{list(new_tags)}''\n"
+        f"and the following tags were added '{list(new_tags)}'\n"
         f"{requested_action}\n"
     )
