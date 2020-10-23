@@ -70,21 +70,21 @@ async def skopeo_delete_image(image_with_tag: str, tls_verify: bool = True):
         print(f"🚨Could not remove image {image_with_tag}")
 
 
-async def get_image_tags_for_image(image: str, tls_verify: bool = True):
+async def get_tags_for_image(image: str, tls_verify: bool = True) -> List[str]:
     """Returns all the image tags in target repository"""
-    result = await _skopeo_inspect(image, tls_verify)
-    return result["RepoTags"]
+    try:
+        result = await _skopeo_inspect(image, tls_verify)
+        return result["RepoTags"]
+    except SkopeoException:
+        print(f"Could not inspect {image}, no tags were found")
+        return []
 
 
 async def get_images_to_remove(
     base_image: str, tags_to_keep: List[str], tls_verify: bool = True
 ) -> Set[str]:
     """Given a repository will returns the images to delete"""
-    try:
-        tags = set(await get_image_tags_for_image(base_image, tls_verify))
-    except SkopeoException:
-        print(f"Could not inspect {base_image}, no tags were removed")
-        return {}
+    tags = set(await get_tags_for_image(base_image, tls_verify))
 
     set_tags_to_keep = set(tags_to_keep)
 
