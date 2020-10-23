@@ -23,7 +23,7 @@ sync-steps:
     to:
       - destination: "rega:5000/new/cool/thing"
         tags_to_keep: ["latest"] # all tags except `latest` will be removed from this registry
-        email_owners_upon_changes: true
+        email_owners_upon_changes: true # default is false
       - destination: "rega:5000/old/cool/thing"
         # if a string is provided the tags will be searched in a text file each on a new line
         # automates CI workflows and allows the CI to automatically publish new versions to target environments
