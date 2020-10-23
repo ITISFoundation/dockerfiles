@@ -67,7 +67,7 @@ class ConfigurationSyncStepTo(CustomBaseModel):
             "if a string is provided it reppresents the path to a yaml array file containing all the tags to sync"
         ),
     )
-    email_owners_upon_publishing: bool = Field(
+    email_owners_upon_changes: bool = Field(
         False,
         description="if True an email will be sent to the owner when a new tag is pushed",
     )

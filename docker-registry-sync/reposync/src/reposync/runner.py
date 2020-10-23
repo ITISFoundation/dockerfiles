@@ -176,7 +176,7 @@ async def run_task(
         removed_tags = tags_before_sync - tags_after_sync
         new_tags = tags_after_sync - tags_before_sync
 
-        if new_tags or removed_tags:
+        if new_tags or removed_tags and sync_payload.to_field.email_owners_upon_changes:
             await send_notification_to_owner(
                 sync_payload.to_field.destination, removed_tags, new_tags
             )
