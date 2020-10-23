@@ -24,7 +24,7 @@ class Collections:
 @dataclass
 class TransformedData:
     flattened_data: List[Dict]
-    services_with_versions: Set[str]
+    services_with_versions: Dict[str, str]
 
 
 def metadata_key(dict_data):
@@ -62,6 +62,8 @@ def flatten_data(collections: Collections) -> TransformedData:
     # REMAPPINGS
     # - users to dict via "primary_gid"
     users_via_primary_gid = {x["primary_gid"]: x for x in users_list}
+    # - users to dict via "id"
+    users_via_id = {x["id"]: x for x in users_list}
 
     # injecting "user" information into "groups_list" items via: "gid"
     for group in groups_list:
@@ -101,12 +103,21 @@ def flatten_data(collections: Collections) -> TransformedData:
 
     flattened_data = services_access_rights_list
 
+    # inject "user data" into "projects_list" items via "prj_owner"
+    for project in projects_list:
+        project["prj_owner"] = users_via_id[project["prj_owner"]]
+
     # services_in_workbench
-    services_with_versions = set()
+    services_with_versions = dict()
     for project in projects_list:
         workbench = json.loads(project["workbench"])
+        project_owner_email = project["prj_owner"]["email"]
+        project_name = project["name"]
         for entry in workbench.values():
-            services_with_versions.add(entry["key"] + entry["version"])
+            store_key = entry["key"] + entry["version"]
+            services_with_versions[store_key] = dict(
+                project_owner_email=project_owner_email, project_name=project_name
+            )
 
     return TransformedData(
         flattened_data=flattened_data,
@@ -141,10 +152,19 @@ def regroup_and_transform_data(transformed_data: TransformedData):
                 in_use = search_key in transformed_data.services_with_versions
                 group["in_use"] = in_use
 
+                if "used_by" not in group:
+                    group["used_by"] = deque()
+                if in_use:
+                    group["used_by"].append(
+                        transformed_data.services_with_versions[search_key]
+                    )
+
     # change deques into lists
     for key in services:
         for version in services[key]:
             services[key][version] = list(services[key][version])
+            for group in services[key][version]:
+                group["used_by"] = list(group["used_by"])
 
     return services
 
@@ -181,6 +201,11 @@ def markdown_for_service(service_versions: Dict, list_index: int) -> Tuple[str, 
 |-|-|-|-|
 {% for group in groups %}| **{{group["group_name"]}}** | {{group["group_description"]}} | {{group["product_name"]}} | {{group["access_rights"]}} |
 {% endfor %}
+
+{% if groups[0]["used_by"] %}Used in:
+
+{% for entry in groups[0]["used_by"] %}- **"{{entry["project_name"]}}"** owned by [{{entry["project_owner_email"]}}](mailto:{{entry["project_owner_email"]}})
+{% endfor %}{% endif %}
 {% endfor %}
 ---"""
     rendered_service_template = Template(service_template).render(
