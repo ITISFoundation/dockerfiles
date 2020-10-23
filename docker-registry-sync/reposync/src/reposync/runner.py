@@ -81,7 +81,7 @@ locked_context = LockedContext()
 
 
 async def login_on_all_registries(configuration: Configuration) -> None:
-    print("Logging in to:")
+    print(framed_text("Logging in to"))
     for dns, registry_configuration in configuration.registries.items():
         dns: DNSWithPort = dns
         registry_configuration: ConfigurationRegistry = registry_configuration
