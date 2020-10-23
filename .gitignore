@@ -107,3 +107,4 @@ venv.bak/
 .docker-compose-build.yml
 .vscode/
 data_*/
+docker-registry-sync/dev/deployments/
