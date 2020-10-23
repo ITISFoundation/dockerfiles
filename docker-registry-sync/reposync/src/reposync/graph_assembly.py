@@ -42,8 +42,8 @@ def assemble_sync_data(configuration: Configuration) -> SyncData:
         if step.name is None:
             step.name = make_step_name()
 
-        if step.before is None:
-            step.before = []
+        if step.depends is None:
+            step.depends = []
 
         for to in step.to_fields:
             to: ConfigurationSyncStepTo = to
@@ -72,7 +72,7 @@ def assemble_sync_data(configuration: Configuration) -> SyncData:
 
             # compute all of them from the predecessors
             node_edges = []
-            for before_step_name in step.before:
+            for before_step_name in step.depends:
                 target = make_sync_name(step, to)
 
                 before_step: ConfigurationSyncStep = sync_step_mapping[before_step_name]

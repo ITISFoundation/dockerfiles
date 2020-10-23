@@ -32,7 +32,7 @@ sync-steps:
         email_if_tags_removed: true
         tags_to_keep: /tmp/v2-tags-for-ci.yaml
     name: optional_sync_name # can be ignored, used only by before
-    before: ["no-stage"] # can be ignored
+    depends: ["no-stage"] # can be ignored
 
   - from: index.docker.io/alpine
     to:

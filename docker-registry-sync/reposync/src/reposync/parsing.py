@@ -91,7 +91,7 @@ class ConfigurationSyncStep(CustomBaseModel):
         None,
         description="name of the current step, used to be used in other jobs to indicate they depend upon this one",
     )
-    before: Union[List[str], None] = Field(
+    depends: Union[List[str], None] = Field(
         None,
         description="list of job names to be finished before running the current one",
     )
