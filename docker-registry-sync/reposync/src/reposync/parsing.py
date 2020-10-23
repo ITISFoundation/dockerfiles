@@ -115,7 +115,8 @@ class Configuration(CustomBaseModel):
         description="list of sync operations to be launched; a sync graph will be created for massive parallelism",
     )
 
-    def image_requires_tls_verify(self, image: str) -> bool:
+    def get_dns_from_image(self, image: str) -> DNSWithPort:
+        """Returns the image's DNS or raises an error"""
         parts = image.split("/")
         if not parts:
             raise ValueError(f"Could not determine DNS from image '{image}'")
@@ -123,8 +124,13 @@ class Configuration(CustomBaseModel):
         dns = parts[0]
         if dns not in self.registries:
             raise ValueError(
-                f"Could not find DNS '{dns}' in registries '{list(self.registries.keys())}'"
+                f"Could not find DNS '{dns}' inside configured registries '{list(self.registries.keys())}'"
             )
+
+        return dns
+
+    def image_requires_tls_verify(self, image: str) -> bool:
+        dns = self.get_dns_from_image(image)
         return self.registries[dns].tls_verify
 
 

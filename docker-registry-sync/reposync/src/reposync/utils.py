@@ -16,7 +16,14 @@ async def run_command_in_shell(command: str) -> Tuple[int, str]:
     result = (
         decoded_stdout
         if len(decoded_stderr) == 0
-        else f"{decoded_stdout}❌{decoded_stderr}"
+        else f"{decoded_stdout}{decoded_stderr}"
     )
 
     return process.returncode, result
+
+
+def framed_text(text: str) -> str:
+    message = "|" + "-" * len(text) + "|\n"
+    message += f"|{text}|\n"
+    message += "|" + "-" * len(text) + "|"
+    return message

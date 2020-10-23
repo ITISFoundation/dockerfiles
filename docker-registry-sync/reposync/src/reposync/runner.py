@@ -15,8 +15,14 @@ from .parsing import (
     ConfigurationRegistry,
     validate_yaml_array_file,
 )
-from .skopeo import skopeo_login, skopeo_sync_image
+from .skopeo import (
+    skopeo_login,
+    skopeo_sync_image,
+    get_images_to_remove,
+    skopeo_delete_image,
+)
 from .exceptions import ExecpionsInSyncTasksDetected
+from .utils import framed_text
 
 
 class LockedContext:
@@ -92,8 +98,11 @@ async def run_task(
     configuration: Configuration, sync_name: str, sync_payload: SyncPayload
 ) -> None:
     async def payload_can_throw_error():
+        # validate source and destination DNS
+        configuration.get_dns_from_image(sync_payload.from_field)
+        configuration.get_dns_from_image(sync_payload.to_field.destination)
+
         tasks = deque()
-        source_image = sync_payload.from_field
 
         tags = sync_payload.to_field.tags
         # transform into array of files
@@ -101,6 +110,7 @@ async def run_task(
             tags = validate_yaml_array_file(tags)
 
         for tag in tags:
+            source_image = f"{sync_payload.from_field}:{tag}"
             destination_image = f"{sync_payload.to_field.destination}:{tag}"
 
             task = asyncio.ensure_future(
@@ -128,6 +138,19 @@ async def run_task(
         # raise all detected exceptions
         if exceptions_detected:
             raise ExecpionsInSyncTasksDetected("Please check the above logs")
+
+        # continue with the images removal
+        tls_verify = configuration.image_requires_tls_verify(
+            sync_payload.to_field.destination
+        )
+        images_to_remove: List[str] = await get_images_to_remove(
+            base_image=sync_payload.to_field.destination,
+            tags_to_keep=tags,
+            tls_verify=tls_verify,
+        )
+        for image in images_to_remove:
+            print(f"🗑 Removing image {image}")
+            await skopeo_delete_image(image, tls_verify)
 
     async def runner():
         try:
@@ -176,7 +199,7 @@ async def start_parallel(configuration: Configuration, sync_data: SyncData) -> N
         if configuration.max_parallel_syncs == sys.maxsize
         else f"in batches of '{configuration.max_parallel_syncs}'"
     )
-    print(f"\nWill sync {sync_amount} from:")
+    print(framed_text(f"Will sync {sync_amount} from"))
     for sync_name, preceding_tasks in predecessors.items():
         if len(preceding_tasks) == 0:
             print(f"🏁 '{sync_name}' has no dependencies")
@@ -187,8 +210,9 @@ async def start_parallel(configuration: Configuration, sync_data: SyncData) -> N
 
     total_tasks = len(predecessors)
 
-    print("\nSyncTasks results:")
+    print(framed_text("SyncTasks results"))
     sync_exceptions = deque()
+    task_results = deque()
     while await locked_context.get_finished_tasks_count() < total_tasks:
         # schedule all remainign tasks if possible
         await schedule_unfinished_tasks(
@@ -199,23 +223,33 @@ async def start_parallel(configuration: Configuration, sync_data: SyncData) -> N
         # recover finished job status and results
         with_exceptions, finished_task_name, error_message = await _results_queue.get()
 
+        task_results.append((with_exceptions, finished_task_name))
+
         if with_exceptions:
             sync_exceptions.append((finished_task_name, error_message))
-            print(f"❌ {finished_task_name} had issues, look below at the logs")
-        else:
-            print(f"✅ {finished_task_name} finished with no issues")
 
         await locked_context.finished_task_add(finished_task_name)
         await locked_context.inc_finished_tasks_count()
 
     # print all exceptions for finished tasks at the end
     if sync_exceptions:
-        print("\nTasks with exceptions below")
+        print(framed_text("Tasks with exceptions below"))
     for task_name, traceback_message in sync_exceptions:
-        print(f"❌SyncTask '{task_name}' finished with exceptions:\n{traceback_message}")
+        print(framed_text(f"SyncTask '{task_name}' raised:"))
+        print(traceback_message)
 
-    # TODO: fail in case of errors
-    # TODO: removal procedure with skopeo
+    print(framed_text("Image upload recap"))
+    for with_exceptions, finished_task_name in task_results:
+        if with_exceptions:
+            print(f"❌ {finished_task_name} had issues, check logs above")
+        else:
+            print(f"✅ {finished_task_name} finished with no issues")
+
+    # if there are errors, exit and do not remove any images
+    if sync_exceptions:
+        exit(1)
+
+    # TODO: removal procedure with skopeo, fail upon first error here? fail at the end if multiple errors occur
 
 
 def run_parallel_upload(configuration: Configuration, sync_data: SyncData) -> None:
