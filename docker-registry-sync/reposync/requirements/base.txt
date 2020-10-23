@@ -7,7 +7,9 @@
 attrs==19.3.0             # via jsonschema
 cached-property==1.5.1    # via -r reposync/requirements/base.in
 decorator==4.4.2          # via networkx
+jinja2==2.11.2            # via -r reposync/requirements/base.in
 jsonschema==3.2.0         # via -r reposync/requirements/base.in
+markupsafe==1.1.1         # via jinja2
 networkx==2.4             # via -r reposync/requirements/base.in
 pydantic==1.6.1           # via -r reposync/requirements/base.in
 pyrsistent==0.16.0        # via jsonschema

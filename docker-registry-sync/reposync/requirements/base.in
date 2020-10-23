@@ -4,3 +4,4 @@ cached-property
 sanitize_filename
 networkx
 pydantic
+Jinja2
