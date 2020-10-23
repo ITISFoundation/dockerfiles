@@ -271,7 +271,18 @@ def render_as_deployment(collections: Collections, deployment: str) -> Tuple[str
         rendered_services.append(rendered_service)
         list_index += 1
 
-    markdown = f"# '{deployment}' deployment services index\n\n"
+    markdown = f"""
+# '{deployment}' deployment available services
+
+| Symbol | Meaning |
+|-|-|
+| :green_heart: | version is present in at least one study/project |
+| :broken_heart: | version is not present in any study/project |
+| ✅ | has permission |
+| ❌ | has **no** permission |
+
+"""
+
     for index in index_items:
         markdown += index
     markdown += "\n---\n"
