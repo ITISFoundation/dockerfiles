@@ -282,7 +282,7 @@ def render_as_deployment(collections: Collections, deployment: str) -> Tuple[str
 
 
 def render_from_csv_files(folder_path: str, deployment: str) -> None:
-    print(f"Generating report for '{deployment}' deployment'")
+    print(f"📋 Generating report for '{deployment}' deployment'")
     collections = load_from_csv(folder_path)
     rendered_markdown, source_data = render_as_deployment(collections, deployment)
     # storing results to file
