@@ -20,6 +20,7 @@ from .skopeo import (
     skopeo_sync_image,
     get_images_to_remove,
     skopeo_delete_image,
+    get_tags_for_image,
 )
 from .exceptions import ExecpionsInSyncTasksDetected
 from .utils import framed_text
@@ -152,6 +153,12 @@ async def run_task(
             print(f"🗑 Removing image {image}")
             await skopeo_delete_image(image, tls_verify)
 
+        # list tags at destination
+        print(
+            f"🏷 Tags after sync for {sync_payload.to_field.destination}: "
+            f"{await get_tags_for_image(sync_payload.to_field.destination, tls_verify)}"
+        )
+
     async def runner():
         try:
             await payload_can_throw_error()
@@ -248,8 +255,6 @@ async def start_parallel(configuration: Configuration, sync_data: SyncData) -> N
     # if there are errors, exit and do not remove any images
     if sync_exceptions:
         exit(1)
-
-    # TODO: removal procedure with skopeo, fail upon first error here? fail at the end if multiple errors occur
 
 
 def run_parallel_upload(configuration: Configuration, sync_data: SyncData) -> None:
