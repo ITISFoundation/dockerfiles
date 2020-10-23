@@ -286,7 +286,7 @@ def render_from_csv_files(folder_path: str, deployment: str) -> None:
     collections = load_from_csv(folder_path)
     rendered_markdown, source_data = render_as_deployment(collections, deployment)
     # storing results to file
-    (folder_path / "render.md").write_text(rendered_markdown)
+    (folder_path / "rendered.md").write_text(rendered_markdown)
     (folder_path / "source_data.json").write_text(source_data)
 
 
