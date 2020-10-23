@@ -27,6 +27,7 @@ sync-steps:
       - destination: "rega:5000/old/cool/thing"
         # if a string is provided the tags will be searched in a text file each on a new line
         # automates CI workflows and allows the CI to automatically publish new versions to target environments
+        email_owners_upon_changes: true
         tags_to_keep: /tmp/v2-tags-for-ci.yaml
     name: optional_sync_name # can be ignored, used only by before
     before: ["no-stage"] # can be ignored
@@ -34,16 +35,19 @@ sync-steps:
   - from: index.docker.io/alpine
     to:
       - destination: rega:5000/repo/now/sing
+        email_owners_upon_changes: true
         tags_to_keep: ["3.12", "3", "latest"]
 
   - from: index.docker.io/alpine
     to:
       - destination: rega:5000/repo/now/sing
+        email_owners_upon_changes: true
         tags_to_keep: [] # this will remote all tags present in the destination repository
     name: "no-stage"
 
   - from: rega:5000/not/good
     to:
       - destination: rega:5000/list/me
+        email_owners_upon_changes: true
         tags_to_keep: []
 # check the tag deletion https://gist.github.com/jaytaylor/86d5efaddda926a25fa68c263830dac1
