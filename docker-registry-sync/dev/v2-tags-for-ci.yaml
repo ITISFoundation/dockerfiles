@@ -1,3 +1,3 @@
-- image.io/path/to/image:tag1
-- image.io/path/to/image:tag1
-- image.io/path/to/image2:latest
+- 3.12
+- 3
+- latest

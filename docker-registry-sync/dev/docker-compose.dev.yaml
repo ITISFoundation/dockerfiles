@@ -13,6 +13,7 @@ services:
       REGISTRY_AUTH: htpasswd
       REGISTRY_AUTH_HTPASSWD_PATH: /auth/htpasswd
       REGISTRY_AUTH_HTPASSWD_REALM: Registry Realm
+      REGISTRY_STORAGE_DELETE_ENABLED: "true"
     volumes:
       - ./data_a:/data
       - ./registry_htpasswd:/auth/htpasswd
@@ -28,6 +29,7 @@ services:
       REGISTRY_AUTH: htpasswd
       REGISTRY_AUTH_HTPASSWD_PATH: /auth/htpasswd
       REGISTRY_AUTH_HTPASSWD_REALM: Registry Realm
+      REGISTRY_STORAGE_DELETE_ENABLED: "true"
     volumes:
       - ./data_b:/data
       - ./registry_htpasswd:/auth/htpasswd
@@ -43,10 +45,10 @@ services:
       REGISTRY_AUTH: htpasswd
       REGISTRY_AUTH_HTPASSWD_PATH: /auth/htpasswd
       REGISTRY_AUTH_HTPASSWD_REALM: Registry Realm
+      REGISTRY_STORAGE_DELETE_ENABLED: "true"
     volumes:
       - ./data_c:/data
       - ./registry_htpasswd:/auth/htpasswd
-
 
 networks:
   dev_sync_net:
