@@ -60,7 +60,7 @@ class ConfigurationSyncStepTo(CustomBaseModel):
         ...,
         description="full path where to sync the image without its tag",
     )
-    tags: Union[FilePath, List[str]] = Field(
+    tags_to_keep: Union[FilePath, List[str]] = Field(
         ...,
         description=(
             "list of tag names to by synced(tags which are not present are removed); "

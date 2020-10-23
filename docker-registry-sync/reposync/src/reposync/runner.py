@@ -104,7 +104,7 @@ async def run_task(
 
         tasks = deque()
 
-        tags = sync_payload.to_field.tags
+        tags = sync_payload.to_field.tags_to_keep
         # transform into array of files
         if isinstance(tags, Path):
             tags = validate_yaml_array_file(tags)
