@@ -257,11 +257,7 @@ def get_essential_service_data(entry: Dict) -> Dict:
     return flat_entry
 
 
-def render(folder_path: Path, deployment: str) -> None:
-    print(f"Generating report for {str(folder_path)}")
-    # TODO: change the CSV input to a JSON/API call or something else
-    collections = load_from_csv(folder_path)
-
+def render_as_deployment(collections: Collections, deployment: str) -> Tuple[str, str]:
     transformed_data = flatten_data(collections)
     services = regroup_and_transform_data(transformed_data)
 
@@ -282,18 +278,27 @@ def render(folder_path: Path, deployment: str) -> None:
     for rendered_service in rendered_services:
         markdown += rendered_service
 
+    return markdown, json.dumps(services)
+
+
+def render_from_csv_files(folder_path: str, deployment: str) -> None:
+    print(f"Generating report for '{deployment}' deployment'")
+    collections = load_from_csv(folder_path)
+    rendered_markdown, source_data = render_as_deployment(collections, deployment)
     # storing results to file
-    (folder_path / "render.md").write_text(markdown)
-    (folder_path / "source_data.json").write_text(json.dumps(services))
-    print("✅ done")
+    (folder_path / "render.md").write_text(rendered_markdown)
+    (folder_path / "source_data.json").write_text(source_data)
 
 
 def main():
-    render(Path("/tmp/master"), "master")
-    # dalco-staging
-    # dalco-production
-    # aws-staging
-    # aws-production
+    root_deployments = Path("/tmp/deployments")
+    directories = [x for x in root_deployments.glob("*") if x.is_dir()]
+
+    for directory in directories:
+        deployment_name = str(directory).split("/")[-1]
+        render_from_csv_files(directory, deployment_name)
+
+    print("✅ done")
 
 
 if __name__ == "__main__":
