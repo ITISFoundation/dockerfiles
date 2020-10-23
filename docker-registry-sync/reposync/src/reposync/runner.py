@@ -24,6 +24,7 @@ from .skopeo import (
 )
 from .exceptions import ExecpionsInSyncTasksDetected
 from .utils import framed_text
+from .notifications import send_notification_to_owner
 
 
 class LockedContext:
@@ -105,6 +106,15 @@ async def run_task(
 
         tasks = deque()
 
+        tags_before_sync = set(
+            await get_tags_for_image(
+                image=sync_payload.to_field.destination,
+                tls_verify=configuration.image_requires_tls_verify(
+                    sync_payload.to_field.destination
+                ),
+            )
+        )
+
         tags = sync_payload.to_field.tags_to_keep
         # transform into array of files
         if isinstance(tags, Path):
@@ -154,10 +164,22 @@ async def run_task(
             await skopeo_delete_image(image, tls_verify)
 
         # list tags at destination
+        tags_after_sync = set(
+            await get_tags_for_image(sync_payload.to_field.destination, tls_verify)
+        )
         print(
             f"🏷 Tags after sync for {sync_payload.to_field.destination}: "
-            f"{await get_tags_for_image(sync_payload.to_field.destination, tls_verify)}"
+            f"{list(tags_after_sync)}"
         )
+
+        # if new images were added ore removed an email will be sent to th owner
+        removed_tags = tags_before_sync - tags_after_sync
+        new_tags = tags_after_sync - tags_before_sync
+
+        if new_tags or removed_tags:
+            await send_notification_to_owner(
+                sync_payload.to_field.destination, removed_tags, new_tags
+            )
 
     async def runner():
         try:
