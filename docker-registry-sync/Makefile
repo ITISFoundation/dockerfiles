@@ -63,23 +63,50 @@ setup-env: ## creates the .env still need to change your credentials
 
 .PHONY: start-dev-registry
 start-dev-registry: ## starts development registries used by development-run
+	@docker network rm ${BRIDGE_NETWORK_NAME} || true
 	@docker network create ${BRIDGE_NETWORK_NAME}
 	@docker-compose -f dev/docker-compose.dev.yaml up -d
 
 .PHONY: stop-dev-registry
 stop-dev-registry: ## stops development registries used by development-run
 	@docker-compose -f dev/docker-compose.dev.yaml down
-	@docker network rm ${BRIDGE_NETWORK_NAME}
+	@docker network rm ${BRIDGE_NETWORK_NAME} || true
 	@sudo rm -rf dev/data_*
 
 .PHONY: development-run
 development-run: _ensure-in-venv build ## used to test out changes during development
-	@docker run --rm -it \
+	@docker run --rm -it --ulimit memlock=-1 \
 		--env-file .env \
-		-v $(current_dir)/dev/dev-sync-cfg.yml:/etc/cfg.yaml \
+		-v $(current_dir)/dev/v2-config.yaml:/tmp/v2-config.yaml \
+		-v $(current_dir)/dev/v2-image-catalog.yaml:/tmp/v2-image-catalog.yaml \
+		-v $(current_dir)/dev/v2-tags-for-ci.yaml:/tmp/v2-tags-for-ci.yaml \
 		--network=${BRIDGE_NETWORK_NAME} \
 		${DOCKER_REGISTRY}/${IMAGE_NAME}:${DOCKER_REG_SYNC_VERSION} \
-		run-reposync -c /etc/cfg.yaml
+		run-reposync -c /tmp/v2-config.yaml
+
+.PHONY: start-shell
+start-shell: _ensure-in-venv build ## used to test out changes during development
+	@docker run --rm -it --ulimit memlock=-1 \
+		--env-file .env \
+		-v $(current_dir)/dev/deployments/:/tmp/deployments/ \
+		-v $(current_dir)/dev/v2-config.yaml:/tmp/v2-config.yaml \
+		-v $(current_dir)/dev/v2-image-catalog.yaml:/tmp/v2-image-catalog.yaml \
+		-v $(current_dir)/dev/v2-tags-for-ci.yaml:/tmp/v2-tags-for-ci.yaml \
+		--network=${BRIDGE_NETWORK_NAME} \
+		${DOCKER_REGISTRY}/${IMAGE_NAME}:${DOCKER_REG_SYNC_VERSION} \
+		bash
+
+.PHONY: run-servcice-parser
+run-servcice-parser: _ensure-in-venv build ## used to test out changes during development
+	@docker run --rm -it --ulimit memlock=-1 \
+		--env-file .env \
+		-v $(current_dir)/dev/deployments/:/tmp/deployments/ \
+		-v $(current_dir)/dev/v2-config.yaml:/tmp/v2-config.yaml \
+		-v $(current_dir)/dev/v2-image-catalog.yaml:/tmp/v2-image-catalog.yaml \
+		-v $(current_dir)/dev/v2-tags-for-ci.yaml:/tmp/v2-tags-for-ci.yaml \
+		--network=${BRIDGE_NETWORK_NAME} \
+		${DOCKER_REGISTRY}/${IMAGE_NAME}:${DOCKER_REG_SYNC_VERSION} \
+		generate-table
 
 # Used by deployment stages
 

@@ -1,0 +1,58 @@
+# maximum number of sync jobs to run in parallel
+max-parallel-syncs: 10
+
+published-image-catalogs:
+  # all images stored in this catalog are never to be deleted from the registry
+  # provides a path to a catalog
+  "index.docker.io": /tmp/v2-image-catalog.yaml
+
+registries:
+  "index.docker.io":
+    user: SC_CI_DOCKER_REGISTRY_HUB_USER
+    password: SC_CI_DOCKER_REGISTRY_HUB_PASSWORD
+    # tags from this registry will never be deleted
+    # if a tag needs to be deleted an error will be shown from that job which was trying to delete it
+    disable_delete: true # default is false
+  "rega:5000":
+    user: ENV_VAR_USERNAME_MASTER
+    password: ENV_PASSWORD_MASTER
+    tls_verify: false # default is true
+
+sync-steps:
+  - from: index.docker.io/alpine
+    to:
+      - destination: "rega:5000/new/cool/thing"
+        tags_to_keep: ["latest"] # all tags except `latest` will be removed from this registry
+        email_if_tags_added: true # default false
+        email_if_tags_removed: true # default false
+      - destination: "rega:5000/old/cool/thing"
+        # if a string is provided the tags will be searched in a text file each on a new line
+        # automates CI workflows and allows the CI to automatically publish new versions to target environments
+        email_if_tags_added: true
+        email_if_tags_removed: true
+        tags_to_keep: /tmp/v2-tags-for-ci.yaml
+    name: optional_sync_name # can be ignored, used only by before
+    depends: ["no-stage"] # can be ignored
+
+  - from: index.docker.io/alpine
+    to:
+      - destination: rega:5000/repo/now/sing
+        email_if_tags_added: true
+        email_if_tags_removed: true
+        tags_to_keep: ["3.12", "3", "latest"]
+
+  - from: index.docker.io/alpine
+    to:
+      - destination: rega:5000/repo/now/sing
+        email_if_tags_added: true
+        email_if_tags_removed: true
+        tags_to_keep: [] # this will remote all tags present in the destination repository
+    name: "no-stage"
+
+  - from: rega:5000/not/good
+    to:
+      - destination: rega:5000/list/me
+        email_if_tags_added: true
+        email_if_tags_removed: true
+        tags_to_keep: []
+# check the tag deletion https://gist.github.com/jaytaylor/86d5efaddda926a25fa68c263830dac1
