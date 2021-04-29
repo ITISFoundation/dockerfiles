@@ -1,0 +1,32 @@
+version: 2
+updates:
+- package-ecosystem: docker
+  directory: "/python-with-pandas/3.6-alpine"
+  schedule:
+    interval: daily
+    time: "04:00"
+  open-pull-requests-limit: 10
+  assignees:
+  - pcrespov
+- package-ecosystem: docker
+  directory: "/rabbitmq"
+  schedule:
+    interval: daily
+    time: "04:00"
+  open-pull-requests-limit: 10
+  assignees:
+  - pcrespov
+- package-ecosystem: pip
+  directory: "/python-with-pandas/3.6-alpine"
+  schedule:
+    interval: daily
+    time: "04:00"
+  open-pull-requests-limit: 10
+  reviewers:
+  - pcrespov
+  assignees:
+  - pcrespov
+  ignore:
+  - dependency-name: pandas
+    versions:
+    - "> 0.24.2"
