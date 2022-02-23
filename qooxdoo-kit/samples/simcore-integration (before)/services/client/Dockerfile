@@ -1,4 +1,4 @@
-FROM node:10.15.1 as base-stage
+FROM node:10.23.2 as base-stage
 
 # Used to qx compile and/or serve (dev) client-side code
 
