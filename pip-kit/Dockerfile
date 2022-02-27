@@ -1,4 +1,4 @@
-FROM python:3.6-alpine
+FROM python:3.9.10-alpine
 
 LABEL maintainer=pcrespov
 
