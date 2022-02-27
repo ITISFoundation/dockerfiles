@@ -13,7 +13,7 @@ RUN cd myapp && \
 
 
 #####################################################
-FROM python:3.6-alpine as production
+FROM python:3.9.10-alpine as production
 
 WORKDIR /work
 COPY --from=build /project/myapp/compiled/build/ .
