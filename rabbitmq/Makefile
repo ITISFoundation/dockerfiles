@@ -1,5 +1,5 @@
 .DEFAULT_GOAL   := help
-export RABBIT_VERSION  :=3.8.0-management
+export RABBIT_VERSION  :=3.11.2-management
 export DOCKER_REGISTRY ?=itisfoundation
 
 export VCS_URL         := $(shell git config --get remote.origin.url)
@@ -12,7 +12,11 @@ help: ## displays targets
 
 .PHONY: build
 build: ## builds image
-	@docker-compose build
+	@docker buildx bake --load
+
+.PHONY: shell
+shell: ## builds image
+	@docker run -it $(DOCKER_REGISTRY)/rabbitmq:$(RABBIT_VERSION) bash
 
 .PHONY: push
 push: ## pushes image to Dockerhub
