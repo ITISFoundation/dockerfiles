@@ -4,16 +4,31 @@
 #
 #    pip-compile --output-file requirements.txt requirements.in
 #
-certifi==2018.11.29       # via requests
-chardet==3.0.4            # via requests
-click==7.0                # via pip-tools
-docopt==0.6.2             # via pipreqs
-idna==2.8                 # via requests
+certifi==2022.12.7
+    # via requests
+chardet==3.0.4
+    # via requests
+click==7.0
+    # via pip-tools
+docopt==0.6.2
+    # via pipreqs
+idna==2.8
+    # via requests
 pip-tools==3.4.0
+    # via -r requirements.in
 pipdeptree==0.13.2
+    # via -r requirements.in
 pipreqs==0.4.9
-requests==2.21.0          # via yarg
-six==1.12.0               # via pip-tools
+    # via -r requirements.in
+requests==2.21.0
+    # via yarg
+six==1.12.0
+    # via pip-tools
 urllib3==1.24.2
-yarg==0.1.9               # via pipreqs
+    # via
+    #   -r requirements.in
+    #   requests
+yarg==0.1.9
+    # via pipreqs
 yolk3k==0.9
+    # via -r requirements.in
