@@ -1,5 +1,5 @@
 .DEFAULT_GOAL   := help
-export RABBIT_VERSION  :=3.11.2-management
+export RABBIT_VERSION  :=3.11.16-management
 export DOCKER_REGISTRY ?=itisfoundation
 
 export VCS_URL         := $(shell git config --get remote.origin.url)
