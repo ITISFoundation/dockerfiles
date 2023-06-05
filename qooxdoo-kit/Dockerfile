@@ -1,4 +1,4 @@
-FROM node:10.16.3-alpine
+FROM node:18.16.0-alpine
 
 LABEL maintainer="oetiker,pcrespov"
 
