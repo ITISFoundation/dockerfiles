@@ -8,11 +8,10 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
-      - name: Set Git Remote
-        run: git remote add origin https://github.com/${{ github.repository }}.git
       - uses: ./ci/github/action-build-and-push
         with:
           REGISTRY_USER: ${{ secrets.DOCKER_HUB_USER }}
           REGISTRY_PASSWORD: ${{ secrets.DOCKER_HUB_PASSWORD }}
           TARGET_REGISTRY_NAME: ${{ secrets.DOCKER_HUB_TARGET_REGISTRY_NAME }}
           TARGET_PROJECT_PATH_IN_GIT_REPO: "docker-registry-sync"
+          GITHUB_REPOSITORY: ${{ github.repository }}
