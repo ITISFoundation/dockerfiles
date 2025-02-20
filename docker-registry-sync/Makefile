@@ -64,11 +64,11 @@ setup-env: ## creates the .env still need to change your credentials
 .PHONY: start-dev-registry
 start-dev-registry: ## starts development registries used by development-run
 	@docker network create ${BRIDGE_NETWORK_NAME}
-	@docker-compose -f dev/docker-compose.dev.yaml up -d
+	@docker compose -f dev/docker-compose.dev.yaml up -d
 
 .PHONY: stop-dev-registry
 stop-dev-registry: ## stops development registries used by development-run
-	@docker-compose -f dev/docker-compose.dev.yaml down
+	@docker compose -f dev/docker-compose.dev.yaml down
 	@docker network rm ${BRIDGE_NETWORK_NAME}
 	@sudo rm -rf dev/data_*
 
@@ -85,7 +85,7 @@ development-run: _ensure-in-venv build ## used to test out changes during develo
 
 .PHONY: build
 build: ## build and tag the iamge
-	@docker-compose build
+	@docker compose build
 
 .PHONY: push
 push: ## pushes image to Dockerhub
