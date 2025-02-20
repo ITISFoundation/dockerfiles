@@ -6,7 +6,11 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
-## [0.2.1] - 2020-07-8
+## [0.3.0] - 2025-02-20
+
+- upgraded dregsy to 0.5.1
+
+## [0.2.1] - 2020-07-08
 ### Changed
 - reduced parallel sync operations to 10 at a time to reduce third party system pressure
 
