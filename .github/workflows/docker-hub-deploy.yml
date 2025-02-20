@@ -8,6 +8,8 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
+      - name: Set Git Remote
+        run: git remote add origin https://github.com/${{ github.repository }}.git
       - uses: ./ci/github/action-build-and-push
         with:
           REGISTRY_USER: ${{ secrets.DOCKER_HUB_USER }}

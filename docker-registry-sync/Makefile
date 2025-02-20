@@ -8,6 +8,7 @@ export DOCKER_REG_SYNC_VERSION := 0.3.0
 export DOCKER_REG_SYNC_TAG_AS_STABLE_VERSION := 0.3.0
 export DOCKER_REGISTRY ?=itisfoundation
 
+export VCS_URL         := $(shell git config --get remote.origin.url)
 export VCS_REF         := $(shell git rev-parse --short HEAD)
 export BUILD_DATE      := $(shell date -u +"%Y-%m-%dT%H:%M:%SZ")
 
@@ -121,15 +122,14 @@ endif
 
 .PHONY: github-ci-tests
 github-ci-tests:	## reserved for Git Hub CI to start testsuite
-	@echo "Running tests in isolation"
-	@echo "Will be cloining: '$(shell git config --get remote.origin.url)'"
+	echo "Running tests in isolation"
 	docker run --rm \
 		-v $(current_dir):/code \
 		-w /code \
 		python:3.8-buster \
 		sh -c ' export VIRTUAL_ENV=1 && \
 				rm -rf orig_repo && \
-				git clone $(shell git config --get remote.origin.url) python3 convert_vcs_url.py) orig_repo && \
+				git clone $(shell VCS_URL="$(VCS_URL)" python3 convert_vcs_url.py) orig_repo && \
 				cd orig_repo && \
 				git checkout $(GITHUB_SHA) && \
 				pip install tox && \
