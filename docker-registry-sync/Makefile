@@ -3,9 +3,9 @@
 BRIDGE_NETWORK_NAME := dev_sync_net
 
 export IMAGE_NAME := docker-registry-sync
-export DOCKER_REG_SYNC_VERSION := 0.2.1
+export DOCKER_REG_SYNC_VERSION := 0.3.0
 # if this image is built by this script it will be tagged as stable
-export DOCKER_REG_SYNC_TAS_AS_STABLEVERSION := 0.2.1
+export DOCKER_REG_SYNC_TAG_AS_STABLE_VERSION := 0.3.0
 export DOCKER_REGISTRY ?=itisfoundation
 
 export VCS_URL         := $(shell git config --get remote.origin.url)
@@ -64,11 +64,11 @@ setup-env: ## creates the .env still need to change your credentials
 .PHONY: start-dev-registry
 start-dev-registry: ## starts development registries used by development-run
 	@docker network create ${BRIDGE_NETWORK_NAME}
-	@docker-compose -f dev/docker-compose.dev.yaml up -d
+	@docker compose -f dev/docker-compose.dev.yaml up -d
 
 .PHONY: stop-dev-registry
 stop-dev-registry: ## stops development registries used by development-run
-	@docker-compose -f dev/docker-compose.dev.yaml down
+	@docker compose -f dev/docker-compose.dev.yaml down
 	@docker network rm ${BRIDGE_NETWORK_NAME}
 	@sudo rm -rf dev/data_*
 
@@ -85,7 +85,7 @@ development-run: _ensure-in-venv build ## used to test out changes during develo
 
 .PHONY: build
 build: ## build and tag the iamge
-	@docker-compose build
+	@docker compose build
 
 .PHONY: push
 push: ## pushes image to Dockerhub
@@ -115,7 +115,7 @@ github-ci-pull: ## reserved for Git Hub CI to pull image
 github-ci-build: ## reserved for Git Hub CI to build image
 	@make build
 	# checkk the version for stable
-ifeq (${DOCKER_REG_SYNC_VERSION}, ${DOCKER_REG_SYNC_TAS_AS_STABLEVERSION})
+ifeq (${DOCKER_REG_SYNC_VERSION}, ${DOCKER_REG_SYNC_TAG_AS_STABLE_VERSION})
 	docker tag ${DOCKER_REGISTRY}/${IMAGE_NAME}:${DOCKER_REG_SYNC_VERSION} ${DOCKER_REGISTRY}/${IMAGE_NAME}:stable
 endif
 	@make info
@@ -129,17 +129,17 @@ github-ci-tests:	## reserved for Git Hub CI to start testsuite
 		python:3.8-buster \
 		sh -c ' export VIRTUAL_ENV=1 && \
 				rm -rf orig_repo && \
-				git clone $(shell VCS_URL="$(VCS_URL)" python3 convert_vcs_url.py) orig_repo && \
+				git clone $(shell VCS_URL="https://github.com/${GITHUB_REPOSITORY}.git" python3 convert_vcs_url.py) orig_repo && \
 				cd orig_repo && \
 				git checkout $(GITHUB_SHA) && \
-				pip install tox && \
+				pip install tox==3.15.2 && \
 				cd docker-registry-sync && \
 				make tests'
 
 .PHONY: github-ci-push
 github-ci-push:	## reserved for Git Hub CI to push image
 	@make push
-ifeq (${DOCKER_REG_SYNC_VERSION}, ${DOCKER_REG_SYNC_TAS_AS_STABLEVERSION})
+ifeq (${DOCKER_REG_SYNC_VERSION}, ${DOCKER_REG_SYNC_TAG_AS_STABLE_VERSION})
 	@docker push ${DOCKER_REGISTRY}/${IMAGE_NAME}:stable
 endif
 	

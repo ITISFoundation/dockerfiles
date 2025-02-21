@@ -1,9 +1,9 @@
-# based on https://github.com/xelalexv/dregsy/blob/85b34eb8a0c7ffc1b7c610bc8de1388230a12551/Dockerfile
-FROM xelalex/dregsy@sha256:9b0fe252cb8bf88f67871efd6559ef89b76013c46dfbc49b961d396a4b8d1887
+# based on https://github.com/xelalexv/dregsy/blob/0.5.1/hack/dregsy.alpine.Dockerfile
+FROM xelalex/dregsy:0.5.1-alpine@sha256:1adb89b1310128367a55dbbe6b0656c36558986e893fa96e610303069d966578
 
 LABEL maintainer "neagu@itis.swiss"
 
-RUN apk add python3
+RUN apk add python3 py-pip
 RUN pip3 install --upgrade \
         pip \
         setuptools \
