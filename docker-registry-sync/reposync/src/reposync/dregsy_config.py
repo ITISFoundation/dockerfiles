@@ -2,7 +2,7 @@ import uuid
 import networkx as nx
 
 from typing import Dict, Tuple
-from dataclasses import dataclass, field
+from dataclasses import dataclass
 from collections import deque
 
 
@@ -20,6 +20,7 @@ class Mapping(BaseSerializable):
     from_field: str
     to_field: str
     tags: List[str]
+    platform: str = "all"
 
     def as_dict(self) -> Dict:
         result = {
@@ -70,7 +71,7 @@ class DregsyYAML(BaseSerializable):
         return dict_to_yaml(self.as_dict())
 
     def ci_print(self) -> str:
-        """Returns a string usable in the CI, obscures secrets """
+        """Returns a string usable in the CI, obscures secrets"""
         dict_formatted = self.as_dict()
         # obscuring secrets in UI
         for task in dict_formatted["tasks"]:
@@ -187,4 +188,3 @@ def create_dregsy_task_graph(
         )
 
     return task_mapping, predecessors
-
