@@ -3,9 +3,9 @@
 BRIDGE_NETWORK_NAME := dev_sync_net
 
 export IMAGE_NAME := docker-registry-sync
-export DOCKER_REG_SYNC_VERSION := 0.3.0
+export DOCKER_REG_SYNC_VERSION := 0.3.1
 # if this image is built by this script it will be tagged as stable
-export DOCKER_REG_SYNC_TAG_AS_STABLE_VERSION := 0.3.0
+export DOCKER_REG_SYNC_TAG_AS_STABLE_VERSION := 0.3.1
 export DOCKER_REGISTRY ?=itisfoundation
 
 export VCS_URL         := $(shell git config --get remote.origin.url)
