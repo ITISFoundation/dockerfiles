@@ -1,17 +1,16 @@
 import uuid
 import networkx as nx
 
-from typing import Dict, Tuple
 from dataclasses import dataclass
 from collections import deque
 
 
-from .prepare_stages import Stage, List
+from .prepare_stages import Stage
 from .utils import encode_credentials, dict_to_yaml, CyclicDependencyException
 
 
 class BaseSerializable:
-    def as_dict(self) -> Dict:
+    def as_dict(self) -> dict:
         raise NotImplementedError("Must implement in subclass")  # pragma: no cover
 
 
@@ -19,10 +18,10 @@ class BaseSerializable:
 class Mapping(BaseSerializable):
     from_field: str
     to_field: str
-    tags: List[str]
+    tags: list[str]
     platform: str = "all"
 
-    def as_dict(self) -> Dict:
+    def as_dict(self) -> dict:
         result = {
             "from": self.from_field,
             "to": self.to_field,
@@ -38,7 +37,7 @@ class TaskRegistry(BaseSerializable):
     auth: str
     skip_tls_verify: bool
 
-    def as_dict(self) -> Dict:
+    def as_dict(self) -> dict:
         return {
             "registry": self.registry,
             "auth": self.auth,
@@ -52,19 +51,19 @@ class Task(BaseSerializable):
     verbose: bool
     source: TaskRegistry
     target: TaskRegistry
-    mappings: List[Mapping]
+    mappings: list[Mapping]
     # needed for scheduling
     id: str
-    depends_on: List[str]
+    depends_on: list[str]
 
 
 @dataclass
 class DregsyYAML(BaseSerializable):
     relay: str
-    skopeo: Dict[str, str]
-    tasks: List[Task]
+    skopeo: dict[str, str]
+    tasks: list[Task]
 
-    def as_dict(self) -> Dict:
+    def as_dict(self) -> dict:
         return {"relay": self.relay, "skopeo": self.skopeo, "tasks": self.tasks}
 
     def as_yaml(self) -> str:
@@ -97,8 +96,8 @@ class DregsyYAML(BaseSerializable):
 
 
 def create_dregsy_task_graph(
-    stages: List[Stage],
-) -> Tuple[Dict[str, Task], Dict[str, List[str]]]:
+    stages: list[Stage],
+) -> tuple[dict[str, Task], dict[str, list[str]]]:
     def get_task_number(task_index):
         return task_index + 1
 

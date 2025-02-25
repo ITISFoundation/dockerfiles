@@ -1,11 +1,10 @@
 import io
-import sys
 import pytest
 from argparse import Namespace
 
 import reposync
 
-from .conf import (
+from conf import (
     MIN_VALID_CONFIGURATION,
     MULTI_STAGE_IDS_CONFIGURATION,
     NO_SUCH_STAGE_CONFIGURATION,
