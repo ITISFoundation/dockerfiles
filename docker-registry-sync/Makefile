@@ -88,8 +88,15 @@ build: ## build and tag the iamge
 	@docker compose build
 
 .PHONY: push
-push: ## pushes image to Dockerhub
-	@docker push ${DOCKER_REGISTRY}/${IMAGE_NAME}:${DOCKER_REG_SYNC_VERSION}
+push: ## Pushes image to Docker Hub only if the tag does not exist
+	@echo "Checking if tag ${DOCKER_REG_SYNC_VERSION} exists in ${DOCKER_REGISTRY}/${IMAGE_NAME}..."
+	@if [ "$(shell curl -s -o /dev/null -w "%{http_code}" https://hub.docker.com/v2/repositories/${DOCKER_REGISTRY}/${IMAGE_NAME}/tags/${DOCKER_REG_SYNC_VERSION}/)" = "404" ]; then \
+		echo "Tag does not exist. Pushing image..."; \
+		docker push ${DOCKER_REGISTRY}/${IMAGE_NAME}:${DOCKER_REG_SYNC_VERSION}; \
+	else \
+		echo "Tag already exists. Skipping push."; \
+	fi
+
 
 .PHONY: pull
 pull: ## pulls image from Dockerhub
@@ -128,12 +135,8 @@ github-ci-tests:	## reserved for Git Hub CI to start testsuite
 		-w /code \
 		python:3.8-buster \
 		sh -c ' export VIRTUAL_ENV=1 && \
-				rm -rf orig_repo && \
-				git clone $(shell VCS_URL="https://github.com/${GITHUB_REPOSITORY}.git" python3 convert_vcs_url.py) orig_repo && \
-				cd orig_repo && \
-				git checkout $(GITHUB_SHA) && \
 				pip install tox==3.15.2 && \
-				cd docker-registry-sync && \
+				cd /code && \
 				make tests'
 
 .PHONY: github-ci-push
