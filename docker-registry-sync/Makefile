@@ -31,28 +31,23 @@ compile-dependencies: _ensure-in-venv ## snapshot dependencies
 
 
 .PHONY: install-test
-install-test: _ensure-in-venv ## install package test dependencies
+install-test: _ensure-in-venv ## install test dependencies
 	@cd reposync/requirements; uv pip sync test.txt 
 
 .PHONY: install-dev
-install-dev: _ensure-in-venv ## install package test dependencies
+install-dev: _ensure-in-venv ## install dev dependencies
 	@cd reposync/requirements; uv pip sync dev.txt
 
 .PHONY: install-ci
-install-ci: _ensure-in-venv ## install package test dependencies
+install-ci: _ensure-in-venv ## install ci dependencies
 	@cd reposync/requirements; uv pip sync ci.txt
 
-
-.PHONY: install-py-package
-install-py-package: _ensure-in-venv ## install package dependencies
-	@pip install -e reposync
+##### DEVELOPMENT UTILS
 
 .PHONY: tests
 tests: _ensure-in-venv ## install package dependencies
 	@tox -r -c reposync/tox.ini
 
-
-##### DEVELOPMENT UTILS
 
 .PHONY: setup-env
 setup-env: ## creates the .env still need to change your credentials
