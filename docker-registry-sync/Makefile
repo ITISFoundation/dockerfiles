@@ -88,8 +88,15 @@ build: ## build and tag the iamge
 	@docker compose build
 
 .PHONY: push
-push: ## pushes image to Dockerhub
-	@docker push ${DOCKER_REGISTRY}/${IMAGE_NAME}:${DOCKER_REG_SYNC_VERSION}
+push: ## Pushes image to Docker Hub only if the tag does not exist
+	@echo "Checking if tag ${DOCKER_REG_SYNC_VERSION} exists in ${DOCKER_REGISTRY}/${IMAGE_NAME}..."
+	@if [ "$(shell curl -s -o /dev/null -w "%{http_code}" https://hub.docker.com/v2/repositories/${DOCKER_REGISTRY}/${IMAGE_NAME}/tags/${DOCKER_REG_SYNC_VERSION}/)" = "404" ]; then \
+		echo "Tag does not exist. Pushing image..."; \
+		docker push ${DOCKER_REGISTRY}/${IMAGE_NAME}:${DOCKER_REG_SYNC_VERSION}; \
+	else \
+		echo "Tag already exists. Skipping push."; \
+	fi
+
 
 .PHONY: pull
 pull: ## pulls image from Dockerhub

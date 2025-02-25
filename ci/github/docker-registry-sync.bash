@@ -23,7 +23,8 @@ tests() {
 
 push() {
   # shellcheck source=/dev/null
-  echo "to implment pushing"
+  pushd docker-registry-sync
+  make push
 }
 
 # Check if the function exists (bash specific)
