@@ -128,10 +128,6 @@ github-ci-tests:	## reserved for Git Hub CI to start testsuite
 		-w /code \
 		python:3.8-buster \
 		sh -c ' export VIRTUAL_ENV=1 && \
-				rm -rf orig_repo && \
-				git clone $(shell VCS_URL="https://github.com/${GITHUB_REPOSITORY}.git" python3 convert_vcs_url.py) orig_repo && \
-				cd orig_repo && \
-				git checkout $(GITHUB_SHA) && \
 				pip install tox==3.15.2 && \
 				cd docker-registry-sync && \
 				make tests'
