@@ -1,5 +1,5 @@
-pyyaml
-jsonschema
 cached-property
-sanitize_filename
+jsonschema
 networkx
+pyyaml
+sanitize_filename
