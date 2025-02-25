@@ -17,7 +17,7 @@ build() {
 tests() {
   # shellcheck source=/dev/null
   pushd docker-registry-sync
-  make github-ci-tests
+  make tests-isolated
   popd
 }
 

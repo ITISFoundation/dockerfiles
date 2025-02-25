@@ -95,8 +95,8 @@ push: ## Pushes image to Docker Hub only if the tag does not exist
 		echo "Tag already exists. Skipping push."; \
 	fi
 
-.PHONY: github-ci-tests
-github-ci-tests:	## reserved for Git Hub CI to start testsuite
+.PHONY: tests-isolated
+tests-isolated:	## reserved for Git Hub CI to start testsuite
 	echo "Running tests in isolation"
 	docker run --rm \
 		-v $(current_dir):/code \
