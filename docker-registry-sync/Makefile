@@ -4,8 +4,6 @@ BRIDGE_NETWORK_NAME := dev_sync_net
 
 export IMAGE_NAME := docker-registry-sync
 export DOCKER_REG_SYNC_VERSION := 0.3.1
-# if this image is built by this script it will be tagged as stable
-export DOCKER_REG_SYNC_TAG_AS_STABLE_VERSION := 0.3.1
 export DOCKER_REGISTRY ?=itisfoundation
 
 export VCS_URL         := $(shell git config --get remote.origin.url)
@@ -97,36 +95,6 @@ push: ## Pushes image to Docker Hub only if the tag does not exist
 		echo "Tag already exists. Skipping push."; \
 	fi
 
-
-.PHONY: pull
-pull: ## pulls image from Dockerhub
-	@docker pull ${DOCKER_REGISTRY}/${IMAGE_NAME}:${DOCKER_REG_SYNC_VERSION}
-
-define show-meta
-	$(foreach iid,$(shell docker images */$(1):* -q | sort | uniq),\
-		docker image inspect $(iid) | jq '.[0] | .RepoTags, .ContainerConfig.Labels';)
-endef
-
-.PHONY: info
-info: ## gives some information about the docker image
-	@docker images */${IMAGE_NAME}:*;\
-	$(call show-meta,${IMAGE_NAME})
-
-# Used by GitHub Actions, these should be defined by each project
-
-.PHONY: github-ci-pull
-github-ci-pull: ## reserved for Git Hub CI to pull image
-	@make pull
-
-.PHONY: github-ci-build
-github-ci-build: ## reserved for Git Hub CI to build image
-	@make build
-	# checkk the version for stable
-ifeq (${DOCKER_REG_SYNC_VERSION}, ${DOCKER_REG_SYNC_TAG_AS_STABLE_VERSION})
-	docker tag ${DOCKER_REGISTRY}/${IMAGE_NAME}:${DOCKER_REG_SYNC_VERSION} ${DOCKER_REGISTRY}/${IMAGE_NAME}:stable
-endif
-	@make info
-
 .PHONY: github-ci-tests
 github-ci-tests:	## reserved for Git Hub CI to start testsuite
 	echo "Running tests in isolation"
@@ -138,11 +106,3 @@ github-ci-tests:	## reserved for Git Hub CI to start testsuite
 				pip install tox==3.15.2 && \
 				cd /code && \
 				make tests'
-
-.PHONY: github-ci-push
-github-ci-push:	## reserved for Git Hub CI to push image
-	@make push
-ifeq (${DOCKER_REG_SYNC_VERSION}, ${DOCKER_REG_SYNC_TAG_AS_STABLE_VERSION})
-	@docker push ${DOCKER_REGISTRY}/${IMAGE_NAME}:stable
-endif
-	
