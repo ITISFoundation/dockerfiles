@@ -1,3 +1,1 @@
---constraint base.txt
-
-tox==4.24.1
+tox

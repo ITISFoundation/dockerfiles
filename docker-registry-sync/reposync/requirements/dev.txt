@@ -1,0 +1,6 @@
+--requirement base.txt
+--requirement test.txt
+--requirement tools.txt
+
+# installs current package
+--editable ./reposync

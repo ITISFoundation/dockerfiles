@@ -17,31 +17,30 @@ current_dir = $(shell pwd)
 help: ## help on rule's targets
 	@awk 'BEGIN {FS = ":.*?## "} /^[[:alpha:][:space:]_-]+:.*?## / {printf "\033[36m%-20s\033[0m %s\n", $$1, $$2}' $(MAKEFILE_LIST)
 
-##### PYTHON PACKAGE -START
+# DEPENDENCIES
 
 .PHONY: _ensure-in-venv
 _ensure-in-venv:
 	@python3 -c "import os; os.environ['VIRTUAL_ENV']" || (echo "\n>>>> You are not in a virtualenv. Activate one <<<<\n"; exit 1)
 
-
-.PHONY: dev-dependencies
-dev-dependencies: _ensure-in-venv ## install development depenencies in your venv
-	@pip install pip-tools black rope
-
-
 .PHONY: compile-dependencies
 compile-dependencies: _ensure-in-venv ## snapshot dependencies
 	@pip-compile --build-isolation reposync/requirements/base.in --output-file reposync/requirements/base.txt 
 	@pip-compile --build-isolation reposync/requirements/test.in --output-file reposync/requirements/test.txt 
+	@pip-compile --build-isolation reposync/requirements/tools.in --output-file reposync/requirements/tools.txt 
 
 
-.PHONY: install-dependencies
-install-dependencies: _ensure-in-venv ## install package dependencies
-	@cd reposync/requirements; pip-sync base.txt
-
-.PHONY: install-test-dependencies
-install-test-dependencies: _ensure-in-venv ## install package test dependencies
+.PHONY: install-test
+install-test: _ensure-in-venv ## install package test dependencies
 	@cd reposync/requirements; pip-sync test.txt 
+
+.PHONY: install-dev
+install-dev: _ensure-in-venv ## install package test dependencies
+	@cd reposync/requirements; pip-sync dev.txt
+
+.PHONY: install-ci
+install-ci: _ensure-in-venv ## install package test dependencies
+	@cd reposync/requirements; pip-sync ci.txt
 
 
 .PHONY: install-py-package
@@ -53,11 +52,11 @@ tests: _ensure-in-venv ## install package dependencies
 	@tox -r -c reposync/tox.ini
 
 
+##### DEVELOPMENT UTILS
+
 .PHONY: setup-env
 setup-env: ## creates the .env still need to change your credentials
 	cp .env.default .env
-
-##### PYTHON PACKAGE - END
 
 .PHONY: start-dev-registry
 start-dev-registry: ## starts development registries used by development-run
@@ -78,7 +77,6 @@ shell: _ensure-in-venv build ## check internals of image
 		--entrypoint /bin/sh \
 		${DOCKER_REGISTRY}/${IMAGE_NAME}:${DOCKER_REG_SYNC_VERSION}
 
-
 .PHONY: development-run
 development-run: _ensure-in-venv build ## used to test out changes during development
 	@docker run --rm -it \
@@ -88,7 +86,7 @@ development-run: _ensure-in-venv build ## used to test out changes during develo
 		${DOCKER_REGISTRY}/${IMAGE_NAME}:${DOCKER_REG_SYNC_VERSION} \
 		run-reposync -c /etc/cfg.yaml
 
-# Used by deployment stages
+# CI & RELEASE
 
 .PHONY: build
 build: ## build and tag the iamge
@@ -112,6 +110,6 @@ tests-isolated:	## reserved for Git Hub CI to start testsuite
 		-w /code \
 		python:3.11-buster \
 		sh -c ' export VIRTUAL_ENV=1 && \
-				pip install tox==4.24.1 && \
 				cd /code && \
+				make install-ci \
 				make tests'
