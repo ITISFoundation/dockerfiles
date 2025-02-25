@@ -106,5 +106,6 @@ tests-isolated:	## reserved for Git Hub CI to start testsuite
 		python:3.11-buster \
 		sh -c ' export VIRTUAL_ENV=1 && \
 				cd /code && \
+				pip install uv && \
 				make install-ci \
 				make tests'
