@@ -101,8 +101,8 @@ tests-isolated:	## reserved for Git Hub CI to start testsuite
 	docker run --rm \
 		-v $(current_dir):/code \
 		-w /code \
-		python:3.8-buster \
+		python:3.11-buster \
 		sh -c ' export VIRTUAL_ENV=1 && \
-				pip install tox==3.15.2 && \
+				pip install tox==4.24.1 && \
 				cd /code && \
 				make tests'
