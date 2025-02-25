@@ -14,8 +14,7 @@ on:
       - master
 
 jobs:
-  # Job to build and push Docker image
-  build:
+  docker-registry-sync:
     runs-on: ubuntu-latest
 
     steps:
