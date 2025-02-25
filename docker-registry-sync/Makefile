@@ -129,7 +129,7 @@ github-ci-tests:	## reserved for Git Hub CI to start testsuite
 		python:3.8-buster \
 		sh -c ' export VIRTUAL_ENV=1 && \
 				pip install tox==3.15.2 && \
-				cd docker-registry-sync && \
+				cd /code && \
 				make tests'
 
 .PHONY: github-ci-push
