@@ -70,6 +70,15 @@ stop-dev-registry: ## stops development registries used by development-run
 	@docker network rm ${BRIDGE_NETWORK_NAME}
 	@sudo rm -rf dev/data_*
 
+.PHONY: shell
+shell: _ensure-in-venv build ## check internals of image
+	@docker run --rm -it \
+		--env-file .env \
+		--network=${BRIDGE_NETWORK_NAME} \
+		--entrypoint /bin/sh \
+		${DOCKER_REGISTRY}/${IMAGE_NAME}:${DOCKER_REG_SYNC_VERSION}
+
+
 .PHONY: development-run
 development-run: _ensure-in-venv build ## used to test out changes during development
 	@docker run --rm -it \
