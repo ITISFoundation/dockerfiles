@@ -25,9 +25,9 @@ _ensure-in-venv:
 
 .PHONY: compile-dependencies
 compile-dependencies: _ensure-in-venv ## snapshot dependencies
-	@uv pip compile --build-isolation reposync/requirements/base.in --output-file reposync/requirements/base.txt 
-	@uv pip compile --build-isolation reposync/requirements/test.in --output-file reposync/requirements/test.txt 
-	@uv pip compile --build-isolation reposync/requirements/tools.in --output-file reposync/requirements/tools.txt 
+	@uv pip compile reposync/requirements/base.in --output-file reposync/requirements/base.txt 
+	@uv pip compile reposync/requirements/test.in --output-file reposync/requirements/test.txt 
+	@uv pip compile reposync/requirements/tools.in --output-file reposync/requirements/tools.txt 
 
 
 .PHONY: install-test
