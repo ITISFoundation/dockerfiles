@@ -25,22 +25,22 @@ _ensure-in-venv:
 
 .PHONY: compile-dependencies
 compile-dependencies: _ensure-in-venv ## snapshot dependencies
-	@pip-compile --build-isolation reposync/requirements/base.in --output-file reposync/requirements/base.txt 
-	@pip-compile --build-isolation reposync/requirements/test.in --output-file reposync/requirements/test.txt 
-	@pip-compile --build-isolation reposync/requirements/tools.in --output-file reposync/requirements/tools.txt 
+	@uv pip compile --build-isolation reposync/requirements/base.in --output-file reposync/requirements/base.txt 
+	@uv pip compile --build-isolation reposync/requirements/test.in --output-file reposync/requirements/test.txt 
+	@uv pip compile --build-isolation reposync/requirements/tools.in --output-file reposync/requirements/tools.txt 
 
 
 .PHONY: install-test
 install-test: _ensure-in-venv ## install package test dependencies
-	@cd reposync/requirements; pip-sync test.txt 
+	@cd reposync/requirements; uv pip sync test.txt 
 
 .PHONY: install-dev
 install-dev: _ensure-in-venv ## install package test dependencies
-	@cd reposync/requirements; pip-sync dev.txt
+	@cd reposync/requirements; uv pip sync dev.txt
 
 .PHONY: install-ci
 install-ci: _ensure-in-venv ## install package test dependencies
-	@cd reposync/requirements; pip-sync ci.txt
+	@cd reposync/requirements; uv pip sync ci.txt
 
 
 .PHONY: install-py-package
