@@ -3,4 +3,4 @@
 --requirement tools.txt
 
 # installs current package
---editable ./reposync
+--editable ../.
