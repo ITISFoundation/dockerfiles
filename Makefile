@@ -51,10 +51,3 @@ devenv: .venv ##  Nuilds python environment and installs some tooling for operat
 clean: ## Cleans all unversioned files in project
 	@echo -n "Are you sure? [y/N] " && read ans && [ $${ans:-N} = y ]
 	@git clean -dxf
-
-.PHONY: debug-github-workflow
-debug-github-workflow: ## Runs the github worflow locally act is needed on the system
-	@act -v \
-		-s DOCKER_HUB_USER=${DOCKER_HUB_USER} \
-		-s DOCKER_HUB_TARGET_REGISTRY_NAME=${DOCKER_HUB_TARGET_REGISTRY_NAME} \
-		-s DOCKER_HUB_PASSWORD=${DOCKER_HUB_PASSWORD}
