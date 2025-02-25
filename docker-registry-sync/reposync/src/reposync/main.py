@@ -1,21 +1,21 @@
-import sys
-import yaml
 import argparse
 import datetime
-import traceback
 import subprocess
+import sys
+import traceback
 from collections import deque
-from io import TextIOWrapper
 from concurrent import futures
-from typing import Dict
-from queue import Queue
+from io import TextIOWrapper
 from pprint import pprint
+from queue import Queue
+from typing import Dict
 
+import yaml
 
-from reposync.validation import is_configuration_valid
+from reposync.dregsy_config import DregsyYAML, Task, create_dregsy_task_graph
 from reposync.prepare_stages import assemble_stages
-from reposync.dregsy_config import create_dregsy_task_graph, DregsyYAML, Task
-from reposync.utils import temp_configuration_file, make_task_id
+from reposync.utils import make_task_id, temp_configuration_file
+from reposync.validation import is_configuration_valid
 
 
 def load_yaml_from_file(input_file: TextIOWrapper) -> Dict:

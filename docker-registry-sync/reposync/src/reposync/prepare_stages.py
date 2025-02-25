@@ -1,11 +1,10 @@
 from __future__ import annotations
 
 from dataclasses import dataclass
-from .utils import from_env, make_stage_id
-from cached_property import cached_property
-from collections import deque
 
-from typing import List, Dict
+from cached_property import cached_property
+
+from .utils import from_env, make_stage_id
 
 
 @dataclass
@@ -17,7 +16,7 @@ class Registry:
     skip_tls_verify: bool
 
     @classmethod
-    def parse_from_configuration(cls, key: str, config_entry: Dict) -> Registry:
+    def from_configuration(cls, key: str, config_entry: dict) -> Registry:
         return Registry(
             key=key,
             url=config_entry["url"],
@@ -37,13 +36,13 @@ class From:
 class ToEntry:
     destination: Registry
     repository: str
-    tags: List[str]
+    tags: list[str]
 
 
 @dataclass
 class Stage:
     from_obj: From
-    to_entries: List[ToEntry]
+    to_entries: list[ToEntry]
     id: str
     depends_on: str
 
@@ -54,19 +53,19 @@ class StageParser:
     derived from the stages key
     """
 
-    def __init__(self, configuration: Dict):
-        self.configuration: Dict = configuration
+    def __init__(self, configuration: dict):
+        self.configuration: dict = configuration
 
     @cached_property
-    def registries(self) -> Dict[str:Registry]:
+    def registries(self) -> dict[str, Registry]:
         return {
-            k: Registry.parse_from_configuration(key=k, config_entry=registry_dict)
-            for k, registry_dict in self.configuration["registries"].items()
+            key: Registry.from_configuration(key=key, config_entry=registry_dict)
+            for key, registry_dict in self.configuration["registries"].items()
         }
 
     @cached_property
-    def stages(self) -> List[Stage]:
-        stages = deque()
+    def stages(self) -> list[Stage]:
+        stages: list[Stage] = []
         for stage in self.configuration["stages"]:
             from_obj = From(
                 source=self.registries[stage["from"]["source"]],
@@ -90,9 +89,7 @@ class StageParser:
         return list(stages)
 
 
-def assemble_stages(configuration: Dict) -> List[Stage]:
+def assemble_stages(configuration: dict) -> list[Stage]:
     """Retruns a list of sync stages to be executed in order"""
     stage_parser = StageParser(configuration)
-    stage_parser.stages  # called to compute everything
     return stage_parser.stages
-

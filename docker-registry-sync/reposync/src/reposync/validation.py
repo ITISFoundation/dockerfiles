@@ -1,5 +1,5 @@
 import os
-from jsonschema import Draft7Validator, validate
+from jsonschema import validate
 from collections import deque
 from typing import Dict
 
