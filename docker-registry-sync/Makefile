@@ -79,7 +79,7 @@ development-run: _ensure-in-venv build ## used to test out changes during develo
 		-v $(current_dir)/dev/dev-sync-cfg.yml:/etc/cfg.yaml \
 		--network=${BRIDGE_NETWORK_NAME} \
 		${DOCKER_REGISTRY}/${IMAGE_NAME}:${DOCKER_REG_SYNC_VERSION} \
-		run-reposync /etc/cfg.yaml
+		run-reposync /etc/cfg.yaml --debug
 
 
 .PHONY: debug-run
