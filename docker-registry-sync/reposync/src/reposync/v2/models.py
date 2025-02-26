@@ -17,7 +17,6 @@ IDKey: TypeAlias = str
 def _resolve_from_env(env_var_name: str | None) -> str:
     if env_var_name is None:
         return env_var_name
-    # print(env_var_name, os.environ[env_var_name], )
     return os.environ[env_var_name]
 
 
