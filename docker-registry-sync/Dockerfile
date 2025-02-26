@@ -2,6 +2,7 @@ FROM python:3.11-alpine
 
 LABEL maintainer "neagu@itis.swiss"
 
+# CRANE
 ENV VERSION=v0.20.3
 ENV OS=Linux
 ENV ARCH=x86_64
