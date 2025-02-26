@@ -63,9 +63,17 @@ async def get_digest(image: DockerImage, tag: DockerTag, *, debug: bool) -> str:
 
 
 async def copy(
-    source: DockerImageAndTag, destination: DockerImageAndTag, *, debug: bool
+    source: DockerImageAndTag,
+    destination: DockerImageAndTag,
+    *,
+    src_skip_tls_verify: bool,
+    dst_skip_tls_verify: bool,
+    debug: bool,
 ) -> None:
-    await _execute_command(["crane", "copy", source, destination], debug=debug)
+    command = ["crane", "copy", source, destination]
+    if src_skip_tls_verify or dst_skip_tls_verify:
+        command.append("--insecure")
+    await _execute_command(command, debug=debug)
 
 
 async def get_image_tags(image: DockerImage, *, debug: bool) -> list[str]:

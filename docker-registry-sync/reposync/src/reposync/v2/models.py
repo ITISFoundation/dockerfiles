@@ -35,7 +35,7 @@ class Registry(BaseModel):
     url: str
     env_user: Annotated[str | None, BeforeValidator(_resolve_from_env)]
     env_password: Annotated[SecretStr | None, BeforeValidator(_resolve_from_env)]
-    skip_tls_verify: bool = False
+    skip_tls_verify: Annotated[bool, Field(alias="skip-tls-verify")] = False
 
 
 class FromEntry(BaseModel):
