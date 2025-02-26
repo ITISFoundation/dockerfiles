@@ -1,5 +1,17 @@
 import asyncio
-from pydantic import SecretStr
+from functools import lru_cache
+from typing import Final
+
+from pydantic import NonNegativeInt, SecretStr
+
+from .models import DockerImage, DockerImageAndTag, DockerTag
+
+_DIGEST_CACHE_SIZE: Final[NonNegativeInt] = 10_000
+
+
+class CouldNotCopyError(RuntimeError):
+    def __init__(self, command: list[str | SecretStr], result: str):
+        super().__init__(f"Command {command=} finished with error:\n{result}")
 
 
 def _resolve_secret(value: str | SecretStr) -> str:
@@ -9,16 +21,16 @@ def _resolve_secret(value: str | SecretStr) -> str:
 async def _execute_command(command: list[str | SecretStr], *, debug: bool) -> str:
     process = await asyncio.create_subprocess_exec(
         *[_resolve_secret(c) for c in command],
+        stdin=asyncio.subprocess.PIPE,
         stdout=asyncio.subprocess.PIPE,
-        stderr=asyncio.subprocess.PIPE,
+        stderr=asyncio.subprocess.STDOUT,
     )
 
     stdout, _ = await process.communicate()
     result = stdout.decode()
 
-    if process.returncode == 0:
-        msg = f"Command {command=} finished with error:\n{result}"
-        raise RuntimeError(msg)
+    if process.returncode != 0:
+        raise CouldNotCopyError(command, result)
 
     if debug:
         print(f"{command=} finishe with:\n{result}")
@@ -26,13 +38,15 @@ async def _execute_command(command: list[str | SecretStr], *, debug: bool) -> st
     return result
 
 
-async def login(registry: str, username: str, password: SecretStr, debug: bool) -> None:
+async def login(
+    registry_url: str, username: str, password: SecretStr, *, debug: bool
+) -> None:
     await _execute_command(
         [
             "crane",
             "auth",
             "login",
-            registry,
+            registry_url,
             "--username",
             username,
             "--password",
@@ -42,11 +56,20 @@ async def login(registry: str, username: str, password: SecretStr, debug: bool) 
     )
 
 
-async def digest(image: str, debug: bool) -> str:
-    return await _execute_command(["crane", "digest", image], debug=debug)
+@lru_cache(maxsize=_DIGEST_CACHE_SIZE)
+async def get_digest(image: DockerImage, tag: DockerTag, *, debug: bool) -> str:
+    """computes the digest of an image, results are cahced for efficnecy"""
+    return await _execute_command(["crane", "digest", f"{image}:{tag}"], debug=debug)
 
 
-async def copy(source_image: str, destination_image: str, debug: bool) -> None:
-    await _execute_command(
-        ["crane", "copy", source_image, destination_image], debug=debug
+async def copy(
+    source: DockerImageAndTag, destination: DockerImageAndTag, *, debug: bool
+) -> None:
+    await _execute_command(["crane", "copy", source, destination], debug=debug)
+
+
+async def get_image_tags(image: DockerImage, *, debug: bool) -> list[str]:
+    response = await _execute_command(
+        ["crane", "ls", image, "--omit-digest-tags"], debug=debug
     )
+    return [x.strip() for x in response.strip().split("\n")]
