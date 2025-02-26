@@ -1,23 +1,34 @@
 import os
+from uuid import uuid4
 from typing import Annotated, TypeAlias, Self
 
 from pydantic import (
     BaseModel,
     Field,
     BeforeValidator,
+    AfterValidator,
     ConfigDict,
     SecretStr,
     model_validator,
 )
 
+
+DockerImage: TypeAlias = str
+DockerTag: TypeAlias = str
+DockerImageAndTag: TypeAlias = str
 RegistryKey: TypeAlias = str
-IDKey: TypeAlias = str
+StageID: TypeAlias = str
+TaskID: TypeAlias = str
 
 
 def _resolve_from_env(env_var_name: str | None) -> str:
     if env_var_name is None:
         return env_var_name
     return os.environ[env_var_name]
+
+
+def _replace_none_stage(stage_id: StageID | None) -> StageID:
+    return f"{uuid4()}" if stage_id is None else stage_id
 
 
 class Registry(BaseModel):
@@ -29,33 +40,37 @@ class Registry(BaseModel):
 
 class FromEntry(BaseModel):
     source: RegistryKey
-    repository: str
+    repository: DockerImage
 
 
 class ToEntry(BaseModel):
     destination: RegistryKey
-    repository: str
-    tags: list[str]
+    repository: DockerImage
+    tags: list[DockerTag]
 
 
 class Stage(BaseModel):
     from_entry: Annotated[FromEntry, Field(alias="from")]
     to_entries: Annotated[list[ToEntry], Field(alias="to")]
-    id: IDKey | None = None
-    depends_on: Annotated[list[IDKey], Field(default_factory=list)]
+    id: Annotated[
+        StageID | None,
+        Field(default_factory=uuid4),
+        AfterValidator(_replace_none_stage),
+    ]
+    depends_on: Annotated[list[StageID], Field(default_factory=list)]
 
     model_config = ConfigDict(populate_by_name=True)
 
 
-class ConfigFile(BaseModel):
+class Configuration(BaseModel):
     registries: dict[RegistryKey, Registry]
     stages: list[Stage]
 
     @model_validator(mode="after")
     @classmethod
     def ensure_constraints(cls, model: Self) -> Self:
-        all_stage_ids: list[IDKey] = [s.id for s in model.stages if s.id is not None]
-        stage_ids: set[IDKey] = set(all_stage_ids)
+        all_stage_ids: list[StageID] = [s.id for s in model.stages]
+        stage_ids: set[StageID] = set(all_stage_ids)
 
         # mo duplicate IDKey
         if duplicates := {i for i in all_stage_ids if all_stage_ids.count(i) > 1}:
