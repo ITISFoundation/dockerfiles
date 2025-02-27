@@ -21,8 +21,21 @@ def _configure_logging(debug: bool) -> None:
     )
 
 
-async def _async_app(
-    configfile: Path,
+def _get_configuration(config_file: Path) -> Configuration:
+    _logger.debug("Confoguration path: '%s'", config_file)
+
+    # TODO: add support in yaml for include keyword
+    parased_yaml = yaml.safe_load(config_file.read_text())
+
+    configuration = TypeAdapter(Configuration).validate_python(parased_yaml)
+    _logger.info(
+        "Parsed configuration:\n%s", pformat(configuration.model_dump(mode="python"))
+    )
+    return configuration
+
+
+async def _repo_sync(
+    config_file: Path,
     verify_only: bool,
     parallel_sync_tasks: NonNegativeInt,
     use_explicit_tags: bool,
@@ -30,19 +43,11 @@ async def _async_app(
 ) -> None:
     _configure_logging(debug)
 
-    _logger.debug("Confoguration path: '%s'", configfile)
-
-    parased_yaml = yaml.safe_load(configfile.read_text())
-    configuration = TypeAdapter(Configuration).validate_python(parased_yaml)
-    _logger.info(
-        "Parsed configuration:\n%s", pformat(configuration.model_dump(mode="python"))
-    )
+    configuration = _get_configuration(config_file)
 
     if verify_only:
         _logger.info("Configuration is OK, closing gracefully.")
         return
-
-    # rest of the app
 
     await run_sync_tasks(
         configuration,
@@ -51,7 +56,7 @@ async def _async_app(
     )
 
 
-def app(
+def _typer_app(
     config_file: Annotated[
         Path,
         typer.Argument(help="configuration file to be used", exists=True),
@@ -77,14 +82,14 @@ def app(
     ] = False,
 ):
     asyncio.run(
-        _async_app(
+        _repo_sync(
             config_file, verify_only, parallel_sync_tasks, use_explicit_tags, debug
         )
     )
 
 
 def main() -> None:
-    typer.run(app)
+    typer.run(_typer_app)
 
 
 if __name__ == "__main__":
