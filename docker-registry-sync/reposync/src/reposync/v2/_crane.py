@@ -1,12 +1,9 @@
 import asyncio
-from functools import lru_cache
-from typing import Final
+from aiocache import cached
 
-from pydantic import NonNegativeInt, SecretStr
+from pydantic import SecretStr
 
-from .models import DockerImage, DockerImageAndTag, DockerTag
-
-_DIGEST_CACHE_SIZE: Final[NonNegativeInt] = 10_000
+from .models import DockerImage, DockerImageAndTag
 
 
 class CouldNotCopyError(RuntimeError):
@@ -56,10 +53,15 @@ async def login(
     )
 
 
-@lru_cache(maxsize=_DIGEST_CACHE_SIZE)
-async def get_digest(image: DockerImage, tag: DockerTag, *, debug: bool) -> str:
+@cached()
+async def get_digest(
+    image: DockerImageAndTag, *, skip_tls_verify: bool, debug: bool
+) -> str:
     """computes the digest of an image, results are cahced for efficnecy"""
-    return await _execute_command(["crane", "digest", f"{image}:{tag}"], debug=debug)
+    command = ["crane", "digest", image]
+    if skip_tls_verify:
+        command.append("--insecure")
+    return await _execute_command(command, debug=debug)
 
 
 async def copy(

@@ -6,6 +6,7 @@ from typing import Any, Coroutine
 import asyncio
 from concurrent.futures import ThreadPoolExecutor
 from . import _crane
+from datetime import datetime, timezone
 
 from .models import (
     TaskID,
@@ -196,7 +197,7 @@ async def _copy_image(
     *,
     debug: bool,
 ) -> None:
-    print(f"Starting {task_id}")
+    print(f"Starting '{task_id}'")
 
     sync_task = task_mapping[task_id]
     src_registry = configuration.registries[sync_task.src]
@@ -208,6 +209,17 @@ async def _copy_image(
     dst_image = _get_image(
         url=dst_registry.url, image=sync_task.dst_path, tag=sync_task.tag
     )
+
+    src_digest = await _crane.get_digest(
+        src_image, skip_tls_verify=src_registry.skip_tls_verify, debug=debug
+    )
+    dst_digest = await _crane.get_digest(
+        dst_image, skip_tls_verify=dst_registry.skip_tls_verify, debug=debug
+    )
+
+    if src_digest == dst_digest:
+        print(f"Same digest detected, skipping copy for '{task_id}'")
+        return
 
     await _crane.copy(
         src_image,
@@ -281,6 +293,8 @@ async def run_sync_tasks(
 
     task_mapping, predecessors = _get_tasks_to_run(configuration, sync_tasks)
 
+    start_datetime = datetime.now(timezone.utc)
+
     await _run_sync_tasks(
         configuration,
         task_mapping,
@@ -288,3 +302,5 @@ async def run_sync_tasks(
         parallel_sync_tasks=parallel_sync_tasks,
         debug=debug,
     )
+
+    print(f"Image sync took: {datetime.now(timezone.utc) - start_datetime}")
