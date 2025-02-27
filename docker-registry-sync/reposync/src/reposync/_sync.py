@@ -26,7 +26,10 @@ _logger = logging.getLogger(__name__)
 
 
 class CyclicDependencyError(RuntimeError):
-    pass
+    def __init__(self, predecessors: dict[TaskID, list[TaskID]]):
+        super().__init__(
+            f"Please remove cyclic dependencies. Check predecessors:\n{predecessors}"
+        )
 
 
 @dataclass(frozen=True)
@@ -148,9 +151,7 @@ def _get_tasks_to_run(
         predecessors[node] = [x for x in graph.predecessors(node)]
 
     if not is_directed_acyclic_graph(graph):
-        raise CyclicDependencyError(
-            f"Please remove cyclic dependencies. Check predecessors:\n{predecessors}"
-        )
+        raise CyclicDependencyError(predecessors)
     return task_mapping, predecessors
 
 
