@@ -13,6 +13,8 @@ from ._sync import run_sync_tasks
 
 _logger = logging.getLogger(__name__)
 
+app = typer.Typer()
+
 
 def _configure_logging(debug: bool) -> None:
     logging.basicConfig(
@@ -56,7 +58,8 @@ async def _repo_sync(
     )
 
 
-def _typer_app(
+@app.command()
+def run_repo_sync(
     config_file: Annotated[
         Path,
         typer.Argument(help="configuration file to be used", exists=True),
@@ -89,7 +92,7 @@ def _typer_app(
 
 
 def main() -> None:
-    typer.run(_typer_app)
+    app()
 
 
 if __name__ == "__main__":
