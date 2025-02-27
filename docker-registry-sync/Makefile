@@ -40,7 +40,7 @@ install-dev: _ensure-in-venv ## install dev dependencies
 
 .PHONY: install-ci
 install-ci: _ensure-in-venv ## install ci dependencies
-	@cd reposync/requirements; uv pip sync ci.txt
+	@cd reposync/requirements; python -m uv pip sync test.txt
 
 ##### DEVELOPMENT UTILS
 
@@ -112,8 +112,8 @@ tests-isolated:	## reserved for Git Hub CI to start testsuite
 		-v $(current_dir):/code \
 		-w /code \
 		python:3.11-buster \
-		sh -c ' export VIRTUAL_ENV=1 && \
-				cd /code && \
-				pip install uv && \
-				make install-ci \
+		sh -c ' export VIRTUAL_ENV=1 &&\
+				cd /code &&\
+				pip install uv &&\
+				make install-ci &&\
 				make tests'
