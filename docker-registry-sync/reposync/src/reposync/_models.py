@@ -84,6 +84,9 @@ class Configuration(BaseModel):
 
         # depends_on entry exsits
         for stage in model.stages:
+            if stage.id in stage.depends_on:
+                msg = f"stage cannot depend on itself: {stage.id=} is part of {stage.depends_on=}"
+                raise ValueError(msg)
             for target_id in stage.depends_on:
                 if target_id not in stage_ids:
                     msg = f"stage.depends_on entry '{target_id}' must be any of {stage_ids=}"

@@ -86,7 +86,7 @@ development-run: _ensure-in-venv build ## used to test out changes during develo
 debug-run: _ensure-in-venv ## used to test out changes during development
 	@bash -c '\
 		set -a; source .env; set +a; \
-		run-reposync dev/dev-sync-cfg.yml \
+		run-reposync dev/dev-sync-cfg --debug\
 	'
 
 # CI & RELEASE
