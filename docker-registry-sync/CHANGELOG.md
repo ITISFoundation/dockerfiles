@@ -6,6 +6,16 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [1.0.0] - 2025-02-27
+
+- upgraded python to `3.11` from `3.8`
+- using pydantic validation instead of jsonschema
+- images are only synced when they are missing (using digest chess for this)
+- all architectures are automatically copied over
+- added `--use-explicit-tags` options which no longer syncs all the tags when the `tags: []` (left empty), this is an on or off option
+- added support for including other `.yaml` files via the `!include file.yaml` directive
+
+
 ## [0.3.1] - 2025-02-21
 
 - dregsy now syncs all image archtectures
