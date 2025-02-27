@@ -1,4 +1,5 @@
 import asyncio
+import logging
 from concurrent.futures import ThreadPoolExecutor
 from dataclasses import dataclass
 from datetime import datetime, timezone
@@ -21,6 +22,8 @@ from ._models import (
     ToEntry,
 )
 
+_logger = logging.getLogger(__name__)
+
 
 class CyclicDependencyError(RuntimeError):
     pass
@@ -39,23 +42,17 @@ class SyncTask:
     tag: DockerTag
 
 
-async def _login_on_all_registries(configuration: Configuration, debug: bool) -> None:
+async def _login_on_all_registries(configuration: Configuration) -> None:
     for registry in configuration.registries.values():
-        print(f"logging into {registry.url=}")
-        await _crane.login(
-            registry.url, registry.env_user, registry.env_password, debug=debug
-        )
+        _logger.debug("logging into '%s'", registry.url)
+        await _crane.login(registry.url, registry.env_user, registry.env_password)
 
 
 async def _get_all_tags(
-    image: DockerImage,
-    defined_tags: list[DockerTag],
-    *,
-    use_explicit_tags: bool,
-    debug: bool,
+    image: DockerImage, defined_tags: list[DockerTag], *, use_explicit_tags: bool
 ) -> list[DockerTag]:
     if len(defined_tags) == 0 and not use_explicit_tags:
-        return await _crane.get_image_tags(image, debug=debug)
+        return await _crane.get_image_tags(image)
     return defined_tags
 
 
@@ -72,7 +69,7 @@ def _get_task_id(
 
 
 async def _get_sync_tasks(
-    configuration: Configuration, *, use_explicit_tags: bool, debug: bool
+    configuration: Configuration, *, use_explicit_tags: bool
 ) -> list[SyncTask]:
 
     sync_tasks: list[SyncTask] = []
@@ -84,12 +81,11 @@ async def _get_sync_tasks(
                 from_entry.repository,
                 to_entry.tags,
                 use_explicit_tags=use_explicit_tags,
-                debug=debug,
             )
 
             for tag in tags_to_sync:
                 task_id = _get_task_id(stage.id, from_entry, to_entry, tag)
-                print(f"Will sync '{task_id}'")
+                _logger.debug("Will sync '%s'", task_id)
                 sync_task = SyncTask(
                     task_id=task_id,
                     stage_id=stage.id,
@@ -110,7 +106,7 @@ async def _get_sync_tasks(
         )
         raise RuntimeError(msg)
 
-    print(f"Generated '{len(sync_tasks)}' sync tasks.")
+    _logger.info("Generated '%s' sync tasks.", len(sync_tasks))
 
     return sync_tasks
 
@@ -135,7 +131,6 @@ def _get_tasks_to_run(
 
     graph = DiGraph()
     graph.add_nodes_from(task_mapping.keys())
-    # print("NODES:", task_mapping.keys())
     for task in sync_tasks:
         task_depedns_on: list[StageID] = stage_mapping[task.stage_id].depends_on
 
@@ -147,7 +142,6 @@ def _get_tasks_to_run(
 
         node_edges = [(task_id, task.task_id) for task_id in tasks_required_to_finish]
         graph.add_edges_from(node_edges)
-        # print(node_edges, ",")
 
     predecessors: dict[TaskID, list[TaskID]] = {}
     for node in task_mapping.keys():
@@ -192,13 +186,10 @@ def _get_image(*, url: str, image: DockerImage, tag: DockerTag) -> DockerImageAn
 
 
 async def _copy_image(
-    configuration: Configuration,
-    task_mapping: dict[TaskID, SyncTask],
-    task_id: TaskID,
-    *,
-    debug: bool,
+    configuration: Configuration, task_mapping: dict[TaskID, SyncTask], task_id: TaskID
 ) -> None:
-    print(f"Starting '{task_id}'")
+    _logger.info("Starting '%s'", task_id)
+    start_datetime = datetime.now(timezone.utc)
 
     sync_task = task_mapping[task_id]
     src_registry = configuration.registries[sync_task.src]
@@ -212,14 +203,18 @@ async def _copy_image(
     )
 
     src_digest = await _crane.get_digest(
-        src_image, skip_tls_verify=src_registry.skip_tls_verify, debug=debug
+        src_image, skip_tls_verify=src_registry.skip_tls_verify
     )
     dst_digest = await _crane.get_digest(
-        dst_image, skip_tls_verify=dst_registry.skip_tls_verify, debug=debug
+        dst_image, skip_tls_verify=dst_registry.skip_tls_verify
     )
 
     if src_digest is not None and dst_digest is not None and src_digest == dst_digest:
-        print(f"Same digest detected, skipping copy for '{task_id}'")
+        _logger.info(
+            "Same digest detected, skipping copy for '%s' after %s",
+            task_id,
+            datetime.now(timezone.utc) - start_datetime,
+        )
         return
 
     await _crane.copy(
@@ -227,9 +222,10 @@ async def _copy_image(
         dst_image,
         src_skip_tls_verify=src_registry.skip_tls_verify,
         dst_skip_tls_verify=dst_registry.skip_tls_verify,
-        debug=debug,
     )
-    print(f"Completed '{task_id}'")
+    _logger.info(
+        "Completed '%s' in %s", task_id, datetime.now(timezone.utc) - start_datetime
+    )
 
 
 async def _run_sync_tasks(
@@ -238,10 +234,7 @@ async def _run_sync_tasks(
     predecessors: dict[TaskID, list[TaskID]],
     *,
     parallel_sync_tasks: NonNegativeInt,
-    debug: bool,
 ) -> None:
-    print(f"{task_mapping=}")
-    print(f"{predecessors=}")
 
     # put together in which order the taska need to run
     run_batches: list[set[TaskID]] = []
@@ -258,9 +251,6 @@ async def _run_sync_tasks(
     # ensure it is only ran once
     no_duplicates_run_batches = _remove_duplicates(run_batches)
 
-    print(f"{run_batches=}")
-    print(f"{no_duplicates_run_batches=}")
-
     sync_oprations_count = sum([len(x) for x in no_duplicates_run_batches])
     if len(task_mapping) != sync_oprations_count:
         raise RuntimeError("something went worng sizes do not match")
@@ -268,7 +258,7 @@ async def _run_sync_tasks(
     # run sync batches in order
     for batch_to_run in no_duplicates_run_batches:
         sync_coros = [
-            _copy_image(configuration, task_mapping, task_id, debug=debug)
+            _copy_image(configuration, task_mapping, task_id)
             for task_id in batch_to_run
         ]
         results = await _run_coroutines(
@@ -290,12 +280,11 @@ async def run_sync_tasks(
     *,
     use_explicit_tags: bool,
     parallel_sync_tasks: NonNegativeInt,
-    debug: bool,
 ) -> None:
-    await _login_on_all_registries(configuration, debug=debug)
+    await _login_on_all_registries(configuration)
 
     sync_tasks: list[SyncTask] = await _get_sync_tasks(
-        configuration, use_explicit_tags=use_explicit_tags, debug=debug
+        configuration, use_explicit_tags=use_explicit_tags
     )
 
     task_mapping, predecessors = _get_tasks_to_run(configuration, sync_tasks)
@@ -307,7 +296,6 @@ async def run_sync_tasks(
         task_mapping,
         predecessors,
         parallel_sync_tasks=parallel_sync_tasks,
-        debug=debug,
     )
 
-    print(f"Image sync took: {datetime.now(timezone.utc) - start_datetime}")
+    _logger.info("Image sync took: %s", datetime.now(timezone.utc) - start_datetime)

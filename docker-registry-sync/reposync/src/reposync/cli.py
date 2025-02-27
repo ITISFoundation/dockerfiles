@@ -1,5 +1,8 @@
-from pathlib import Path
 import asyncio
+import logging
+from pathlib import Path
+from pprint import pformat
+
 import typer
 import yaml
 from pydantic import NonNegativeInt, TypeAdapter
@@ -7,6 +10,15 @@ from typing_extensions import Annotated
 
 from ._models import Configuration
 from ._sync import run_sync_tasks
+
+_logger = logging.getLogger(__name__)
+
+
+def _configure_logging(debug: bool) -> None:
+    logging.basicConfig(
+        level=logging.DEBUG if debug else logging.INFO,
+        format="%(levelname)s: %(message)s",
+    )
 
 
 async def _async_app(
@@ -16,18 +28,18 @@ async def _async_app(
     use_explicit_tags: bool,
     debug: bool,
 ) -> None:
-    # TODO: setup logging here with debug or not
-    # TODO: remove debug passing in all functions
-    # TODO: replace prints with logging
+    _configure_logging(debug)
 
-    print(f"Using '{configfile=}'")
+    _logger.debug("Confoguration path: '%s'", configfile)
 
     parased_yaml = yaml.safe_load(configfile.read_text())
     configuration = TypeAdapter(Configuration).validate_python(parased_yaml)
-    print(configuration)
+    _logger.info(
+        "Parsed configuration:\n%s", pformat(configuration.model_dump(mode="python"))
+    )
 
     if verify_only:
-        print("Configuration is OK, closing gracefully.")
+        _logger.info("Configuration is OK, closing gracefully.")
         return
 
     # rest of the app
@@ -36,7 +48,6 @@ async def _async_app(
         configuration,
         use_explicit_tags=use_explicit_tags,
         parallel_sync_tasks=parallel_sync_tasks,
-        debug=debug,
     )
 
 
