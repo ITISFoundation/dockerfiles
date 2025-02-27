@@ -45,24 +45,25 @@ class _SyncTask:
     tag: DockerTag
 
 
-async def _login_on_all_registries(configuration: Configuration) -> None:
+async def _login_into_all_registries(configuration: Configuration) -> None:
     for registry in configuration.registries.values():
         _logger.debug("logging into '%s'", registry.url)
         await _crane.login(registry.url, registry.env_user, registry.env_password)
 
 
-async def _get_all_tags(
+async def _get_tags_to_sync(
     image: DockerImage, defined_tags: list[DockerTag], *, use_explicit_tags: bool
 ) -> list[DockerTag]:
+    # if `use_explicit_tags is False` and `tags: []` in the configuration
+    # it will fetch all tags from the remote repository
     if len(defined_tags) == 0 and not use_explicit_tags:
         return await _crane.get_image_tags(image)
     return defined_tags
 
 
-def _get_task_id(
+def _get_unique_task_id(
     stage_id: StageID, from_entry: FromEntry, to_entry: ToEntry, tag: DockerTag
 ) -> TaskID:
-    """generates a unique id between all tasks"""
     return (
         f"{from_entry.source}/{from_entry.repository}:{tag}"
         " --> "
@@ -80,14 +81,14 @@ async def _get_sync_tasks(
     for stage in configuration.stages:
         from_entry = stage.from_entry
         for to_entry in stage.to_entries:
-            tags_to_sync = await _get_all_tags(
+            tags_to_sync = await _get_tags_to_sync(
                 from_entry.repository,
                 to_entry.tags,
                 use_explicit_tags=use_explicit_tags,
             )
 
             for tag in tags_to_sync:
-                task_id = _get_task_id(stage.id, from_entry, to_entry, tag)
+                task_id = _get_unique_task_id(stage.id, from_entry, to_entry, tag)
                 _logger.debug("Will sync '%s'", task_id)
                 sync_task = _SyncTask(
                     task_id=task_id,
@@ -114,9 +115,17 @@ async def _get_sync_tasks(
     return sync_tasks
 
 
-def _get_tasks_to_run(
+@dataclass
+class ExecutionPlan:
+    task_mapping: dict[TaskID, _SyncTask]
+    predecessors: dict[TaskID, list[TaskID]]
+
+
+def _get_execution_plan(
     configuration: Configuration, sync_tasks: list[_SyncTask]
-) -> tuple[dict[TaskID, _SyncTask], dict[TaskID, list[TaskID]]]:
+) -> ExecutionPlan:
+    """transforms stage dependencies into ordered groups of sync tasks to run in parallel"""
+
     stage_mapping: dict[StageID, Stage] = {s.id: s for s in configuration.stages}
     task_mapping: dict[TaskID, _SyncTask] = {task.task_id: task for task in sync_tasks}
 
@@ -152,34 +161,7 @@ def _get_tasks_to_run(
 
     if not is_directed_acyclic_graph(graph):
         raise CyclicDependencyError(predecessors)
-    return task_mapping, predecessors
-
-
-def _remove_duplicates(run_batches: list[set[TaskID]]) -> list[set[TaskID]]:
-    seen: set[TaskID] = set()
-    result: list[set[TaskID]] = []
-
-    for batch in run_batches:
-        new_batch = set()
-        for entry in batch:
-            if entry not in seen:
-                seen.add(entry)
-                new_batch.add(entry)
-        result.append(new_batch)
-
-    return result
-
-
-async def _run_coroutines(
-    coros: Coroutine, *, parallel_sync_tasks: NonNegativeInt
-) -> list[Any]:
-    with ThreadPoolExecutor(max_workers=parallel_sync_tasks) as executor:
-        loop = asyncio.get_running_loop()
-
-        tasks = [loop.run_in_executor(executor, asyncio.run, coro) for coro in coros]
-        result = await asyncio.gather(*tasks, return_exceptions=True)
-
-    return result
+    return ExecutionPlan(task_mapping, predecessors)
 
 
 def _get_image(*, url: str, image: DockerImage, tag: DockerTag) -> DockerImageAndTag:
@@ -229,22 +211,52 @@ async def _copy_image(
     )
 
 
+def _remove_duplicates(run_batches: list[set[TaskID]]) -> list[set[TaskID]]:
+    seen: set[TaskID] = set()
+    result: list[set[TaskID]] = []
+
+    for batch in run_batches:
+        new_batch = set()
+        for entry in batch:
+            if entry not in seen:
+                seen.add(entry)
+                new_batch.add(entry)
+        result.append(new_batch)
+
+    return result
+
+
+async def _run_coroutines(
+    coros: Coroutine, *, parallel_sync_tasks: NonNegativeInt
+) -> list[Any]:
+    with ThreadPoolExecutor(max_workers=parallel_sync_tasks) as executor:
+        loop = asyncio.get_running_loop()
+
+        tasks = [loop.run_in_executor(executor, asyncio.run, coro) for coro in coros]
+        result = await asyncio.gather(*tasks, return_exceptions=True)
+
+    return result
+
+
 async def _run_sync_tasks(
     configuration: Configuration,
-    task_mapping: dict[TaskID, _SyncTask],
-    predecessors: dict[TaskID, list[TaskID]],
+    execution_plan: ExecutionPlan,
     *,
     parallel_sync_tasks: NonNegativeInt,
 ) -> None:
+    """given an execution plan:
+    - removes previous entries which have been ran in previous group
+    - runs each group of tasks in parallel till it finishes
+    """
 
     # put together in which order the taska need to run
     run_batches: list[set[TaskID]] = []
 
-    for task_id, requirements in predecessors.items():
+    for _, requirements in execution_plan.predecessors.items():
         if len(requirements) > 0:
             run_batches.append(set(requirements))
 
-    remaning_tasks = {task_id for task_id in predecessors}
+    remaning_tasks = {task_id for task_id in execution_plan.predecessors}
     if len(remaning_tasks) > 0:
         run_batches.append(remaning_tasks)
 
@@ -253,13 +265,13 @@ async def _run_sync_tasks(
     no_duplicates_run_batches = _remove_duplicates(run_batches)
 
     sync_oprations_count = sum([len(x) for x in no_duplicates_run_batches])
-    if len(task_mapping) != sync_oprations_count:
+    if len(execution_plan.task_mapping) != sync_oprations_count:
         raise RuntimeError("something went worng sizes do not match")
 
     # run sync batches in order
     for batch_to_run in no_duplicates_run_batches:
         sync_coros = [
-            _copy_image(configuration, task_mapping, task_id)
+            _copy_image(configuration, execution_plan.task_mapping, task_id)
             for task_id in batch_to_run
         ]
         results = await _run_coroutines(
@@ -282,21 +294,18 @@ async def run_sync_tasks(
     use_explicit_tags: bool,
     parallel_sync_tasks: NonNegativeInt,
 ) -> None:
-    await _login_on_all_registries(configuration)
+    await _login_into_all_registries(configuration)
 
     sync_tasks: list[_SyncTask] = await _get_sync_tasks(
         configuration, use_explicit_tags=use_explicit_tags
     )
 
-    task_mapping, predecessors = _get_tasks_to_run(configuration, sync_tasks)
+    execution_plan = _get_execution_plan(configuration, sync_tasks)
 
     start_datetime = datetime.now(timezone.utc)
 
     await _run_sync_tasks(
-        configuration,
-        task_mapping,
-        predecessors,
-        parallel_sync_tasks=parallel_sync_tasks,
+        configuration, execution_plan, parallel_sync_tasks=parallel_sync_tasks
     )
 
     _logger.info("Image sync took: %s", datetime.now(timezone.utc) - start_datetime)
