@@ -24,6 +24,11 @@ TaskID: TypeAlias = str
 def _resolve_from_env(env_var_name: str | None) -> str:
     if env_var_name is None:
         return env_var_name
+
+    if env_var_name not in os.environ:
+        msg = f"The following env var must be set: '{env_var_name}'"
+        raise ValueError(msg)
+
     return os.environ[env_var_name]
 
 
