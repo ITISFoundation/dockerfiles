@@ -3,7 +3,7 @@ from aiocache import cached, Cache
 
 from pydantic import SecretStr
 
-from .models import DockerImage, DockerImageAndTag
+from ._models import DockerImage, DockerImageAndTag
 
 
 class CraneCommandError(RuntimeError):

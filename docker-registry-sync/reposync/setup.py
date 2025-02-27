@@ -22,7 +22,7 @@ setup(
     packages=find_packages(where="src"),
     package_dir={"": "src",},
     include_package_data=True,
-    entry_points={"console_scripts": ["run-reposync=reposync.v2.cli:main",]},
+    entry_points={"console_scripts": ["run-reposync=reposync.cli:main",]},
     python_requires=">=3.11",
     install_requires=install_requirements,
     tests_require=test_requirements,

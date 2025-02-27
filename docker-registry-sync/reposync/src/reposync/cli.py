@@ -5,8 +5,8 @@ import yaml
 from pydantic import NonNegativeInt, TypeAdapter
 from typing_extensions import Annotated
 
-from .models import Configuration
-from .sync import run_sync_tasks
+from ._models import Configuration
+from ._sync import run_sync_tasks
 
 
 async def _async_app(
