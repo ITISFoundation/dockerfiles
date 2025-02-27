@@ -1,8 +1,5 @@
 aiocache
-cached-property
-jsonschema
 networkx
 pydantic
 pyyaml
-sanitize_filename
 typer
