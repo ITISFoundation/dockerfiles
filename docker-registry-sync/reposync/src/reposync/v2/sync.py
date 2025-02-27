@@ -277,6 +277,12 @@ async def _run_sync_tasks(
             msg = f"Could not ocmplete {results}"
             raise RuntimeError(msg)
 
+        # NOTE: image tags and digests are cached
+        # if after a batch something changes inside a source, due to th cahce
+        # it is not possible to figure it out
+        # safest approach is to remove the cache
+        await _crane.clear_cache()
+
 
 async def run_sync_tasks(
     configuration: Configuration,

@@ -1,5 +1,5 @@
 import asyncio
-from aiocache import cached
+from aiocache import cached, Cache
 
 from pydantic import SecretStr
 
@@ -84,8 +84,14 @@ async def copy(
     await _execute_command(command, debug=debug)
 
 
+@cached()
 async def get_image_tags(image: DockerImage, *, debug: bool) -> list[str]:
     response = await _execute_command(
         ["crane", "ls", image, "--omit-digest-tags"], debug=debug
     )
     return [x.strip() for x in response.strip().split("\n")]
+
+
+async def clear_cache() -> None:
+    cache = Cache()
+    await cache.clear()
