@@ -217,7 +217,7 @@ async def _copy_image(
         dst_image, skip_tls_verify=dst_registry.skip_tls_verify, debug=debug
     )
 
-    if src_digest == dst_digest:
+    if src_digest is not None and dst_digest is not None and src_digest == dst_digest:
         print(f"Same digest detected, skipping copy for '{task_id}'")
         return
 
@@ -228,7 +228,7 @@ async def _copy_image(
         dst_skip_tls_verify=dst_registry.skip_tls_verify,
         debug=debug,
     )
-    print(f"Completed {task_id}")
+    print(f"Completed '{task_id}'")
 
 
 async def _run_sync_tasks(

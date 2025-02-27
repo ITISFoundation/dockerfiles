@@ -6,7 +6,7 @@ from pydantic import SecretStr
 from .models import DockerImage, DockerImageAndTag
 
 
-class CouldNotCopyError(RuntimeError):
+class CraneCommandError(RuntimeError):
     def __init__(self, command: list[str | SecretStr], result: str):
         super().__init__(f"Command {command=} finished with error:\n{result}")
 
@@ -27,7 +27,7 @@ async def _execute_command(command: list[str | SecretStr], *, debug: bool) -> st
     result = stdout.decode()
 
     if process.returncode != 0:
-        raise CouldNotCopyError(command, result)
+        raise CraneCommandError(command, result)
 
     if debug:
         print(f"{command=} finishe with:\n{result}")
@@ -56,12 +56,18 @@ async def login(
 @cached()
 async def get_digest(
     image: DockerImageAndTag, *, skip_tls_verify: bool, debug: bool
-) -> str:
+) -> str | None:
     """computes the digest of an image, results are cahced for efficnecy"""
     command = ["crane", "digest", image]
     if skip_tls_verify:
         command.append("--insecure")
-    return await _execute_command(command, debug=debug)
+
+    try:
+        return await _execute_command(command, debug=debug)
+    except CraneCommandError as e:
+        if "unexpected status code 404" in f"{e}":
+            return None
+        raise
 
 
 async def copy(
