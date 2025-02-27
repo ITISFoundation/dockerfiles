@@ -59,7 +59,7 @@ class Stage(BaseModel):
     to_entries: Annotated[list[ToEntry], Field(alias="to")]
     id: Annotated[
         StageID | None,
-        Field(default_factory=uuid4),
+        Field(default_factory=lambda: f"{uuid4()}"),
         AfterValidator(_replace_none_stage),
     ]
     depends_on: Annotated[list[StageID], Field(default_factory=list)]
