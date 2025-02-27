@@ -2,6 +2,7 @@ import asyncio
 import logging
 from pathlib import Path
 from pprint import pformat
+import yaml_include
 
 import typer
 import yaml
@@ -26,8 +27,11 @@ def _configure_logging(debug: bool) -> None:
 def _get_configuration(config_file: Path) -> Configuration:
     _logger.debug("Confoguration path: '%s'", config_file)
 
-    # TODO: add support in yaml for include keyword
-    parased_yaml = yaml.safe_load(config_file.read_text())
+    # allows the usage of `!include another_file.yaml` inside the configuration
+    yaml.add_constructor(
+        "!include", yaml_include.Constructor(base_dir=config_file.parent)
+    )
+    parased_yaml = yaml.full_load(config_file.read_text())
 
     configuration = TypeAdapter(Configuration).validate_python(parased_yaml)
     _logger.info(

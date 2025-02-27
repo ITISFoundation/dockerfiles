@@ -2,4 +2,5 @@ aiocache
 networkx
 pydantic
 pyyaml
+pyyaml-include
 typer

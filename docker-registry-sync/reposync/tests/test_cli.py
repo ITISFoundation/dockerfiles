@@ -42,7 +42,17 @@ def test_cyclic_dependency_conf(
     assert "Please remove cyclic dependencies." in f"{result}"
 
 
-def test_valid_configuration_ok(
+def test_include(
+    mock_crane: None,
+    get_config_file: Callable[[str], str],
+    caplog_debug: pytest.LogCaptureFixture,
+):
+    result = runner.invoke(cli.app, [get_config_file("include_main.yaml"), "--debug"])
+    assert result.exit_code == os.EX_OK, _format_cli_error(result)
+    assert "Image sync took" in caplog_debug.text
+
+
+def test_min_valid_conf(
     mock_crane: None,
     get_config_file: Callable[[str], str],
     caplog_debug: pytest.LogCaptureFixture,
