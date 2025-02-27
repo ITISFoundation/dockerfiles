@@ -30,7 +30,7 @@ class CyclicDependencyError(RuntimeError):
 
 
 @dataclass(frozen=True)
-class SyncTask:
+class _SyncTask:
     task_id: TaskID
     stage_id: StageID
 
@@ -70,9 +70,9 @@ def _get_task_id(
 
 async def _get_sync_tasks(
     configuration: Configuration, *, use_explicit_tags: bool
-) -> list[SyncTask]:
+) -> list[_SyncTask]:
 
-    sync_tasks: list[SyncTask] = []
+    sync_tasks: list[_SyncTask] = []
 
     for stage in configuration.stages:
         from_entry = stage.from_entry
@@ -86,7 +86,7 @@ async def _get_sync_tasks(
             for tag in tags_to_sync:
                 task_id = _get_task_id(stage.id, from_entry, to_entry, tag)
                 _logger.debug("Will sync '%s'", task_id)
-                sync_task = SyncTask(
+                sync_task = _SyncTask(
                     task_id=task_id,
                     stage_id=stage.id,
                     src=from_entry.source,
@@ -112,16 +112,16 @@ async def _get_sync_tasks(
 
 
 def _get_tasks_to_run(
-    configuration: Configuration, sync_tasks: list[SyncTask]
-) -> tuple[dict[TaskID, SyncTask], dict[TaskID, list[TaskID]]]:
+    configuration: Configuration, sync_tasks: list[_SyncTask]
+) -> tuple[dict[TaskID, _SyncTask], dict[TaskID, list[TaskID]]]:
     stage_mapping: dict[StageID, Stage] = {s.id: s for s in configuration.stages}
-    task_mapping: dict[TaskID, SyncTask] = {task.task_id: task for task in sync_tasks}
+    task_mapping: dict[TaskID, _SyncTask] = {task.task_id: task for task in sync_tasks}
 
     if len(task_mapping) != len(sync_tasks):
         msg = f"Issue deteceted size of task_mapping {len(task_mapping)} != {len(sync_tasks)} number of sync_tasks"
         raise ValueError(msg)
 
-    stage_to_tasks_mapping: dict[StageID, set[SyncTask]] = {}
+    stage_to_tasks_mapping: dict[StageID, set[_SyncTask]] = {}
 
     for task in sync_tasks:
         if task.stage_id not in stage_to_tasks_mapping:
@@ -186,7 +186,7 @@ def _get_image(*, url: str, image: DockerImage, tag: DockerTag) -> DockerImageAn
 
 
 async def _copy_image(
-    configuration: Configuration, task_mapping: dict[TaskID, SyncTask], task_id: TaskID
+    configuration: Configuration, task_mapping: dict[TaskID, _SyncTask], task_id: TaskID
 ) -> None:
     _logger.info("Starting '%s'", task_id)
     start_datetime = datetime.now(timezone.utc)
@@ -230,7 +230,7 @@ async def _copy_image(
 
 async def _run_sync_tasks(
     configuration: Configuration,
-    task_mapping: dict[TaskID, SyncTask],
+    task_mapping: dict[TaskID, _SyncTask],
     predecessors: dict[TaskID, list[TaskID]],
     *,
     parallel_sync_tasks: NonNegativeInt,
@@ -283,7 +283,7 @@ async def run_sync_tasks(
 ) -> None:
     await _login_on_all_registries(configuration)
 
-    sync_tasks: list[SyncTask] = await _get_sync_tasks(
+    sync_tasks: list[_SyncTask] = await _get_sync_tasks(
         configuration, use_explicit_tags=use_explicit_tags
     )
 
