@@ -284,7 +284,17 @@ async def _run_sync_tasks(
             sync_coros, parallel_sync_tasks=parallel_sync_tasks
         )
         if any(isinstance(x, BaseException) for x in results):
-            msg = f"Could not ocmplete {results}"
+            completed_count = sum(x for x in results if x is None)
+            failed = [x for x in results if x is not None]
+            failed_count = len(failed)
+            formatted_errors = "\n".join(
+                f"--> ERROR #{k} <--\n{x}" for k, x in enumerate(failed)
+            )
+
+            msg = (
+                f"Taks: finished='{completed_count}', failed='{failed_count}'. "
+                f"Exceptions:\n{formatted_errors}"
+            )
             raise RuntimeError(msg)
 
         # NOTE: image tags and digests are cached
@@ -310,8 +320,9 @@ async def run_sync_tasks(
 
     start_datetime = datetime.now(timezone.utc)
 
-    await _run_sync_tasks(
-        configuration, execution_plan, parallel_sync_tasks=parallel_sync_tasks
-    )
-
-    _logger.info("Image sync took: %s", datetime.now(timezone.utc) - start_datetime)
+    try:
+        await _run_sync_tasks(
+            configuration, execution_plan, parallel_sync_tasks=parallel_sync_tasks
+        )
+    finally:
+        _logger.info("Image sync took: %s", datetime.now(timezone.utc) - start_datetime)
