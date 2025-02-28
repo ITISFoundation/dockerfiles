@@ -72,7 +72,7 @@ def _get_unique_task_id(
     )
 
 
-def _get_image(
+def _get_registry_image(
     *, url: str, image: DockerImage, tag: DockerTag | None = None
 ) -> RegistryImage:
     image_path = f"{url}/{image.lstrip('/')}"
@@ -89,7 +89,7 @@ async def _get_sync_tasks(
         from_entry = stage.from_entry
         for to_entry in stage.to_entries:
             tags_to_sync = await _get_tags_to_sync(
-                _get_image(
+                _get_registry_image(
                     url=configuration.registries[from_entry.source].url,
                     image=from_entry.repository,
                 ),
@@ -184,10 +184,10 @@ async def _copy_image(
     src_registry = configuration.registries[sync_task.src]
     dst_registry = configuration.registries[sync_task.dst]
 
-    src_image = _get_image(
+    src_image = _get_registry_image(
         url=src_registry.url, image=sync_task.src_path, tag=sync_task.tag
     )
-    dst_image = _get_image(
+    dst_image = _get_registry_image(
         url=dst_registry.url, image=sync_task.dst_path, tag=sync_task.tag
     )
 

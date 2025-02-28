@@ -1,4 +1,4 @@
-from reposync._sync import _get_image
+from reposync._sync import _get_registry_image
 from reposync._models import RegistryImage, DockerImage, DockerTag
 import pytest
 
@@ -12,7 +12,7 @@ import pytest
         pytest.param("some_repo", "/a/path", "tag", "some_repo/a/path:tag"),
     ],
 )
-def test_something(
+def test__get_registry_image(
     url: str, image: DockerImage, tag: DockerTag | None, expected: RegistryImage
 ):
-    assert _get_image(url=url, image=image, tag=tag) == expected
+    assert _get_registry_image(url=url, image=image, tag=tag) == expected
