@@ -12,7 +12,7 @@ from . import _crane
 from ._models import (
     Configuration,
     DockerImage,
-    DockerImageAndTag,
+    RegistryImage,
     DockerTag,
     FromEntry,
     RegistryKey,
@@ -52,7 +52,7 @@ async def _login_into_all_registries(configuration: Configuration) -> None:
 
 
 async def _get_tags_to_sync(
-    image: DockerImage, defined_tags: list[DockerTag], *, use_explicit_tags: bool
+    image: RegistryImage, defined_tags: list[DockerTag], *, use_explicit_tags: bool
 ) -> list[DockerTag]:
     # if `use_explicit_tags is False` and `tags: []` in the configuration
     # it will fetch all tags from the remote repository
@@ -72,6 +72,12 @@ def _get_unique_task_id(
     )
 
 
+def _get_image(
+    *, url: str, image: DockerImage, tag: DockerTag | None = None
+) -> RegistryImage:
+    return f"{url}/{image}" if tag is None else f"{url}/{image}:{tag}"
+
+
 async def _get_sync_tasks(
     configuration: Configuration, *, use_explicit_tags: bool
 ) -> list[_SyncTask]:
@@ -82,7 +88,10 @@ async def _get_sync_tasks(
         from_entry = stage.from_entry
         for to_entry in stage.to_entries:
             tags_to_sync = await _get_tags_to_sync(
-                from_entry.repository,
+                _get_image(
+                    url=configuration.registries[from_entry.source].url,
+                    image=from_entry.repository,
+                ),
                 to_entry.tags,
                 use_explicit_tags=use_explicit_tags,
             )
@@ -162,10 +171,6 @@ def _get_execution_plan(
     if not is_directed_acyclic_graph(graph):
         raise CyclicDependencyError(predecessors)
     return ExecutionPlan(task_mapping, predecessors)
-
-
-def _get_image(*, url: str, image: DockerImage, tag: DockerTag) -> DockerImageAndTag:
-    return f"{url}/{image}:{tag}"
 
 
 async def _copy_image(

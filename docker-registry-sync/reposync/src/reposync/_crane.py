@@ -4,7 +4,7 @@ from aiocache import cached, Cache
 
 from pydantic import SecretStr
 
-from ._models import DockerImage, DockerImageAndTag
+from ._models import RegistryImage
 
 _logger = logging.getLogger(__name__)
 
@@ -53,7 +53,7 @@ async def login(registry_url: str, username: str, password: SecretStr) -> None:
 
 
 @cached()
-async def get_digest(image: DockerImageAndTag, *, skip_tls_verify: bool) -> str | None:
+async def get_digest(image: RegistryImage, *, skip_tls_verify: bool) -> str | None:
     """computes the digest of an image, results are cahced for efficnecy"""
     command = ["crane", "digest", image]
     if skip_tls_verify:
@@ -68,8 +68,8 @@ async def get_digest(image: DockerImageAndTag, *, skip_tls_verify: bool) -> str 
 
 
 async def copy(
-    source: DockerImageAndTag,
-    destination: DockerImageAndTag,
+    source: RegistryImage,
+    destination: RegistryImage,
     *,
     src_skip_tls_verify: bool,
     dst_skip_tls_verify: bool,
@@ -81,7 +81,7 @@ async def copy(
 
 
 @cached()
-async def get_image_tags(image: DockerImage) -> list[str]:
+async def get_image_tags(image: RegistryImage) -> list[str]:
     response = await _execute_command(["crane", "ls", image, "--omit-digest-tags"])
     return [x.strip() for x in response.strip().split("\n")]
 

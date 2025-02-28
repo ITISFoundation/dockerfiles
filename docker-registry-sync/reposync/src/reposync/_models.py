@@ -15,7 +15,7 @@ from pydantic import (
 
 DockerImage: TypeAlias = str
 DockerTag: TypeAlias = str
-DockerImageAndTag: TypeAlias = str
+RegistryImage: TypeAlias = str
 RegistryKey: TypeAlias = str
 StageID: TypeAlias = str
 TaskID: TypeAlias = str
