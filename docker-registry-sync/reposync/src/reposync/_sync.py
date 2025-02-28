@@ -4,6 +4,7 @@ from concurrent.futures import ThreadPoolExecutor
 from dataclasses import dataclass
 from datetime import datetime, timezone
 from typing import Any, Coroutine
+from pathlib import Path
 
 from networkx import DiGraph, is_directed_acyclic_graph
 from pydantic import NonNegativeInt
@@ -75,7 +76,8 @@ def _get_unique_task_id(
 def _get_image(
     *, url: str, image: DockerImage, tag: DockerTag | None = None
 ) -> RegistryImage:
-    return f"{url}/{image}" if tag is None else f"{url}/{image}:{tag}"
+    image_path = f"{url}/{image.lstrip('/')}"
+    return image_path if tag is None else f"{image_path}:{tag}"
 
 
 async def _get_sync_tasks(
