@@ -4,7 +4,6 @@ from concurrent.futures import ThreadPoolExecutor
 from dataclasses import dataclass
 from datetime import datetime, timezone
 from typing import Any, Coroutine
-from pathlib import Path
 
 from networkx import DiGraph, is_directed_acyclic_graph
 from pydantic import NonNegativeInt
