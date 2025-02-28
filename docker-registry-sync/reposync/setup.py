@@ -1,6 +1,5 @@
 import os
 import re
-import sys
 from pathlib import Path
 
 from setuptools import find_packages, setup
@@ -23,8 +22,8 @@ setup(
     packages=find_packages(where="src"),
     package_dir={"": "src",},
     include_package_data=True,
-    entry_points={"console_scripts": ["run-reposync=reposync.main:main",]},
-    python_requires=">=3.7",
+    entry_points={"console_scripts": ["run-reposync=reposync.cli:main",]},
+    python_requires=">=3.11",
     install_requires=install_requirements,
     tests_require=test_requirements,
     setup_requires=["setuptools_scm"],

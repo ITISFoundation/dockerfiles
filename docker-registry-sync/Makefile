@@ -3,9 +3,7 @@
 BRIDGE_NETWORK_NAME := dev_sync_net
 
 export IMAGE_NAME := docker-registry-sync
-export DOCKER_REG_SYNC_VERSION := 0.3.1
-# if this image is built by this script it will be tagged as stable
-export DOCKER_REG_SYNC_TAG_AS_STABLE_VERSION := 0.3.1
+export DOCKER_REG_SYNC_VERSION := 1.0.0
 export DOCKER_REGISTRY ?=itisfoundation
 
 export VCS_URL         := $(shell git config --get remote.origin.url)
@@ -19,36 +17,32 @@ current_dir = $(shell pwd)
 help: ## help on rule's targets
 	@awk 'BEGIN {FS = ":.*?## "} /^[[:alpha:][:space:]_-]+:.*?## / {printf "\033[36m%-20s\033[0m %s\n", $$1, $$2}' $(MAKEFILE_LIST)
 
-##### PYTHON PACKAGE -START
+# DEPENDENCIES
 
 .PHONY: _ensure-in-venv
 _ensure-in-venv:
 	@python3 -c "import os; os.environ['VIRTUAL_ENV']" || (echo "\n>>>> You are not in a virtualenv. Activate one <<<<\n"; exit 1)
 
-
-.PHONY: dev-dependencies
-dev-dependencies: _ensure-in-venv ## install development depenencies in your venv
-	@pip install pip-tools black rope
-
-
 .PHONY: compile-dependencies
 compile-dependencies: _ensure-in-venv ## snapshot dependencies
-	@pip-compile --build-isolation reposync/requirements/base.in --output-file reposync/requirements/base.txt 
-	@pip-compile --build-isolation reposync/requirements/test.in --output-file reposync/requirements/test.txt 
+	@uv pip compile reposync/requirements/base.in --output-file reposync/requirements/base.txt 
+	@uv pip compile reposync/requirements/test.in --output-file reposync/requirements/test.txt 
+	@uv pip compile reposync/requirements/tools.in --output-file reposync/requirements/tools.txt 
 
 
-.PHONY: install-dependencies
-install-dependencies: _ensure-in-venv ## install package dependencies
-	@cd reposync/requirements; pip-sync base.txt
+.PHONY: install-test
+install-test: _ensure-in-venv ## install test dependencies
+	@cd reposync/requirements; uv pip sync test.txt 
 
-.PHONY: install-test-dependencies
-install-test-dependencies: _ensure-in-venv ## install package test dependencies
-	@cd reposync/requirements; pip-sync test.txt 
+.PHONY: install-dev
+install-dev: _ensure-in-venv ## install dev dependencies
+	@cd reposync/requirements; uv pip sync dev.txt
 
+.PHONY: install-ci
+install-ci: _ensure-in-venv ## install ci dependencies
+	@cd reposync/requirements; python -m uv pip sync test.txt
 
-.PHONY: install-py-package
-install-py-package: _ensure-in-venv ## install package dependencies
-	@pip install -e reposync
+##### DEVELOPMENT UTILS
 
 .PHONY: tests
 tests: _ensure-in-venv ## install package dependencies
@@ -58,8 +52,6 @@ tests: _ensure-in-venv ## install package dependencies
 .PHONY: setup-env
 setup-env: ## creates the .env still need to change your credentials
 	cp .env.default .env
-
-##### PYTHON PACKAGE - END
 
 .PHONY: start-dev-registry
 start-dev-registry: ## starts development registries used by development-run
@@ -72,6 +64,14 @@ stop-dev-registry: ## stops development registries used by development-run
 	@docker network rm ${BRIDGE_NETWORK_NAME}
 	@sudo rm -rf dev/data_*
 
+.PHONY: shell
+shell: _ensure-in-venv build ## check internals of image
+	@docker run --rm -it \
+		--env-file .env \
+		--network=${BRIDGE_NETWORK_NAME} \
+		--entrypoint /bin/sh \
+		${DOCKER_REGISTRY}/${IMAGE_NAME}:${DOCKER_REG_SYNC_VERSION}
+
 .PHONY: development-run
 development-run: _ensure-in-venv build ## used to test out changes during development
 	@docker run --rm -it \
@@ -79,9 +79,17 @@ development-run: _ensure-in-venv build ## used to test out changes during develo
 		-v $(current_dir)/dev/dev-sync-cfg.yml:/etc/cfg.yaml \
 		--network=${BRIDGE_NETWORK_NAME} \
 		${DOCKER_REGISTRY}/${IMAGE_NAME}:${DOCKER_REG_SYNC_VERSION} \
-		run-reposync -c /etc/cfg.yaml
+		run-reposync /etc/cfg.yaml --debug
 
-# Used by deployment stages
+
+.PHONY: debug-run
+debug-run: _ensure-in-venv ## used to test out changes during development
+	@bash -c '\
+		set -a; source .env; set +a; \
+		run-reposync dev/dev-sync-cfg --debug\
+	'
+
+# CI & RELEASE
 
 .PHONY: build
 build: ## build and tag the iamge
@@ -97,52 +105,15 @@ push: ## Pushes image to Docker Hub only if the tag does not exist
 		echo "Tag already exists. Skipping push."; \
 	fi
 
-
-.PHONY: pull
-pull: ## pulls image from Dockerhub
-	@docker pull ${DOCKER_REGISTRY}/${IMAGE_NAME}:${DOCKER_REG_SYNC_VERSION}
-
-define show-meta
-	$(foreach iid,$(shell docker images */$(1):* -q | sort | uniq),\
-		docker image inspect $(iid) | jq '.[0] | .RepoTags, .ContainerConfig.Labels';)
-endef
-
-.PHONY: info
-info: ## gives some information about the docker image
-	@docker images */${IMAGE_NAME}:*;\
-	$(call show-meta,${IMAGE_NAME})
-
-# Used by GitHub Actions, these should be defined by each project
-
-.PHONY: github-ci-pull
-github-ci-pull: ## reserved for Git Hub CI to pull image
-	@make pull
-
-.PHONY: github-ci-build
-github-ci-build: ## reserved for Git Hub CI to build image
-	@make build
-	# checkk the version for stable
-ifeq (${DOCKER_REG_SYNC_VERSION}, ${DOCKER_REG_SYNC_TAG_AS_STABLE_VERSION})
-	docker tag ${DOCKER_REGISTRY}/${IMAGE_NAME}:${DOCKER_REG_SYNC_VERSION} ${DOCKER_REGISTRY}/${IMAGE_NAME}:stable
-endif
-	@make info
-
-.PHONY: github-ci-tests
-github-ci-tests:	## reserved for Git Hub CI to start testsuite
+.PHONY: tests-isolated
+tests-isolated:	## reserved for Git Hub CI to start testsuite
 	echo "Running tests in isolation"
 	docker run --rm \
 		-v $(current_dir):/code \
 		-w /code \
-		python:3.8-buster \
-		sh -c ' export VIRTUAL_ENV=1 && \
-				pip install tox==3.15.2 && \
-				cd /code && \
+		python:3.11-buster \
+		sh -c ' export VIRTUAL_ENV=1 &&\
+				cd /code &&\
+				pip install uv &&\
+				make install-ci &&\
 				make tests'
-
-.PHONY: github-ci-push
-github-ci-push:	## reserved for Git Hub CI to push image
-	@make push
-ifeq (${DOCKER_REG_SYNC_VERSION}, ${DOCKER_REG_SYNC_TAG_AS_STABLE_VERSION})
-	@docker push ${DOCKER_REGISTRY}/${IMAGE_NAME}:stable
-endif
-	

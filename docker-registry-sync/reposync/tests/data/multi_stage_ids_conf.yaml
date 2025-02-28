@@ -1,0 +1,28 @@
+registries:
+  first:
+    url: first.url.here
+    env_user: ENV_VAR_FIRST_USER
+    env_password: ENV_VAR_FIRST_PASSWORD
+  second:
+    url: second.url.here
+    env_user: ENV_VAR_SECOND_USER
+    env_password: ENV_VAR_SECOND_PASSWORD
+
+stages:
+  - from:
+      source: first
+      repository: "some/repo"
+    to:
+      - destination: second
+        repository: "other/repo"
+        tags: []
+    id: "test-stage"
+
+  - from:
+      source: first
+      repository: "some/repo2"
+    to:
+      - destination: second
+        repository: "other/repo2"
+        tags: []
+    id: "test-stage"

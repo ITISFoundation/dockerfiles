@@ -1,13 +1,17 @@
-# based on https://github.com/xelalexv/dregsy/blob/0.5.1/hack/dregsy.alpine.Dockerfile
-FROM xelalex/dregsy:0.5.1-alpine@sha256:1adb89b1310128367a55dbbe6b0656c36558986e893fa96e610303069d966578
+FROM python:3.11-alpine
 
 LABEL maintainer "neagu@itis.swiss"
 
-RUN apk add python3 py-pip
-RUN pip3 install --upgrade \
-        pip \
-        setuptools \
-        wheel
+# CRANE
+ENV VERSION=v0.20.3
+ENV OS=Linux
+ENV ARCH=x86_64
+RUN apk add curl tar &&\
+        curl -sL "https://github.com/google/go-containerregistry/releases/download/${VERSION}/go-containerregistry_${OS}_${ARCH}.tar.gz" > go-containerregistry.tar.gz &&\
+        tar -zxvf go-containerregistry.tar.gz -C /usr/local/bin/ crane &&\
+        crane --help &&\
+        apk del curl tar &&\
+        apk cache clean
 
 RUN mkdir -p /app
 
@@ -20,5 +24,5 @@ RUN pip3 install .
 # remove install directory
 RUN rm -rf /app
 
-CMD ["run-reposync", "-c", "/etc/cfg.yaml"]
+CMD ["run-reposync", "/etc/cfg.yaml"]
 
