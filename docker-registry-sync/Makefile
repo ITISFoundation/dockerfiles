@@ -3,7 +3,7 @@
 BRIDGE_NETWORK_NAME := dev_sync_net
 
 export IMAGE_NAME := docker-registry-sync
-export DOCKER_REG_SYNC_VERSION := 1.0.1
+export DOCKER_REG_SYNC_VERSION := 1.0.2
 export DOCKER_REGISTRY ?=itisfoundation
 
 export VCS_URL         := $(shell git config --get remote.origin.url)
