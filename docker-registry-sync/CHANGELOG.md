@@ -6,7 +6,11 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
-## [1.0.0] - 2025-03-03
+## [1.0.2] - 2025-03-03
+
+- disabled locals in tracebacks
+
+## [1.0.1] - 2025-03-03
 
 - fixed an issue where it would fail to count the number of errors
 

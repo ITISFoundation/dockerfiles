@@ -14,7 +14,7 @@ from ._sync import run_sync_tasks
 
 _logger = logging.getLogger(__name__)
 
-app = typer.Typer()
+app = typer.Typer(pretty_exceptions_enable=False, pretty_exceptions_show_locals=False)
 
 
 def _configure_logging(debug: bool) -> None:
