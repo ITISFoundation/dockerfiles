@@ -284,7 +284,7 @@ async def _run_sync_tasks(
             sync_coros, parallel_sync_tasks=parallel_sync_tasks
         )
         if any(isinstance(x, BaseException) for x in results):
-            completed_count = sum(x for x in results if x is None)
+            completed_count = sum(1 for x in results if x is None)
             failed = [x for x in results if x is not None]
             failed_count = len(failed)
             formatted_errors = "\n".join(
