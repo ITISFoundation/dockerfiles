@@ -6,6 +6,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [1.0.4] - 2025-03-17
+
+- previous timeouts have been increased (created errors in CI)
+
 ## [1.0.3] - 2025-03-17
 
 - added timeouts for crane's digest and tag commands (avoids hangs in CI)
