@@ -7,8 +7,8 @@ from pydantic import SecretStr, NonNegativeFloat
 
 from ._models import RegistryImage
 
-_DIGEST_TIMEOUT: Final[NonNegativeFloat] = 5
-_TAGS_TIMEOUT: Final[NonNegativeFloat] = 30
+_DIGEST_TIMEOUT: Final[NonNegativeFloat] = 30
+_TAGS_TIMEOUT: Final[NonNegativeFloat] = 60
 
 _logger = logging.getLogger(__name__)
 
