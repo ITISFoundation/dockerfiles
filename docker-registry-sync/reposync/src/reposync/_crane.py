@@ -1,10 +1,14 @@
 import asyncio
 import logging
 from aiocache import cached, Cache
+from typing import Final
 
-from pydantic import SecretStr
+from pydantic import SecretStr, NonNegativeFloat
 
 from ._models import RegistryImage
+
+_DIGEST_TIMEOUT: Final[NonNegativeFloat] = 5
+_TAGS_TIMEOUT: Final[NonNegativeFloat] = 30
 
 _logger = logging.getLogger(__name__)
 
@@ -60,7 +64,8 @@ async def get_digest(image: RegistryImage, *, skip_tls_verify: bool) -> str | No
         command.append("--insecure")
 
     try:
-        return await _execute_command(command)
+        async with asyncio.timeout(delay=_DIGEST_TIMEOUT):
+            return await _execute_command(command)
     except CraneCommandError as e:
         if "unexpected status code 404" in f"{e}":
             return None
@@ -82,7 +87,8 @@ async def copy(
 
 @cached()
 async def get_image_tags(image: RegistryImage) -> list[str]:
-    response = await _execute_command(["crane", "ls", image, "--omit-digest-tags"])
+    async with asyncio.timeout(delay=_TAGS_TIMEOUT):
+        response = await _execute_command(["crane", "ls", image, "--omit-digest-tags"])
     return [x.strip() for x in response.strip().split("\n")]
 
 
