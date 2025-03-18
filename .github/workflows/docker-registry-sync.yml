@@ -1,4 +1,4 @@
-name: CI
+name: registry-sync CI
 
 on:
   pull_request:
@@ -8,9 +8,19 @@ on:
       - opened
       - synchronize
       - reopened
+    paths:
+      - 'docker-registry-sync/**'
+      - '.github/workflows/docker-registry-sync.yml'
   push:
     branches:
       - master
+    paths:
+      - 'docker-registry-sync/**'
+      - '.github/workflows/docker-registry-sync.yml'
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
 
 jobs:
   build-docker-registry-sync:
@@ -34,6 +44,7 @@ jobs:
           DOCKER_HUB_TARGET_REGISTRY_NAME: ${{ secrets.DOCKER_HUB_TARGET_REGISTRY_NAME }}
 
       - name: Log in to Docker Hub
+        if: github.event_name == 'push' && github.ref == 'refs/heads/master'
         uses: docker/login-action@v3
         with:
           username: ${{ secrets.DOCKER_HUB_USER }}
