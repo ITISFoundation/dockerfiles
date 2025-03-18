@@ -1,4 +1,3 @@
-version: '3.7'
 services:
   rabbitmq:
     image: ${DOCKER_REGISTRY}/rabbitmq:${RABBIT_VERSION}
