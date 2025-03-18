@@ -8,9 +8,13 @@ on:
       - opened
       - synchronize
       - reopened
+    paths:
+      - 'rabbitmq/**'
   push:
     branches:
       - master
+    paths:
+      - 'rabbitmq/**'
 
 jobs:
   build-docker-registry-sync:
@@ -40,4 +44,4 @@ jobs:
         run: |
           pushd rabbitmq
           make push
-        
+

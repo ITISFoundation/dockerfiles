@@ -8,9 +8,13 @@ on:
       - opened
       - synchronize
       - reopened
+    paths:
+      - 'docker-registry-sync/**'
   push:
     branches:
       - master
+    paths:
+      - 'docker-registry-sync/**'
 
 jobs:
   build-docker-registry-sync:
