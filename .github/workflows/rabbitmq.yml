@@ -10,11 +10,13 @@ on:
       - reopened
     paths:
       - 'rabbitmq/**'
+      - '.github/workflows/rabbitmq.yml'
   push:
     branches:
       - master
     paths:
       - 'rabbitmq/**'
+      - '.github/workflows/rabbitmq.yml'
 
 jobs:
   build-docker-registry-sync:
