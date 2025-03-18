@@ -18,6 +18,10 @@ on:
       - 'rabbitmq/**'
       - '.github/workflows/rabbitmq.yml'
 
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
 jobs:
   build-docker-registry-sync:
     runs-on: ubuntu-latest
