@@ -23,7 +23,7 @@ concurrency:
   cancel-in-progress: true
 
 jobs:
-  build-docker-registry-sync:
+  rabbitmq:
     runs-on: ubuntu-latest
 
     steps:
