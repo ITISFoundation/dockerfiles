@@ -1,6 +1,8 @@
 .DEFAULT_GOAL   := help
 export RABBIT_VERSION  :=3.13.7-management
 export DOCKER_REGISTRY ?=itisfoundation
+DOCKER_TARGET_PLATFORMS ?= linux/amd64
+comma := ,
 
 export VCS_URL         := $(shell git config --get remote.origin.url)
 export VCS_REF         := $(shell git rev-parse --short HEAD)
@@ -12,15 +14,18 @@ help: ## displays targets
 
 .PHONY: build
 build: ## builds image
-	@docker buildx bake --load
+	@docker buildx bake \
+	--set *.platform=$(DOCKER_TARGET_PLATFORMS) \
+	$(if $(findstring $(comma),$(DOCKER_TARGET_PLATFORMS)),, --load)
+	
 
 .PHONY: shell
 shell: ## builds image
 	@docker run -it $(DOCKER_REGISTRY)/rabbitmq:$(RABBIT_VERSION) bash
 
 .PHONY: push
-push: ## pushes image to Dockerhub
-	@docker push $(DOCKER_REGISTRY)/rabbitmq:$(RABBIT_VERSION)
+push: ## pushes multi-arch image to Dockerhub
+	docker buildx bake --set *.platform=linux/amd64,linux/arm64 --push
 
 .PHONY: pull
 pull: ## pulls image from Dockerhub
