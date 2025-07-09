@@ -1,6 +1,6 @@
 .DEFAULT_GOAL   := help
-export RABBIT_VERSION  :=3.13.7-management
-export DOCKER_REGISTRY ?=itisfoundation
+export RABBIT_VERSION  := 4.1.2-management
+export DOCKER_REGISTRY ?= itisfoundation
 DOCKER_TARGET_PLATFORMS ?= linux/amd64
 comma := ,
 
