@@ -29,16 +29,16 @@ help: ## This colourful help
 	@awk 'BEGIN {FS = ":.*?## "} /^[a-zA-Z_-.]+:.*?## / {printf "\033[36m%-20s\033[0m %s\n", $$1, $$2}' $(MAKEFILE_LIST)
 
 .docker-compose-build.yml: $(docker_compose_configs)
-	docker-compose $(foreach dc,$^,-f $(dc)) config >$@
+	docker compose $(foreach dc,$^,-f $(dc)) config >$@
 
 .PHONY: build
 build: .docker-compose-build.yml ## Builds all images (uses cache)
 	# building $$(PROJECTS)
-	docker-compose -f $< build --parallel
+	docker compose -f $< build --parallel
 
 .PHONY: build-nc
 build-nc: .docker-compose-build.yml ## Builds all images from scratch
-	docker-compose -f $< build --parallel --no-cache
+	docker compose -f $< build --parallel --no-cache
 
 .PHONY: devenv
 devenv: .venv ##  Nuilds python environment and installs some tooling for operations
