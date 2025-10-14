@@ -7,7 +7,12 @@ RUN apk add --no-cache \
     su-exec \
     git \
     tini \
-    jq
+    jq \
+    python2 \
+    python \
+    make \
+    g++
+
 
 # TODO: PATH=/foo:${PATH} invalidates path and append everytime a new /foo!!!
 ENV PATH=/home/node/node_modules/.bin:${PATH}
@@ -19,7 +24,7 @@ COPY --chown=node:node package*.json ./
 
 # TODO: latest or fix?? or a variable?
 RUN su - node -c "npm install npm@latest" && \
-    su - node -c "npm install"
+    su - node -c "npm install --build-from-source"
 
 # RUN su - node -c "echo {} > package.json" ;\
 #     apk add --no-cache --virtual .build-deps python2;\

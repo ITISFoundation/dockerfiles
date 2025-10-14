@@ -45,7 +45,7 @@ update-packages: ## updates dependencies and recreates package-lock.json
 
 build: package-lock.json ## Build the container
 	export VERSION=lastbuild; \
-	docker-compose -f docker-compose.build.yml build $(APP_NAME)
+	docker compose -f docker-compose.build.yml build $(APP_NAME)
 
 build-nc: package-lock.json ## Build the container without caching
 	export VERSION=lastbuild; \
