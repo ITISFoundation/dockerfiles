@@ -15,7 +15,11 @@ export BUILD_DATE       := $(shell date -u +"%Y-%m-%dT%H:%M:%SZ")
 
 # TODO: all folders with a $(folder)/docker-compose.yml or $(folder)/.docker-compose-build.yml inside
 PROJECTS := \
-	qooxdoo-kit
+	devpi \
+	pip-kit \
+	qooxdoo-kit \
+	rabbitmq \
+	docker-registry-sync
 
 docker_compose_configs = $(foreach folder,$(PROJECTS),$(CURDIR)/$(folder)/docker-compose.yml)
 
