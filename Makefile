@@ -47,3 +47,17 @@ devenv: .venv ##  Nuilds python environment and installs some tooling for operat
 clean: ## Cleans all unversioned files in project
 	@echo -n "Are you sure? [y/N] " && read ans && [ $${ans:-N} = y ]
 	@git clean -dxf
+
+.PHONY: info-tools
+info-tools: ## displays tools versions
+	@echo dev-tools versions -------------------------
+	@echo ' awk           : $(shell awk -W version 2>&1 | head -n 1)'
+	@echo ' docker        : $(shell docker --version)'
+	@echo ' docker buildx : $(shell docker buildx version)'
+	@echo ' docker compose: $(shell docker compose version)'
+	@echo ' jq            : $(shell jq --version)'
+	@echo ' make          : $(shell make --version 2>&1 | head -n 1)'
+	@echo ' node          : $(shell node --version 2> /dev/null || echo ERROR nodejs missing)'
+	@echo ' python        : $(shell python3 --version)'
+	@echo ' uv            : $(shell uv --version 2> /dev/null || echo ERROR uv missing)'
+	@echo ' ubuntu        : $(shell lsb_release --description --short 2> /dev/null | tail || echo ERROR Not an Ubuntu OS )'

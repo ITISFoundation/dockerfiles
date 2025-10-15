@@ -36,10 +36,10 @@ help: ## This help.
 .PHONY: build build-nc
 
 build:  ## Build the container
-	docker-compose build $(APP_NAME) 
+	docker compose build $(APP_NAME) 
 
 build-nc:  ## Build the container without caching
-	docker-compose build --no-cache $(APP_NAME)
+	docker compose build --no-cache $(APP_NAME)
 
 .PHONY: test
 test: .check_version ## Run the tests 
@@ -47,10 +47,10 @@ test: .check_version ## Run the tests
 
 .PHONY: up  down
 up: ## Launch the container
-	docker-compose up
+	docker compose up
 
 down: ## Stop the container
-	docker-compose down
+	docker compose down
 
 # Docker tagging
 .PHONY: tag 
@@ -88,8 +88,8 @@ clean: .check_clean ## Cleans unversioned files/foldersm remove all temporary fo
 	@git clean -Xdf
 	# removes all temporary folders
 	@-rm -rf $(wildcard $(TMPPREFIX)*)
-	# cleans close docker-compose
-	@-docker-compose down
+	# cleans close docker compose
+	@-docker compose down
 
 clean-images: .check_clean ## Remove all images concerning the current app
 	$(shell docker rmi -f $$(docker images |grep $(DOCKER_IMAGE_NAME)))
