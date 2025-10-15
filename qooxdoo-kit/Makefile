@@ -45,11 +45,11 @@ update-packages: ## updates dependencies and recreates package-lock.json
 
 build: package-lock.json ## Build the container
 	export VERSION=lastbuild; \
-	docker-compose -f docker-compose.build.yml build $(APP_NAME)
+	docker compose -f docker-compose.build.yml build $(APP_NAME)
 
 build-nc: package-lock.json ## Build the container without caching
 	export VERSION=lastbuild; \
-	docker-compose -f docker-compose.build.yml build --no-cache $(APP_NAME)
+	docker compose -f docker-compose.build.yml build --no-cache $(APP_NAME)
 
 
 # Run the container
@@ -61,7 +61,7 @@ shell: ## opens shell in container
 	cp -r tests $(TMPDIR)
 	@export VERSION=lastbuild; \
 	export PROJECT_DIR=$(TMPDIR);\
-	docker-compose run $(APP_NAME)
+	docker compose run $(APP_NAME)
 
 
 .PHONY: test
@@ -70,7 +70,7 @@ test: ## tests
 	cp -r tests $(TMPDIR)
 	@export VERSION=lastbuild;
 	export PROJECT_DIR=$(TMPDIR);\
-	docker-compose run $(APP_NAME) /bin/sh ./tests/run.sh
+	docker compose run $(APP_NAME) /bin/sh ./tests/run.sh
 
 
 # Docker tagging
@@ -121,8 +121,8 @@ clean:
 	@git clean -Xdf
 	# removes all temporary folders
 	@-rm -rf $(wildcard $(TMPPREFIX)*)
-	# cleans close docker-compose
-	@-docker-compose down
+	# cleans close docker compose
+	@-docker compose down
 
 .PHONY: clean-images
 clean-images:

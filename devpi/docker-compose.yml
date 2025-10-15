@@ -1,4 +1,3 @@
-version: '3.7'
 services:
   devpi:
     image: ${DOCKER_REPO}/devpi:${VERSION:-latest}

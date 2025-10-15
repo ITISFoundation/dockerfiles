@@ -24,20 +24,20 @@ info:
 .PHONY: build-devel
 # target: build-devel: – Builds dev container
 build-devel:
-	export BUILD_TARGET=development; docker-compose build
+	export BUILD_TARGET=development; docker compose build
 
 
 .PHONY: build
 # target: build: – Builds container
 build:
-	export BUILD_TARGET=build; docker-compose build
+	export BUILD_TARGET=build; docker compose build
 	docker run -it client_qx:build /bin/sh -c "ls -l build-output;cat build-output/version.txt"
 
 
 .PHONY: clean
 # target: clean: – Cleans images and current dir outputs
 clean:
-	@docker-compose down
+	@docker compose down
 	@docker image rm -f client_qx:build 2> /dev/null
 	@docker image rm -f client_qx:development 2> /dev/null
 	@git clean -dxf ${CURDIR}
@@ -47,7 +47,7 @@ clean:
 # target: compile: – Compiles front-end's code [dev]
 compile:
 	export BUILD_TARGET=development; \
-		docker-compose run --service-ports qx compile \
+		docker compose run --service-ports qx compile \
 			--set osparc.vcsRef='"${VCS_REF}"' \
 			--set osparc.vcsRefClient='"${VCS_REF_CLIENT}"' \
 			--set osparc.vcsStatusClient='"${VCS_STATUS_CLIENT}"' \
@@ -58,4 +58,4 @@ compile:
 # target: serve: – Compiles, watches and serves front-end's code [dev]
 serve:
 	export BUILD_TARGET=development; \
-		docker-compose run --service-ports qx
+		docker compose run --service-ports qx
