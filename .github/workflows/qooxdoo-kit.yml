@@ -40,7 +40,9 @@ jobs:
         run: |
           pushd qooxdoo-kit
           make build
+          popd
 
+      # Code to be used in the future to push image to docker hub:
       # - name: Log in to Docker Hub
       #   if: github.event_name == 'push' && github.ref == 'refs/heads/master'
       #   uses: docker/login-action@v3
@@ -51,5 +53,6 @@ jobs:
       # - name: Push Docker image
       #   if: github.event_name == 'push' && github.ref == 'refs/heads/master'
       #   run: |
-      #     pushd rabbitmq
+      #     pushd qooxdoo-kit
       #     make push
+      #     popd
