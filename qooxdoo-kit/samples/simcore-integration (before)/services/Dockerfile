@@ -1,4 +1,4 @@
-FROM python:3.6-alpine as base
+FROM python:3.7.12-alpine as base
 #
 #  USAGE:
 #     cd sercices/web
