@@ -352,7 +352,14 @@ async def _run_sync_tasks(
 
     sync_oprations_count = sum([len(x) for x in no_duplicates_run_batches])
     if len(execution_plan.task_mapping) != sync_oprations_count:
-        raise RuntimeError("something went worng sizes do not match")
+        msg = (
+            "Internal inconsistency while building the execution plan: "
+            f"task_mapping has {len(execution_plan.task_mapping)} entries but "
+            f"the deduplicated run batches contain {sync_oprations_count} tasks "
+            f"across {len(no_duplicates_run_batches)} batch(es). "
+            "Every task should appear exactly once across all batches."
+        )
+        raise RuntimeError(msg)
 
     stats = _RunStats()
 
@@ -368,7 +375,8 @@ async def _run_sync_tasks(
         stats.update(results)
 
         if stats.failures:
-            raise RuntimeError(f"Run statistics:\n{stats.format()}")
+            msg = f"Run statistics:\n{stats.format()}"
+            raise RuntimeError(msg)
 
         # NOTE: image tags and digests are cached
         # if after a batch something changes inside a source, due to th cahce
