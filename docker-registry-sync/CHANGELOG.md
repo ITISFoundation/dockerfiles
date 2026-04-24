@@ -6,6 +6,11 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [1.0.5] - 2026-04-24
+
+- fixed an issue with asyncio, concurrency is now semaphore based (less tasks issues)
+- enhanced logging added task completition summary that is slily more readabe also errors are associated to image task_id
+
 ## [1.0.4] - 2025-03-17
 
 - previous timeouts have been increased (created errors in CI)

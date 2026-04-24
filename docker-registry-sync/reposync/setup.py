@@ -18,7 +18,7 @@ test_requirements = read_reqs(current_dir / "requirements" / "test.txt")
 
 setup(
     name="reposync",
-    version="0.2.0",
+    version="1.0.5",
     packages=find_packages(where="src"),
     package_dir={"": "src",},
     include_package_data=True,
