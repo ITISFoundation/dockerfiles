@@ -375,8 +375,13 @@ async def _run_sync_tasks(
         stats.update(results)
 
         if stats.failures:
-            msg = f"Run statistics:\n{stats.format()}"
-            raise RuntimeError(msg)
+            # NOTE: log the report and exit with a non-zero status without
+            # raising a regular ``Exception``. ``SystemExit`` propagates
+            # through ``asyncio.run`` and terminates the process with the
+            # given code without dumping an additional (and noisy) traceback
+            # for the orchestration layer itself.
+            _logger.error("Run statistics:\n%s", stats.format())
+            raise SystemExit(1)
 
         # NOTE: image tags and digests are cached
         # if after a batch something changes inside a source, due to th cahce
