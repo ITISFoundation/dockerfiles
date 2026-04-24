@@ -3,7 +3,7 @@
 BRIDGE_NETWORK_NAME := dev_sync_net
 
 export IMAGE_NAME := docker-registry-sync
-export DOCKER_REG_SYNC_VERSION := 1.0.5
+export DOCKER_REG_SYNC_VERSION := 1.0.6
 export DOCKER_REGISTRY ?=itisfoundation
 
 export VCS_URL         := $(shell git config --get remote.origin.url)
@@ -77,16 +77,17 @@ development-run: _ensure-in-venv build ## used to test out changes during develo
 	@docker run --rm -it \
 		--env-file .env \
 		-v $(current_dir)/dev/dev-sync-cfg.yml:/etc/cfg.yaml \
+		-v $(current_dir)/dev/:/tmp/logs \
 		--network=${BRIDGE_NETWORK_NAME} \
 		${DOCKER_REGISTRY}/${IMAGE_NAME}:${DOCKER_REG_SYNC_VERSION} \
-		run-reposync /etc/cfg.yaml --debug
+		run-reposync /etc/cfg.yaml --debug --tracebacks-file /tmp/logs/tracebacks.ignore.log
 
 
 .PHONY: debug-run
 debug-run: _ensure-in-venv ## used to test out changes during development
 	@bash -c '\
 		set -a; source .env; set +a; \
-		run-reposync dev/dev-sync-cfg --debug\
+		run-reposync dev/dev-sync-cfg --debug --tracebacks-file /tmp/tracebacks.log \
 	'
 
 # CI & RELEASE

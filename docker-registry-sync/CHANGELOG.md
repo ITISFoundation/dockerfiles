@@ -6,6 +6,11 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [1.0.6] - 2026-04-24
+
+- sync errors no longer go to stdoud but a dedicated file
+- made simper to read skip, copy, error in logs and also reduced INFO logs
+
 ## [1.0.5] - 2026-04-24
 
 - fixed an issue with asyncio, concurrency is now semaphore based (less tasks issues)

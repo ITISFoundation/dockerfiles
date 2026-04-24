@@ -1,10 +1,10 @@
 import asyncio
 import logging
-import textwrap
 import traceback
 from dataclasses import dataclass, field
 from datetime import datetime, timezone
 from enum import Enum
+from pathlib import Path
 from typing import Any, Coroutine
 
 from networkx import DiGraph, is_directed_acyclic_graph
@@ -211,7 +211,7 @@ async def _copy_image(
             and src_digest == dst_digest
         ):
             _logger.info(
-                "[%s] skipped (same digest): '%s'",
+                "⏭️  [%s] %s — same digest",
                 datetime.now(timezone.utc) - start_datetime,
                 task_id,
             )
@@ -224,19 +224,22 @@ async def _copy_image(
             dst_skip_tls_verify=dst_registry.skip_tls_verify,
         )
         _logger.info(
-            "[%s] copy completed: '%s'",
+            "✅ [%s] %s — copied",
             datetime.now(timezone.utc) - start_datetime,
             task_id,
         )
         return task_id, CopyResult.COPIED
     except Exception as exc:  # pylint: disable=broad-except  # noqa: BLE001
         # Capture the exception and pair it with the task_id so the final
-        # summary can attribute the failure.
-        _logger.warning(
-            "[%s] error while copying: '%s' (%s)",
+        # summary can attribute the failure. Tracebacks are written to the
+        # mandatory ``--tracebacks-file`` (see ``_write_tracebacks_file``);
+        # the live log only carries a one-line summary so CI logs stay small.
+        _logger.error(
+            "❌ [%s] %s — error: %s: %s",
             datetime.now(timezone.utc) - start_datetime,
             task_id,
-            exc,
+            type(exc).__name__,
+            exc or repr(exc),
         )
         return task_id, exc
 
@@ -304,29 +307,53 @@ class _RunStats:
                 self.copied += 1
                 self.copied_task_ids.append(task_id)
 
-    def format(self) -> str:
-        if self.failures:
-            errors_block = "\n".join(
-                f"  - {tid}\n{textwrap.indent(_format_exception(exc).rstrip(), '      ')}"
-                for tid, exc in self.failures
-            )
-        else:
-            errors_block = "  (none)"
+    def format(self, *, tracebacks_file: Path) -> str:
+        copied_sorted = sorted(self.copied_task_ids)
+        failed_sorted = sorted(tid for tid, _ in self.failures)
 
         copied_block = (
-            "\n".join(f"  - {t}" for t in self.copied_task_ids)
-            if self.copied_task_ids
+            "\n".join(f"  ✅ {t}" for t in copied_sorted)
+            if copied_sorted
+            else "  (none)"
+        )
+        failed_block = (
+            "\n".join(f"  ❌ {t}" for t in failed_sorted)
+            if failed_sorted
             else "  (none)"
         )
 
         return (
-            f"Errors detected:\n{errors_block}\n"
-            f"Copied images:\n{copied_block}\n"
-            f"total='{self.total}', "
-            f"copied='{self.copied}', "
-            f"same-digest='{self.same_digest}', "
-            f"failed='{self.failed}'"
+            f"Run statistics: "
+            f"total={self.total}, "
+            f"copied={self.copied}, "
+            f"same-digest={self.same_digest}, "
+            f"failed={self.failed}\n"
+            f"Copied images ({self.copied}):\n{copied_block}\n"
+            f"Failed images ({self.failed}):\n{failed_block}\n"
+            f"Tracebacks written to: {tracebacks_file} (sorted by task_id)"
         )
+
+
+def _write_tracebacks_file(
+    tracebacks_file: Path, failures: list[tuple[TaskID, BaseException]]
+) -> None:
+    """Write a plain-text file with one section per failure, sorted by task_id.
+
+    The file is always created (possibly empty) so artifact-upload steps in CI
+    pipelines can run unconditionally.
+    """
+    tracebacks_file.parent.mkdir(parents=True, exist_ok=True)
+
+    if not failures:
+        tracebacks_file.write_text("")
+        return
+
+    sections: list[str] = []
+    for task_id, exc in sorted(failures, key=lambda item: item[0]):
+        sections.append(
+            f"=== {task_id} ===\n{_format_exception(exc).rstrip()}\n"
+        )
+    tracebacks_file.write_text("\n".join(sections))
 
 
 async def _run_sync_tasks(
@@ -334,6 +361,7 @@ async def _run_sync_tasks(
     execution_plan: ExecutionPlan,
     *,
     parallel_sync_tasks: NonNegativeInt,
+    tracebacks_file: Path,
 ) -> None:
     """given an execution plan:
     - removes previous entries which have been ran in previous group
@@ -380,12 +408,13 @@ async def _run_sync_tasks(
         stats.update(results)
 
         if stats.failures:
-            # NOTE: log the report and exit with a non-zero status without
-            # raising a regular ``Exception``. ``SystemExit`` propagates
-            # through ``asyncio.run`` and terminates the process with the
-            # given code without dumping an additional (and noisy) traceback
-            # for the orchestration layer itself.
-            _logger.error("Run statistics:\n%s", stats.format())
+            # NOTE: write the tracebacks file BEFORE exiting so that CI
+            # artifact upload steps always find it. Then log the summary and
+            # exit with a non-zero status. ``SystemExit`` propagates through
+            # ``asyncio.run`` and terminates the process without dumping an
+            # additional (and noisy) traceback for the orchestration layer.
+            _write_tracebacks_file(tracebacks_file, stats.failures)
+            _logger.error("%s", stats.format(tracebacks_file=tracebacks_file))
             raise SystemExit(1)
 
         # NOTE: image tags and digests are cached
@@ -394,7 +423,10 @@ async def _run_sync_tasks(
         # safest approach is to remove the cache
         await _crane.clear_cache()
 
-    _logger.info("Run statistics:\n%s", stats.format())
+    # Always create the tracebacks file (empty on success) so the artifact
+    # upload step in CI does not need a conditional check.
+    _write_tracebacks_file(tracebacks_file, stats.failures)
+    _logger.info("%s", stats.format(tracebacks_file=tracebacks_file))
 
 
 async def run_sync_tasks(
@@ -402,6 +434,7 @@ async def run_sync_tasks(
     *,
     use_explicit_tags: bool,
     parallel_sync_tasks: NonNegativeInt,
+    tracebacks_file: Path,
 ) -> None:
     await _login_into_all_registries(configuration)
 
@@ -415,7 +448,10 @@ async def run_sync_tasks(
 
     try:
         await _run_sync_tasks(
-            configuration, execution_plan, parallel_sync_tasks=parallel_sync_tasks
+            configuration,
+            execution_plan,
+            parallel_sync_tasks=parallel_sync_tasks,
+            tracebacks_file=tracebacks_file,
         )
     finally:
         _logger.info("Image sync took: %s", datetime.now(timezone.utc) - start_datetime)

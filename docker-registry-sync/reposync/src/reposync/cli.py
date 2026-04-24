@@ -46,6 +46,7 @@ async def _repo_sync(
     parallel_sync_tasks: NonNegativeInt,
     use_explicit_tags: bool,
     debug: bool,
+    tracebacks_file: Path,
 ) -> None:
     _configure_logging(debug)
 
@@ -59,6 +60,7 @@ async def _repo_sync(
         configuration,
         use_explicit_tags=use_explicit_tags,
         parallel_sync_tasks=parallel_sync_tasks,
+        tracebacks_file=tracebacks_file,
     )
 
 
@@ -67,6 +69,21 @@ def run_repo_sync(
     config_file: Annotated[
         Path,
         typer.Argument(help="configuration file to be used", exists=True),
+    ],
+    tracebacks_file: Annotated[
+        Path,
+        typer.Option(
+            "--tracebacks-file",
+            help=(
+                "path to a file where full failure tracebacks are written, "
+                "sorted by task_id. The file is always created (empty on "
+                "success) so CI artifact-upload steps can run unconditionally. "
+                "Tracebacks are never written to stdout."
+            ),
+            dir_okay=False,
+            file_okay=True,
+            writable=True,
+        ),
     ],
     verify_only: Annotated[
         bool, typer.Option(help="check configuration file only", allow_dash=True)
@@ -90,7 +107,12 @@ def run_repo_sync(
 ):
     asyncio.run(
         _repo_sync(
-            config_file, verify_only, parallel_sync_tasks, use_explicit_tags, debug
+            config_file,
+            verify_only,
+            parallel_sync_tasks,
+            use_explicit_tags,
+            debug,
+            tracebacks_file,
         )
     )
 
