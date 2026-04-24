@@ -6,6 +6,11 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [1.0.7] - 2026-04-24
+
+- skip logs are now debug, they are not interesting to us
+- every 5 seconds the progress of the entire process is printed
+
 ## [1.0.6] - 2026-04-24
 
 - sync errors no longer go to stdoud but a dedicated file

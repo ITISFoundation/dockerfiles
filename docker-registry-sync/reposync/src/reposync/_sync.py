@@ -1,11 +1,12 @@
 import asyncio
+import contextlib
 import logging
 import traceback
 from dataclasses import dataclass, field
 from datetime import datetime, timezone
 from enum import Enum
 from pathlib import Path
-from typing import Any, Coroutine
+from typing import Any, Coroutine, Final
 
 from networkx import DiGraph, is_directed_acyclic_graph
 from pydantic import NonNegativeInt
@@ -25,6 +26,8 @@ from ._models import (
 )
 
 _logger = logging.getLogger(__name__)
+
+_PROGRESS_INTERVAL_SECONDS: Final[float] = 5.0
 
 
 class CopyResult(str, Enum):
@@ -181,7 +184,10 @@ def _get_execution_plan(
 
 
 async def _copy_image(
-    configuration: Configuration, task_mapping: dict[TaskID, _SyncTask], task_id: TaskID
+    configuration: Configuration,
+    task_mapping: dict[TaskID, _SyncTask],
+    task_id: TaskID,
+    stats: "_RunStats",
 ) -> tuple[TaskID, CopyResult | BaseException]:
     _logger.debug("Starting '%s'", task_id)
     start_datetime = datetime.now(timezone.utc)
@@ -210,11 +216,12 @@ async def _copy_image(
             and dst_digest is not None
             and src_digest == dst_digest
         ):
-            _logger.info(
+            _logger.debug(
                 "⏭️  [%s] %s — same digest",
                 datetime.now(timezone.utc) - start_datetime,
                 task_id,
             )
+            stats.record(task_id, CopyResult.SAME_DIGEST)
             return task_id, CopyResult.SAME_DIGEST
 
         await _crane.copy(
@@ -228,6 +235,7 @@ async def _copy_image(
             datetime.now(timezone.utc) - start_datetime,
             task_id,
         )
+        stats.record(task_id, CopyResult.COPIED)
         return task_id, CopyResult.COPIED
     except Exception as exc:  # pylint: disable=broad-except  # noqa: BLE001
         # Capture the exception and pair it with the task_id so the final
@@ -241,6 +249,7 @@ async def _copy_image(
             type(exc).__name__,
             exc or repr(exc),
         )
+        stats.record(task_id, exc)
         return task_id, exc
 
 
@@ -295,17 +304,33 @@ class _RunStats:
     copied_task_ids: list[TaskID] = field(default_factory=list)
     failures: list[tuple[TaskID, BaseException]] = field(default_factory=list)
 
+    def record(self, task_id: TaskID, outcome: "CopyResult | BaseException") -> None:
+        """Record a single task outcome as soon as it completes.
+
+        Called from inside ``_copy_image`` so the periodic progress reporter
+        (see ``_progress_reporter``) reflects in-flight progress instead of
+        waiting for whole batches to complete.
+        """
+        self.total += 1
+        if isinstance(outcome, BaseException):
+            self.failed += 1
+            self.failures.append((task_id, outcome))
+        elif outcome == CopyResult.SAME_DIGEST:
+            self.same_digest += 1
+        elif outcome == CopyResult.COPIED:
+            self.copied += 1
+            self.copied_task_ids.append(task_id)
+
     def update(self, batch_results: list[Any]) -> None:
-        self.total += len(batch_results)
         for task_id, outcome in batch_results:
-            if isinstance(outcome, BaseException):
-                self.failed += 1
-                self.failures.append((task_id, outcome))
-            elif outcome == CopyResult.SAME_DIGEST:
-                self.same_digest += 1
-            elif outcome == CopyResult.COPIED:
-                self.copied += 1
-                self.copied_task_ids.append(task_id)
+            self.record(task_id, outcome)
+
+    def progress_line(self, *, planned_total: int) -> str:
+        return (
+            f"⏳ progress: copied={self.copied}, "
+            f"same-digest={self.same_digest}, failed={self.failed} "
+            f"({self.total}/{planned_total} processed)"
+        )
 
     def format(self, *, tracebacks_file: Path) -> str:
         copied_sorted = sorted(self.copied_task_ids)
@@ -356,6 +381,26 @@ def _write_tracebacks_file(
     tracebacks_file.write_text("\n".join(sections))
 
 
+async def _progress_reporter(
+    stats: _RunStats,
+    *,
+    planned_total: int,
+    interval_seconds: float = _PROGRESS_INTERVAL_SECONDS,
+) -> None:
+    """Periodically log a one-line progress counter at INFO until cancelled.
+
+    On cancellation, emits one final progress line so the very last counter
+    state is always captured in the logs.
+    """
+    try:
+        while True:
+            await asyncio.sleep(interval_seconds)
+            _logger.info("%s", stats.progress_line(planned_total=planned_total))
+    except asyncio.CancelledError:
+        _logger.info("%s", stats.progress_line(planned_total=planned_total))
+        raise
+
+
 async def _run_sync_tasks(
     configuration: Configuration,
     execution_plan: ExecutionPlan,
@@ -396,32 +441,48 @@ async def _run_sync_tasks(
 
     stats = _RunStats()
 
-    # run sync batches in order
-    for batch_to_run in no_duplicates_run_batches:
-        sync_coros = [
-            _copy_image(configuration, execution_plan.task_mapping, task_id)
-            for task_id in batch_to_run
-        ]
-        results = await _run_coroutines(
-            sync_coros, parallel_sync_tasks=parallel_sync_tasks
-        )
-        stats.update(results)
+    # Periodic heartbeat so CI logs show liveness even when most tasks are
+    # skipped (same-digest is logged at DEBUG and otherwise invisible).
+    reporter = asyncio.create_task(
+        _progress_reporter(stats, planned_total=sync_oprations_count)
+    )
 
-        if stats.failures:
-            # NOTE: write the tracebacks file BEFORE exiting so that CI
-            # artifact upload steps always find it. Then log the summary and
-            # exit with a non-zero status. ``SystemExit`` propagates through
-            # ``asyncio.run`` and terminates the process without dumping an
-            # additional (and noisy) traceback for the orchestration layer.
-            _write_tracebacks_file(tracebacks_file, stats.failures)
-            _logger.error("%s", stats.format(tracebacks_file=tracebacks_file))
-            raise SystemExit(1)
+    try:
+        # run sync batches in order
+        for batch_to_run in no_duplicates_run_batches:
+            sync_coros = [
+                _copy_image(
+                    configuration, execution_plan.task_mapping, task_id, stats
+                )
+                for task_id in batch_to_run
+            ]
+            # NOTE: results are recorded live by ``_copy_image`` via
+            # ``stats.record(...)``; do not call ``stats.update`` here or the
+            # counters would double-count.
+            await _run_coroutines(
+                sync_coros, parallel_sync_tasks=parallel_sync_tasks
+            )
 
-        # NOTE: image tags and digests are cached
-        # if after a batch something changes inside a source, due to th cahce
-        # it is not possible to figure it out
-        # safest approach is to remove the cache
-        await _crane.clear_cache()
+            if stats.failures:
+                # NOTE: write the tracebacks file BEFORE exiting so that CI
+                # artifact upload steps always find it. Then log the summary
+                # and exit with a non-zero status. ``SystemExit`` propagates
+                # through ``asyncio.run`` and terminates the process without
+                # dumping an additional (and noisy) traceback for the
+                # orchestration layer.
+                _write_tracebacks_file(tracebacks_file, stats.failures)
+                _logger.error("%s", stats.format(tracebacks_file=tracebacks_file))
+                raise SystemExit(1)
+
+            # NOTE: image tags and digests are cached
+            # if after a batch something changes inside a source, due to th cahce
+            # it is not possible to figure it out
+            # safest approach is to remove the cache
+            await _crane.clear_cache()
+    finally:
+        reporter.cancel()
+        with contextlib.suppress(asyncio.CancelledError):
+            await reporter
 
     # Always create the tracebacks file (empty on success) so the artifact
     # upload step in CI does not need a conditional check.

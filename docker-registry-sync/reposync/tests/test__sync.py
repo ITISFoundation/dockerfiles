@@ -75,3 +75,33 @@ def test__write_tracebacks_file_empty_on_no_failures(tmp_path: Path):
     _write_tracebacks_file(target, [])
     assert target.exists()
     assert target.read_text() == ""
+
+
+def test__run_stats_record_increments_live():
+    stats = _RunStats()
+
+    stats.record("a-task", CopyResult.COPIED)
+    stats.record("b-task", CopyResult.SAME_DIGEST)
+    stats.record("c-task", RuntimeError("boom"))
+
+    assert stats.total == 3
+    assert stats.copied == 1
+    assert stats.same_digest == 1
+    assert stats.failed == 1
+    assert stats.copied_task_ids == ["a-task"]
+    assert [tid for tid, _ in stats.failures] == ["c-task"]
+
+
+def test__run_stats_progress_line():
+    stats = _RunStats()
+    stats.record("a-task", CopyResult.COPIED)
+    stats.record("b-task", CopyResult.SAME_DIGEST)
+    stats.record("c-task", RuntimeError("boom"))
+
+    line = stats.progress_line(planned_total=10)
+
+    assert "copied=1" in line
+    assert "same-digest=1" in line
+    assert "failed=1" in line
+    assert "3/10" in line
+    assert line.startswith("⏳")
