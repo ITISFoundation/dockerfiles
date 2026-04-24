@@ -1,8 +1,10 @@
 import asyncio
 import logging
-from concurrent.futures import ThreadPoolExecutor
-from dataclasses import dataclass
+import textwrap
+import traceback
+from dataclasses import dataclass, field
 from datetime import datetime, timezone
+from enum import Enum
 from typing import Any, Coroutine
 
 from networkx import DiGraph, is_directed_acyclic_graph
@@ -23,6 +25,11 @@ from ._models import (
 )
 
 _logger = logging.getLogger(__name__)
+
+
+class CopyResult(str, Enum):
+    SAME_DIGEST = "same-digest"
+    COPIED = "copied"
 
 
 class CyclicDependencyError(RuntimeError):
@@ -176,45 +183,57 @@ def _get_execution_plan(
 
 async def _copy_image(
     configuration: Configuration, task_mapping: dict[TaskID, _SyncTask], task_id: TaskID
-) -> None:
+) -> tuple[TaskID, CopyResult | BaseException]:
     _logger.info("Starting '%s'", task_id)
     start_datetime = datetime.now(timezone.utc)
 
-    sync_task = task_mapping[task_id]
-    src_registry = configuration.registries[sync_task.src]
-    dst_registry = configuration.registries[sync_task.dst]
+    try:
+        sync_task = task_mapping[task_id]
+        src_registry = configuration.registries[sync_task.src]
+        dst_registry = configuration.registries[sync_task.dst]
 
-    src_image = _get_registry_image(
-        url=src_registry.url, image=sync_task.src_path, tag=sync_task.tag
-    )
-    dst_image = _get_registry_image(
-        url=dst_registry.url, image=sync_task.dst_path, tag=sync_task.tag
-    )
+        src_image = _get_registry_image(
+            url=src_registry.url, image=sync_task.src_path, tag=sync_task.tag
+        )
+        dst_image = _get_registry_image(
+            url=dst_registry.url, image=sync_task.dst_path, tag=sync_task.tag
+        )
 
-    src_digest = await _crane.get_digest(
-        src_image, skip_tls_verify=src_registry.skip_tls_verify
-    )
-    dst_digest = await _crane.get_digest(
-        dst_image, skip_tls_verify=dst_registry.skip_tls_verify
-    )
+        src_digest = await _crane.get_digest(
+            src_image, skip_tls_verify=src_registry.skip_tls_verify
+        )
+        dst_digest = await _crane.get_digest(
+            dst_image, skip_tls_verify=dst_registry.skip_tls_verify
+        )
 
-    if src_digest is not None and dst_digest is not None and src_digest == dst_digest:
+        if (
+            src_digest is not None
+            and dst_digest is not None
+            and src_digest == dst_digest
+        ):
+            _logger.info(
+                "Same digest detected, skipping copy for '%s' after %s",
+                task_id,
+                datetime.now(timezone.utc) - start_datetime,
+            )
+            return task_id, CopyResult.SAME_DIGEST
+
+        await _crane.copy(
+            src_image,
+            dst_image,
+            src_skip_tls_verify=src_registry.skip_tls_verify,
+            dst_skip_tls_verify=dst_registry.skip_tls_verify,
+        )
         _logger.info(
-            "Same digest detected, skipping copy for '%s' after %s",
+            "Completed '%s' in %s",
             task_id,
             datetime.now(timezone.utc) - start_datetime,
         )
-        return
-
-    await _crane.copy(
-        src_image,
-        dst_image,
-        src_skip_tls_verify=src_registry.skip_tls_verify,
-        dst_skip_tls_verify=dst_registry.skip_tls_verify,
-    )
-    _logger.info(
-        "Completed '%s' in %s", task_id, datetime.now(timezone.utc) - start_datetime
-    )
+        return task_id, CopyResult.COPIED
+    except Exception as exc:  # pylint: disable=broad-except  # noqa: BLE001
+        # Capture the exception and pair it with the task_id so the final
+        # summary can attribute the failure.
+        return task_id, exc
 
 
 def _remove_duplicates(run_batches: list[set[TaskID]]) -> list[set[TaskID]]:
@@ -235,13 +254,74 @@ def _remove_duplicates(run_batches: list[set[TaskID]]) -> list[set[TaskID]]:
 async def _run_coroutines(
     coros: Coroutine, *, parallel_sync_tasks: NonNegativeInt
 ) -> list[Any]:
-    with ThreadPoolExecutor(max_workers=parallel_sync_tasks) as executor:
-        loop = asyncio.get_running_loop()
+    # NOTE: run all coroutines on the current event loop, capping concurrency
+    # via a Semaphore. Previously this spawned a ThreadPoolExecutor that ran
+    # `asyncio.run` per coroutine, which created/destroyed an event loop per
+    # task and leaked subprocess transports, producing log spam such as
+    # "Loop ... is closed" warnings and "Event loop is closed" tracebacks.
+    semaphore = asyncio.Semaphore(parallel_sync_tasks)
 
-        tasks = [loop.run_in_executor(executor, asyncio.run, coro) for coro in coros]
-        result = await asyncio.gather(*tasks, return_exceptions=True)
+    async def _bounded(coro: Coroutine) -> Any:
+        async with semaphore:
+            return await coro
 
-    return result
+    return await asyncio.gather(*(_bounded(coro) for coro in coros))
+
+
+def _format_exception(exc: BaseException) -> str:
+    """Render an exception with its traceback when available, falling back to
+    ``repr`` so the error type is never lost (``str(exc)`` is empty for many
+    exception types).
+    """
+    if isinstance(exc, BaseException) and exc.__traceback__ is not None:
+        return "".join(traceback.format_exception(type(exc), exc, exc.__traceback__))
+    return repr(exc)
+
+
+@dataclass
+class _RunStats:
+    total: int = 0
+    same_digest: int = 0
+    copied: int = 0
+    failed: int = 0
+    copied_task_ids: list[TaskID] = field(default_factory=list)
+    failures: list[tuple[TaskID, BaseException]] = field(default_factory=list)
+
+    def update(self, batch_results: list[Any]) -> None:
+        self.total += len(batch_results)
+        for task_id, outcome in batch_results:
+            if isinstance(outcome, BaseException):
+                self.failed += 1
+                self.failures.append((task_id, outcome))
+            elif outcome == CopyResult.SAME_DIGEST:
+                self.same_digest += 1
+            elif outcome == CopyResult.COPIED:
+                self.copied += 1
+                self.copied_task_ids.append(task_id)
+
+    def format(self) -> str:
+        if self.failures:
+            errors_block = "\n".join(
+                f"  - {tid}\n{textwrap.indent(_format_exception(exc).rstrip(), '      ')}"
+                for tid, exc in self.failures
+            )
+        else:
+            errors_block = "  (none)"
+
+        copied_block = (
+            "\n".join(f"  - {t}" for t in self.copied_task_ids)
+            if self.copied_task_ids
+            else "  (none)"
+        )
+
+        return (
+            f"Errors detected:\n{errors_block}\n"
+            f"Copied images:\n{copied_block}\n"
+            f"total='{self.total}', "
+            f"copied='{self.copied}', "
+            f"same-digest='{self.same_digest}', "
+            f"failed='{self.failed}'"
+        )
 
 
 async def _run_sync_tasks(
@@ -274,6 +354,8 @@ async def _run_sync_tasks(
     if len(execution_plan.task_mapping) != sync_oprations_count:
         raise RuntimeError("something went worng sizes do not match")
 
+    stats = _RunStats()
+
     # run sync batches in order
     for batch_to_run in no_duplicates_run_batches:
         sync_coros = [
@@ -283,25 +365,18 @@ async def _run_sync_tasks(
         results = await _run_coroutines(
             sync_coros, parallel_sync_tasks=parallel_sync_tasks
         )
-        if any(isinstance(x, BaseException) for x in results):
-            completed_count = sum(1 for x in results if x is None)
-            failed = [x for x in results if x is not None]
-            failed_count = len(failed)
-            formatted_errors = "\n".join(
-                f"--> ERROR #{k} <--\n{x}" for k, x in enumerate(failed)
-            )
+        stats.update(results)
 
-            msg = (
-                f"Taks: finished='{completed_count}', failed='{failed_count}'. "
-                f"Exceptions:\n{formatted_errors}"
-            )
-            raise RuntimeError(msg)
+        if stats.failures:
+            raise RuntimeError(f"Run statistics:\n{stats.format()}")
 
         # NOTE: image tags and digests are cached
         # if after a batch something changes inside a source, due to th cahce
         # it is not possible to figure it out
         # safest approach is to remove the cache
         await _crane.clear_cache()
+
+    _logger.info("Run statistics:\n%s", stats.format())
 
 
 async def run_sync_tasks(
