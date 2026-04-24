@@ -89,7 +89,6 @@ def _get_registry_image(
 async def _get_sync_tasks(
     configuration: Configuration, *, use_explicit_tags: bool
 ) -> list[_SyncTask]:
-
     sync_tasks: list[_SyncTask] = []
 
     for stage in configuration.stages:
@@ -184,7 +183,7 @@ def _get_execution_plan(
 async def _copy_image(
     configuration: Configuration, task_mapping: dict[TaskID, _SyncTask], task_id: TaskID
 ) -> tuple[TaskID, CopyResult | BaseException]:
-    _logger.info("Starting '%s'", task_id)
+    _logger.debug("Starting '%s'", task_id)
     start_datetime = datetime.now(timezone.utc)
 
     try:
@@ -212,9 +211,9 @@ async def _copy_image(
             and src_digest == dst_digest
         ):
             _logger.info(
-                "Same digest detected, skipping copy for '%s' after %s",
-                task_id,
+                "[%s] skipped (same digest): '%s'",
                 datetime.now(timezone.utc) - start_datetime,
+                task_id,
             )
             return task_id, CopyResult.SAME_DIGEST
 
@@ -225,14 +224,20 @@ async def _copy_image(
             dst_skip_tls_verify=dst_registry.skip_tls_verify,
         )
         _logger.info(
-            "Completed '%s' in %s",
-            task_id,
+            "[%s] copy completed: '%s'",
             datetime.now(timezone.utc) - start_datetime,
+            task_id,
         )
         return task_id, CopyResult.COPIED
     except Exception as exc:  # pylint: disable=broad-except  # noqa: BLE001
         # Capture the exception and pair it with the task_id so the final
         # summary can attribute the failure.
+        _logger.warning(
+            "[%s] error while copying: '%s' (%s)",
+            datetime.now(timezone.utc) - start_datetime,
+            task_id,
+            exc,
+        )
         return task_id, exc
 
 

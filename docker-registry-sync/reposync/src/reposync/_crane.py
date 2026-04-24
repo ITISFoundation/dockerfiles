@@ -18,6 +18,14 @@ class CraneCommandError(RuntimeError):
         super().__init__(f"Command {command=} finished with error:\n{result}")
 
 
+class CraneCommandTimeoutError(RuntimeError):
+    def __init__(self, command: list[str | SecretStr], timeout: NonNegativeFloat):
+        rendered = [_resolve_secret(c) for c in command]
+        super().__init__(
+            f"Command '{rendered!r}' timed out after {timeout} seconds"
+        )
+
+
 def _resolve_secret(value: str | SecretStr) -> str:
     return value.get_secret_value() if isinstance(value, SecretStr) else value
 
@@ -66,6 +74,8 @@ async def get_digest(image: RegistryImage, *, skip_tls_verify: bool) -> str | No
     try:
         async with asyncio.timeout(delay=_DIGEST_TIMEOUT):
             return await _execute_command(command)
+    except TimeoutError as e:
+        raise CraneCommandTimeoutError(command, _DIGEST_TIMEOUT) from e
     except CraneCommandError as e:
         if "unexpected status code 404" in f"{e}":
             return None
@@ -87,8 +97,12 @@ async def copy(
 
 @cached()
 async def get_image_tags(image: RegistryImage) -> list[str]:
-    async with asyncio.timeout(delay=_TAGS_TIMEOUT):
-        response = await _execute_command(["crane", "ls", image, "--omit-digest-tags"])
+    command = ["crane", "ls", image, "--omit-digest-tags"]
+    try:
+        async with asyncio.timeout(delay=_TAGS_TIMEOUT):
+            response = await _execute_command(command)
+    except TimeoutError as e:
+        raise CraneCommandTimeoutError(command, _TAGS_TIMEOUT) from e
     return [x.strip() for x in response.strip().split("\n")]
 
 
