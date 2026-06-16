@@ -1,0 +1,29 @@
+# Fix a race condition in @qooxdoo/compiler's Analyser.getTranslation().
+#
+# When several applications share a single library (as all osparc-simcore products
+# share the "osparc" library), the compiler builds them concurrently and they all
+# request the same cached Translation object via getTranslation(library, locale).
+# Only the first caller entered the `if (!translation)` branch and awaited the .po
+# file read; every other concurrent caller saw the entry already cached and returned
+# the Translation object *before* its entries had been read. As a result only one
+# (random) application ended up with the translation catalog and all the others
+# shipped an empty one - e.g. only one product showed the Spanish translations.
+#
+# Moving `await translation.checkRead()` out of the `if` makes every caller wait for
+# the (idempotent, promise-guarded) read to complete before using the object.
+#
+# Applies to @qooxdoo/compiler 1.0.0-beta.20200111-0015 and 1.0.0-beta.20200409-1513
+# (identical code). The image build fails loudly if the patch no longer applies,
+# which signals the compiler was upgraded and the fix must be re-verified.
+--- a/source/class/qx/tool/compiler/Analyser.js
++++ b/source/class/qx/tool/compiler/Analyser.js
+@@ -978,8 +978,8 @@
+       if (!translation) {
+         translation = t.__translations[id] = new qx.tool.compiler.app.Translation(library, locale);
+         translation.setWriteLineNumbers(this.isWritePoLineNumbers());
+-        await translation.checkRead();
+       }
++      await translation.checkRead();
+       return translation;
+     },
+ 
