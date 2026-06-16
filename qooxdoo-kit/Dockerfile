@@ -27,9 +27,11 @@ RUN su - node -c "npm install ${NPM_OPTIONS}"
 # --forward keeps the build idempotent; a patch that no longer applies fails the
 # build so the carried fix gets re-verified against the upgraded dependency.
 COPY --chown=node:node patches/ /home/node/patches/
-RUN cd /home/node/node_modules/@qooxdoo/compiler && \
+RUN set -e; \
+    cd /home/node/node_modules/@qooxdoo/compiler; \
     for patchfile in /home/node/patches/*.patch; do \
-      echo "Applying ${patchfile}" && \
+      [ -e "${patchfile}" ] || continue; \
+      echo "Applying ${patchfile}"; \
       patch -p1 --forward < "${patchfile}"; \
     done
 
