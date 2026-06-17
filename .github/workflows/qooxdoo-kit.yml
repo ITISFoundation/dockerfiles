@@ -42,17 +42,16 @@ jobs:
           make build
           popd
 
-      # Code to be used in the future to push image to docker hub:
-      # - name: Log in to Docker Hub
-      #   if: github.event_name == 'push' && github.ref == 'refs/heads/master'
-      #   uses: docker/login-action@v3
-      #   with:
-      #     username: ${{ secrets.DOCKER_HUB_USER }}
-      #     password: ${{ secrets.DOCKER_HUB_PASSWORD }}
-      #
-      # - name: Push Docker image
-      #   if: github.event_name == 'push' && github.ref == 'refs/heads/master'
-      #   run: |
-      #     pushd qooxdoo-kit
-      #     make push
-      #     popd
+      - name: Log in to Docker Hub
+        if: github.event_name == 'push' && github.ref == 'refs/heads/master'
+        uses: docker/login-action@v3
+        with:
+          username: ${{ secrets.DOCKER_HUB_USER }}
+          password: ${{ secrets.DOCKER_HUB_PASSWORD }}
+      
+      - name: Push Docker image
+        if: github.event_name == 'push' && github.ref == 'refs/heads/master'
+        run: |
+          pushd qooxdoo-kit
+          make push
+          popd
