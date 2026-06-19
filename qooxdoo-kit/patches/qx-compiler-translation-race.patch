@@ -9,21 +9,26 @@
 # (random) application ended up with the translation catalog and all the others
 # shipped an empty one - e.g. only one product showed the Spanish translations.
 #
-# Moving `await translation.checkRead()` out of the `if` makes every caller wait for
-# the (idempotent, promise-guarded) read to complete before using the object.
+# Awaiting checkRead() alone is not sufficient: it sets/checks `__mtime` inside the
+# read's fs.stat callback, i.e. mid-read and before the entries are populated, so a
+# concurrent caller can find `__mtime` already set and early-return before the
+# catalog is populated. We therefore make every caller additionally `await
+# translation.read()`, which returns the promise-guarded `__onRead` that resolves
+# only once the catalog is fully populated.
 #
 # Applies to @qooxdoo/compiler 1.0.0-beta.20200111-0015 and 1.0.0-beta.20200409-1513
 # (identical code). The image build fails loudly if the patch no longer applies,
 # which signals the compiler was upgraded and the fix must be re-verified.
 --- a/source/class/qx/tool/compiler/Analyser.js
 +++ b/source/class/qx/tool/compiler/Analyser.js
-@@ -978,8 +978,8 @@
+@@ -978,8 +978,9 @@
        if (!translation) {
          translation = t.__translations[id] = new qx.tool.compiler.app.Translation(library, locale);
          translation.setWriteLineNumbers(this.isWritePoLineNumbers());
 -        await translation.checkRead();
        }
 +      await translation.checkRead();
++      await translation.read();
        return translation;
      },
  
