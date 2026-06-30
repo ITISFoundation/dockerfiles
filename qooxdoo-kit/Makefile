@@ -6,11 +6,13 @@
 export DOCKER_REPO ?= itisfoundation
 APP_NAME           = $(notdir $(PWD))
 DOCKER_IMAGE_NAME  = $(DOCKER_REPO)/$(APP_NAME)
-DOCKER_IMAGE_TAG  := $(shell date +0.0.%Y%m%d-%H%M%S)
 
 # Multi-architecture build settings
 DOCKER_TARGET_PLATFORMS ?= linux/amd64
-DOCKER_IMAGE_TAGS       ?= latest $(DOCKER_IMAGE_TAG)
+# Image version is derived from the bundled qooxdoo compiler (same scheme as rabbitmq pinning RABBIT_VERSION)
+DOCKER_IMAGE_VERSION    := $(shell jq -r '.dependencies."@qooxdoo/compiler".version' package-lock.json)
+DOCKER_IMAGE_DATE       := $(shell date +0.0.%Y%m%d-%H%M%S)
+DOCKER_IMAGE_TAGS       ?= $(DOCKER_IMAGE_VERSION) $(DOCKER_IMAGE_DATE)
 DIGESTS_DIR             ?= /tmp/$(APP_NAME)-digests
 comma := ,
 
