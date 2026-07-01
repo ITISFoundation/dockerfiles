@@ -12,7 +12,7 @@ DOCKER_TARGET_PLATFORMS ?= linux/amd64
 # Image version is derived from the bundled qooxdoo compiler (same scheme as rabbitmq pinning RABBIT_VERSION)
 DOCKER_IMAGE_VERSION    := $(shell jq -r '.dependencies."@qooxdoo/compiler".version' package-lock.json)
 DOCKER_IMAGE_DATE       := $(shell date +0.0.%Y%m%d-%H%M%S)
-DOCKER_IMAGE_TAGS       ?= $(DOCKER_IMAGE_VERSION) $(DOCKER_IMAGE_DATE)
+DOCKER_IMAGE_TAGS       ?= latest $(DOCKER_IMAGE_VERSION) $(DOCKER_IMAGE_DATE)
 DIGESTS_DIR             ?= /tmp/$(APP_NAME)-digests
 comma := ,
 
@@ -100,7 +100,8 @@ push-digest: package-lock.json ## Build a single-arch image and push it to the r
 	--set *.platform=$(DOCKER_TARGET_PLATFORMS) \
 	--set *.output=type=image,name=$(DOCKER_IMAGE_NAME),push-by-digest=true,name-canonical=true,push=true \
 	--metadata-file metadata.json
-	@digest=$$(jq -r '."$(APP_NAME)"."containerimage.digest"' metadata.json); \
+	@digest=$$(jq -r '."$(APP_NAME)"."containerimage.digest" // empty' metadata.json); \
+	test -n "$${digest}" || { echo "ERROR: could not extract image digest from metadata.json"; exit 1; }; \
 	touch "$(DIGESTS_DIR)/$${digest#sha256:}"; \
 	echo "Pushed $(DOCKER_IMAGE_NAME) by digest $${digest}"
 
