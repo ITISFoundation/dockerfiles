@@ -3,10 +3,18 @@
 #
 .DEFAULT_GOAL := help
 
-DOCKER_REPO        = itisfoundation
+export DOCKER_REPO ?= itisfoundation
 APP_NAME           = $(notdir $(PWD))
 DOCKER_IMAGE_NAME  = $(DOCKER_REPO)/$(APP_NAME)
-DOCKER_IMAGE_TAG  := $(shell date +0.0.%Y%m%d-%H%M%S)
+
+# Multi-architecture build settings
+DOCKER_TARGET_PLATFORMS ?= linux/amd64
+# Image version is derived from the bundled qooxdoo compiler (same scheme as rabbitmq pinning RABBIT_VERSION)
+DOCKER_IMAGE_VERSION    := $(shell jq -r '.dependencies."@qooxdoo/compiler".version' package-lock.json)
+DOCKER_IMAGE_DATE       := $(shell date +0.0.%Y%m%d-%H%M%S)
+DOCKER_IMAGE_TAGS       ?= latest $(DOCKER_IMAGE_VERSION) $(DOCKER_IMAGE_DATE)
+DIGESTS_DIR             ?= /tmp/$(APP_NAME)-digests
+comma := ,
 
 TMPPREFIX := /tmp/$(APP_NAME)
 TMPDIR    := $(strip $(shell mktemp -d $(TMPPREFIX)-XXXXX))
@@ -43,13 +51,15 @@ update-packages: ## updates dependencies and recreates package-lock.json
 # Build the container
 .PHONY: build build-nc
 
-build: package-lock.json ## Build the container
-	export VERSION=lastbuild; \
-	docker compose -f docker-compose.build.yml build $(APP_NAME)
+build: package-lock.json ## Build the image for DOCKER_TARGET_PLATFORMS (loaded locally when single-platform)
+	docker buildx bake -f docker-compose.build.yml \
+	--set *.platform=$(DOCKER_TARGET_PLATFORMS) \
+	$(if $(findstring $(comma),$(DOCKER_TARGET_PLATFORMS)),, --load)
 
-build-nc: package-lock.json ## Build the container without caching
-	export VERSION=lastbuild; \
-	docker compose -f docker-compose.build.yml build --no-cache $(APP_NAME)
+build-nc: package-lock.json ## Build the image without caching
+	docker buildx bake --no-cache -f docker-compose.build.yml \
+	--set *.platform=$(DOCKER_TARGET_PLATFORMS) \
+	$(if $(findstring $(comma),$(DOCKER_TARGET_PLATFORMS)),, --load)
 
 
 # Run the container
@@ -73,35 +83,34 @@ test: ## tests
 	docker compose run $(APP_NAME) /bin/sh ./tests/run.sh
 
 
-# Docker tagging
-.PHONY: tag .tag-latest .tag-version
+# Docker publish (multi-architecture)
+#
+# A multi-arch image is produced in two stages so each architecture can be built
+# natively (no QEMU emulation):
+#   1. `push-digest` is run once per platform/runner. It builds a single-arch
+#      image, pushes it to the registry by digest (no tag) and records the digest
+#      as an empty file under DIGESTS_DIR.
+#   2. `create-manifest` collects every digest in DIGESTS_DIR and combines them
+#      into a single multi-arch manifest list tagged with DOCKER_IMAGE_TAGS.
+.PHONY: push-digest create-manifest
 
-tag: .tag-latest .tag-version ## Generate container tags for the `{version}` and `latest` tags
+push-digest: package-lock.json ## Build a single-arch image and push it to the registry by digest
+	@mkdir -p $(DIGESTS_DIR)
+	BUILDX_NO_DEFAULT_ATTESTATIONS=1 docker buildx bake -f docker-compose.build.yml \
+	--set *.platform=$(DOCKER_TARGET_PLATFORMS) \
+	--set *.output=type=image,name=$(DOCKER_IMAGE_NAME),push-by-digest=true,name-canonical=true,push=true \
+	--metadata-file metadata.json
+	@digest=$$(jq -r '."$(APP_NAME)"."containerimage.digest" // empty' metadata.json); \
+	test -n "$${digest}" || { echo "ERROR: could not extract image digest from metadata.json"; exit 1; }; \
+	touch "$(DIGESTS_DIR)/$${digest#sha256:}"; \
+	echo "Pushed $(DOCKER_IMAGE_NAME) by digest $${digest}"
 
-.tag-latest:
-	# Generate container `latest` tag
-	docker tag $(DOCKER_IMAGE_NAME):lastbuild $(DOCKER_IMAGE_NAME):latest
-
-.tag-version:
-	# Generate container `$(DOCKER_IMAGE_TAG)` tag
-	docker tag $(DOCKER_IMAGE_NAME):lastbuild $(DOCKER_IMAGE_NAME):$(DOCKER_IMAGE_TAG)
-	@echo $(DOCKER_IMAGE_TAG) >.TAG
-
-
-# Docker publish
-PHONY: publish publish-latest publish-version release
-
-publish: .publish-latest .publish-version ## Publish the `{version}` and `latest` tagged containers to ECR
-
-.publish-latest: .tag-latest
-	# Publish the `latest` tagged container to `$(DOCKER_REPO)`
-	docker push $(DOCKER_IMAGE_NAME):latest
-
-.publish-version: .tag-version
-	# Publish the $(shell cat .TAG) tagged to `$(DOCKER_REPO)`
-	docker push $(DOCKER_IMAGE_NAME):$(shell cat .TAG)
-
-release: publish ## Tags lastbuild and pushes `{version}` and `latest` to ECR
+create-manifest: ## Combine per-arch digests from DIGESTS_DIR into a multi-arch manifest list
+	@test -n "$$(ls -A $(DIGESTS_DIR) 2>/dev/null)" || { echo "No digests found in $(DIGESTS_DIR)"; exit 1; }
+	cd $(DIGESTS_DIR) && docker buildx imagetools create \
+	$(foreach tag,$(DOCKER_IMAGE_TAGS),-t $(DOCKER_IMAGE_NAME):$(tag)) \
+	$$(printf '$(DOCKER_IMAGE_NAME)@sha256:%s ' *)
+	docker buildx imagetools inspect $(DOCKER_IMAGE_NAME):$(firstword $(DOCKER_IMAGE_TAGS))
 
 
 
