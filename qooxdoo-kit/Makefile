@@ -96,8 +96,11 @@ test: ## tests
 
 push-digest: package-lock.json ## Build a single-arch image and push it to the registry by digest
 	@mkdir -p $(DIGESTS_DIR)
+	# *.tags= clears the tag (docker-compose.build.yml's `image:` field, e.g. lastbuild) since
+	# buildx refuses to push a tagged ref by digest (push-by-digest requires an untagged target).
 	BUILDX_NO_DEFAULT_ATTESTATIONS=1 docker buildx bake -f docker-compose.build.yml \
 	--set *.platform=$(DOCKER_TARGET_PLATFORMS) \
+	--set *.tags= \
 	--set *.output=type=image,name=$(DOCKER_IMAGE_NAME),push-by-digest=true,name-canonical=true,push=true \
 	--metadata-file metadata.json
 	@digest=$$(jq -r '."$(APP_NAME)"."containerimage.digest" // empty' metadata.json); \
